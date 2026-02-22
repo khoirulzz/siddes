@@ -1,0 +1,30 @@
+<?php
+
+return [
+    'name' => 'Desa Lambanggelun',
+    'district' => 'Kabupaten Pekalongan',
+    'logo_url' => env('VILLAGE_LOGO_URL', '/assets/images/logo_pekalongan.svg'),
+    'hero_image_url' => 'https://lh3.googleusercontent.com/pw/AP1GczP_zcOCqkbmPK9-ni6MoR02R8TXFqaVHMRxWbVXlpCERulMVJPcfjLb9iZtmQmcozXXKkouRdva4eRgk4VsywbiJotaCCbVASUY8LaC6KpHYhXHUAVbO8qO1nnPy3hAMD9LOi1yhdPkl-ViIKaIHks0=w973-h651-s-no-gm?authuser=0',
+    'profile_hero_image_url' => 'https://i.ibb.co.com/BKT8Sk3x/146108-picsay.webp',
+    'profile_gallery_images' => [
+        'https://i.ibb.co.com/RGtv94C0/teh.webp',
+        'https://i.ibb.co.com/6cNNgC6N/file-00000000539871fda52f39986fe461c4.webp',
+        'https://i.ibb.co.com/DyDd1kj/Curug.webp',
+        'https://i.ibb.co.com/VpkBmGh3/kuntul.webp',
+        'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1400&q=80',
+        'https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=1400&q=80',
+    ],
+    'announcement_thumbnail_icon' => 'https://i.ibb.co.com/kgWFghJ4/clipboard-image-1771582818.webp',
+    'phone' => '(0285) 000-000',
+    'email' => 'desa@lambanggelun.id',
+    'address' => 'Kantor Desa Lambanggelun, Kabupaten Pekalongan, Jawa Tengah',
+    'instagram_url' => 'https://instagram.com/pemdes_lambanggelun',
+    'facebook_url' => 'https://facebook.com/desa.lambanggelun.1',
+    'map_link_url' => 'https://maps.google.com/?q=Desa+Lambanggelun,+Kabupaten+Pekalongan',
+    'developed_by' => 'Khoirul Ulum',
+    'map_embed_url' => 'https://www.google.com/maps?q=Desa+Lambanggelun,+Kabupaten+Pekalongan&output=embed',
+    'batas_desa' =>  'https://i.ibb.co.com/cShqZ281/batas.webp',
+    'api_key_openrouter' => env('OPENROUTER_API_KEY'),
+    'model_ai_1' => env('OPENROUTER_MODEL_PRIMARY', 'arcee-ai/trinity-mini:free'),
+    'model_ai_2' => env('OPENROUTER_MODEL_FALLBACK', 'arcee-ai/trinity-large-preview:free'),
+    ];

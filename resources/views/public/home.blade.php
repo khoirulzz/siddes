@@ -4,9 +4,9 @@
 
 @section('content')
     <section class="hero hero-with-image hero-centered" style="--hero-image: url('{{ config('village.hero_image_url') }}');">
-        <h1>Selamat Datang di Website Desa Lambanggelun</h1>
+        <h1>Website Desa Lambanggelun</h1>
         <p>
-            Portal resmi pemerintahan desa untuk informasi publik, layanan digital desa,
+            Portal resmi pemerintah desa untuk informasi publik, layanan digital desa,
             serta publikasi yang transparan.
         </p>
         <div class="hero-meta">
@@ -180,7 +180,32 @@
         const activitiesData = @json($activitiesChart['data']);
         const activitiesColors = activitiesLabels.map((_, i) => palette[i % palette.length]);
 
-        new Chart(document.getElementById('homePopulationChart'), {
+        const getChartTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                text: isDark ? '#d5e5f6' : '#274761',
+                grid: isDark ? 'rgba(139, 162, 185, 0.22)' : 'rgba(43, 74, 101, 0.12)',
+            };
+        };
+
+        const barOptions = (theme) => ({
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+            },
+        });
+
+        let chartTheme = getChartTheme();
+        const populationChart = new Chart(document.getElementById('homePopulationChart'), {
             type: 'bar',
             data: {
                 labels: populationLabels,
@@ -191,10 +216,10 @@
                     borderRadius: 7
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
 
-        new Chart(document.getElementById('homeLandChart'), {
+        const landChart = new Chart(document.getElementById('homeLandChart'), {
             type: 'bar',
             data: {
                 labels: landLabels,
@@ -205,10 +230,10 @@
                     borderRadius: 7
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
 
-        new Chart(document.getElementById('homeActivitiesChart'), {
+        const activitiesChart = new Chart(document.getElementById('homeActivitiesChart'), {
             type: 'bar',
             data: {
                 labels: activitiesLabels,
@@ -219,8 +244,18 @@
                     borderRadius: 7
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
+
+        const syncChartsWithTheme = () => {
+            chartTheme = getChartTheme();
+            [populationChart, landChart, activitiesChart].forEach((chart) => {
+                chart.options = barOptions(chartTheme);
+                chart.update();
+            });
+        };
+
+        window.addEventListener('app:theme-change', syncChartsWithTheme);
 
         const initCarousel = (carousel, options = {}) => {
             if (!carousel) {

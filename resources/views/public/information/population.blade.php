@@ -40,8 +40,8 @@
 
     <section class="chart-grid">
         <article class="chart-card">
-            <h3>Distribusi Agama</h3>
-            <canvas id="populationByReligion"></canvas>
+            <h3>Distribusi Rentang Usia</h3>
+            <canvas id="populationByAgeRange"></canvas>
         </article>
         <article class="chart-card">
             <h3>Ringkasan per Dusun</h3>
@@ -79,14 +79,50 @@
         const hamletLabels = @json($summaryByHamlet->pluck('hamlet'));
         const hamletData = @json($summaryByHamlet->pluck('total'));
         const genderData = @json([$genderSummary['Laki-laki'], $genderSummary['Perempuan']]);
-        const religionLabels = @json($religionSummary->pluck('religion'));
-        const religionData = @json($religionSummary->pluck('total'));
+        const ageRangeLabels = @json($ageRangeSummary['labels']);
+        const ageRangeData = @json($ageRangeSummary['data']);
 
         const palette = ['#0f4c81', '#1f8a70', '#f59e0b', '#e76f51', '#457b9d', '#8ab17d', '#9d4edd'];
         const hamletColors = hamletLabels.map((_, i) => palette[i % palette.length]);
-        const religionColors = religionLabels.map((_, i) => palette[i % palette.length]);
+        const ageRangeColors = ageRangeLabels.map((_, i) => palette[i % palette.length]);
 
-        new Chart(document.getElementById('populationByHamlet'), {
+        const getChartTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                text: isDark ? '#d5e5f6' : '#274761',
+                grid: isDark ? 'rgba(139, 162, 185, 0.22)' : 'rgba(43, 74, 101, 0.12)',
+            };
+        };
+
+        const barOptions = (theme) => ({
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+            },
+        });
+
+        const doughnutOptions = (theme) => ({
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: theme.text,
+                    },
+                },
+            },
+        });
+
+        let chartTheme = getChartTheme();
+        const hamletChart = new Chart(document.getElementById('populationByHamlet'), {
             type: 'bar',
             data: {
                 labels: hamletLabels,
@@ -97,10 +133,10 @@
                     borderRadius: 6
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
 
-        new Chart(document.getElementById('populationByGender'), {
+        const genderChart = new Chart(document.getElementById('populationByGender'), {
             type: 'doughnut',
             data: {
                 labels: ['Laki-laki', 'Perempuan'],
@@ -109,21 +145,33 @@
                     backgroundColor: ['#0f4c81', '#1f8a70']
                 }]
             },
-            options: { responsive: true }
+            options: doughnutOptions(chartTheme),
         });
 
-        new Chart(document.getElementById('populationByReligion'), {
+        const ageRangeChart = new Chart(document.getElementById('populationByAgeRange'), {
             type: 'bar',
             data: {
-                labels: religionLabels,
+                labels: ageRangeLabels,
                 datasets: [{
                     label: 'Jumlah Penduduk',
-                    data: religionData,
-                    backgroundColor: religionColors,
+                    data: ageRangeData,
+                    backgroundColor: ageRangeColors,
                     borderRadius: 6
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
+
+        const syncChartsWithTheme = () => {
+            chartTheme = getChartTheme();
+            hamletChart.options = barOptions(chartTheme);
+            genderChart.options = doughnutOptions(chartTheme);
+            ageRangeChart.options = barOptions(chartTheme);
+            hamletChart.update();
+            genderChart.update();
+            ageRangeChart.update();
+        };
+
+        window.addEventListener('app:theme-change', syncChartsWithTheme);
     </script>
 @endsection

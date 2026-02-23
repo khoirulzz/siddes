@@ -189,7 +189,7 @@
                     </div>
 
                     <div class="submit-row">
-                        <button class="btn btn-primary btn-lg" type="submit">Kirim Pengaduan</button>
+                        <button class="btn btn-primary btn-lg" type="submit" data-loading-text="Mengirim pengaduan...">Kirim Pengaduan</button>
                     </div>
                 </form>
             </article>
@@ -520,7 +520,8 @@
                     return;
                 }
 
-                showNikMessage('Memeriksa data NIK...');
+                showNikMessage('Memeriksa data NIK...', 'loading');
+                window.AppUi?.setButtonBusy(btnCheckNik, 'Mengecek...');
 
                 try {
                     const response = await fetch(`${checkNikUrl}?nik=${encodeURIComponent(nik)}`, {
@@ -545,6 +546,8 @@
                     `, 'success');
                 } catch (error) {
                     showNikMessage(error.message || 'Gagal memeriksa NIK.', 'error');
+                } finally {
+                    window.AppUi?.releaseButtonBusy(btnCheckNik);
                 }
             });
 
@@ -555,7 +558,8 @@
                     return;
                 }
 
-                showTicketMessage('Mencari tiket pengaduan...');
+                showTicketMessage('Mencari tiket pengaduan...', 'loading');
+                window.AppUi?.setButtonBusy(btnSearchComplaintTicket, 'Mencari...');
 
                 try {
                     const response = await fetch(`${searchComplaintTicketUrl}?q=${encodeURIComponent(ticket)}`, {
@@ -590,6 +594,10 @@
                     `, 'success');
                 } catch (error) {
                     showTicketMessage(error.message || 'Gagal mencari tiket pengaduan.', 'error');
+                } finally {
+                    if (btnSearchComplaintTicket) {
+                        window.AppUi?.releaseButtonBusy(btnSearchComplaintTicket);
+                    }
                 }
             });
         })();

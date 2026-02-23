@@ -20,6 +20,9 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicServiceController;
 use Illuminate\Support\Facades\Route;
 
+$adminLoginPath = trim((string) config('security.admin_login_path', 'masuk-admin'), '/');
+$adminLoginPath = $adminLoginPath !== '' ? $adminLoginPath : 'masuk-admin';
+
 Route::get('/media/public/{path}', [PublicMediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.public');
@@ -62,9 +65,13 @@ Route::controller(PublicServiceController::class)->prefix('layanan')->name('serv
     });
 });
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.attempt');
+Route::middleware('guest')->group(function () use ($adminLoginPath) {
+    Route::get('/' . $adminLoginPath, [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/' . $adminLoginPath, [AuthController::class, 'login'])->middleware('throttle:login')->name('login.attempt');
+
+    if ($adminLoginPath !== 'login') {
+        Route::any('/login', static fn () => abort(404));
+    }
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');

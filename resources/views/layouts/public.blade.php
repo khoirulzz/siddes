@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', config('village.name'))</title>
+    <script>
+        (function () {
+            const storageKey = 'sid_theme';
+            let storedTheme = null;
+            try {
+                storedTheme = window.localStorage ? localStorage.getItem(storageKey) : null;
+            } catch (error) {
+                storedTheme = null;
+            }
+            const systemTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+            const initialTheme = storedTheme === 'dark' || storedTheme === 'light'
+                ? storedTheme
+                : systemTheme;
+
+            document.documentElement.setAttribute('data-theme', initialTheme);
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,9 +32,10 @@
     <link rel="stylesheet" href="{{ asset('css/public-service-form.css') }}">
 </head>
 <body>
+    <div class="page-progress" data-page-progress aria-hidden="true"></div>
     <header class="site-header">
         <div class="container site-header-inner">
-            <a href="{{ route('home') }}" class="brand">
+            <a href="{{ route('home') }}" class="brand" data-admin-entry="{{ route('login') }}">
                 <img src="{{ config('village.logo_url') }}" alt="Logo {{ config('village.district') }}">
                 <span>
                     {{ config('village.name') }}
@@ -23,9 +43,16 @@
                 </span>
             </a>
 
-            <button class="nav-toggle" type="button" data-nav-toggle>Menu</button>
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="main-nav" aria-label="Buka atau tutup menu navigasi">
+                <span class="nav-toggle-lines" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+                <span class="nav-toggle-text">Menu</span>
+            </button>
 
-            <nav class="main-nav" data-main-nav>
+            <nav class="main-nav" data-main-nav id="main-nav">
                 <ul class="menu">
                     <li><a class="{{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Beranda</a></li>
                     <li class="has-dropdown" data-dropdown>
@@ -72,14 +99,27 @@
             </nav>
 
             <div class="header-actions">
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    data-theme-toggle
+                    aria-label="Ubah mode tampilan"
+                    aria-pressed="false"
+                    title="Ubah mode terang/gelap"
+                >
+                    <span class="theme-toggle-icon sun" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5V5.2M12 18.8V21.5M21.5 12h-2.7M5.2 12H2.5M18.7 5.3l-1.9 1.9M7.2 16.8l-1.9 1.9M18.7 18.7l-1.9-1.9M7.2 7.2 5.3 5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span class="theme-toggle-icon moon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a7 7 0 1 0 10.7 10.7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                    </span>
+                </button>
                 @auth
                     <a class="btn btn-outline" href="{{ route('dashboard.index') }}">Dashboard</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="btn btn-primary" type="submit">Keluar</button>
                     </form>
-                @else
-                    <a class="btn btn-primary" href="{{ route('login') }}">Login Admin</a>
                 @endauth
             </div>
         </div>
@@ -206,19 +246,332 @@
         const navToggle = document.querySelector('[data-nav-toggle]');
         const mainNav = document.querySelector('[data-main-nav]');
         const dropdowns = document.querySelectorAll('[data-dropdown] > button');
+        const brandEntry = document.querySelector('[data-admin-entry]');
+        const pageProgress = document.querySelector('[data-page-progress]');
+        const themeToggle = document.querySelector('[data-theme-toggle]');
+        const rootElement = document.documentElement;
+
+        const themeStorageKey = 'sid_theme';
+        const getSystemTheme = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            ? 'dark'
+            : 'light';
+        const readStoredTheme = () => {
+            try {
+                const stored = localStorage.getItem(themeStorageKey);
+                return stored === 'dark' || stored === 'light' ? stored : null;
+            } catch (error) {
+                return null;
+            }
+        };
+
+        const applyTheme = (theme, { persist = true, emit = true } = {}) => {
+            const normalized = theme === 'dark' ? 'dark' : 'light';
+            rootElement.setAttribute('data-theme', normalized);
+
+            if (persist) {
+                try {
+                    localStorage.setItem(themeStorageKey, normalized);
+                } catch (error) {
+                    // Ignore storage failure
+                }
+            }
+
+            if (themeToggle) {
+                const isDark = normalized === 'dark';
+                themeToggle.classList.toggle('is-dark', isDark);
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+                themeToggle.setAttribute(
+                    'aria-label',
+                    isDark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'
+                );
+                themeToggle.setAttribute(
+                    'title',
+                    isDark ? 'Pindah ke mode terang' : 'Pindah ke mode gelap'
+                );
+            }
+
+            if (emit) {
+                window.dispatchEvent(new CustomEvent('app:theme-change', {
+                    detail: { theme: normalized },
+                }));
+            }
+        };
+
+        const bootTheme = () => {
+            const initialTheme = readStoredTheme() || rootElement.getAttribute('data-theme') || getSystemTheme();
+            applyTheme(initialTheme, { persist: false, emit: false });
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const current = rootElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                    applyTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            }
+
+            if (window.matchMedia) {
+                const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+                const syncSystemTheme = () => {
+                    if (readStoredTheme()) {
+                        return;
+                    }
+                    applyTheme(systemThemeMedia.matches ? 'dark' : 'light', { persist: false });
+                };
+
+                if (typeof systemThemeMedia.addEventListener === 'function') {
+                    systemThemeMedia.addEventListener('change', syncSystemTheme);
+                } else if (typeof systemThemeMedia.addListener === 'function') {
+                    systemThemeMedia.addListener(syncSystemTheme);
+                }
+            }
+        };
+
+        bootTheme();
+
+        let progressFrame = null;
+        let progressValue = 0;
+        const startPageProgress = () => {
+            if (!pageProgress || pageProgress.classList.contains('is-active')) {
+                return;
+            }
+
+            progressValue = 0.15;
+            pageProgress.classList.remove('is-complete');
+            pageProgress.classList.add('is-active');
+            pageProgress.style.transform = `scaleX(${progressValue})`;
+
+            const advance = () => {
+                progressValue = Math.min(progressValue + (1 - progressValue) * 0.12, 0.92);
+                pageProgress.style.transform = `scaleX(${progressValue})`;
+                progressFrame = window.setTimeout(advance, 120);
+            };
+
+            progressFrame = window.setTimeout(advance, 120);
+        };
+
+        const stopPageProgress = () => {
+            if (!pageProgress) {
+                return;
+            }
+
+            if (progressFrame) {
+                clearTimeout(progressFrame);
+                progressFrame = null;
+            }
+
+            pageProgress.style.transform = 'scaleX(1)';
+            pageProgress.classList.add('is-complete');
+
+            window.setTimeout(() => {
+                pageProgress.classList.remove('is-active', 'is-complete');
+                pageProgress.style.transform = 'scaleX(0)';
+            }, 260);
+        };
+
+        const isInternalNavigation = (anchor) => {
+            if (!(anchor instanceof HTMLAnchorElement)) {
+                return false;
+            }
+
+            if (anchor.target === '_blank' || anchor.hasAttribute('download')) {
+                return false;
+            }
+
+            const href = anchor.getAttribute('href') || '';
+            if (href.startsWith('#') || href.startsWith('javascript:')) {
+                return false;
+            }
+
+            try {
+                const url = new URL(anchor.href, window.location.origin);
+                return url.origin === window.location.origin;
+            } catch (error) {
+                return false;
+            }
+        };
+
+        window.addEventListener('pageshow', stopPageProgress);
+        window.addEventListener('load', stopPageProgress);
+        window.addEventListener('beforeunload', startPageProgress);
+
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+
+            const anchor = target.closest('a');
+            if (isInternalNavigation(anchor)) {
+                startPageProgress();
+            }
+        }, true);
 
         if (navToggle && mainNav) {
             navToggle.addEventListener('click', () => {
-                mainNav.classList.toggle('show');
+                const isOpen = mainNav.classList.toggle('show');
+                navToggle.classList.toggle('is-active', isOpen);
+                navToggle.setAttribute('aria-expanded', String(isOpen));
+
+                if (!isOpen) {
+                    dropdowns.forEach((button) => {
+                        button.parentElement?.classList.remove('open');
+                        button.setAttribute('aria-expanded', 'false');
+                    });
+                }
             });
         }
 
         dropdowns.forEach((button) => {
+            button.setAttribute('aria-expanded', 'false');
+
             button.addEventListener('click', () => {
                 if (window.innerWidth <= 920) {
-                    button.parentElement.classList.toggle('open');
+                    const parent = button.parentElement;
+                    if (!parent) {
+                        return;
+                    }
+
+                    const willOpen = !parent.classList.contains('open');
+                    dropdowns.forEach((otherButton) => {
+                        if (otherButton === button) {
+                            return;
+                        }
+
+                        otherButton.parentElement?.classList.remove('open');
+                        otherButton.setAttribute('aria-expanded', 'false');
+                    });
+
+                    parent.classList.toggle('open', willOpen);
+                    button.setAttribute('aria-expanded', String(willOpen));
                 }
             });
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 920 && mainNav && navToggle) {
+                mainNav.classList.remove('show');
+                navToggle.classList.remove('is-active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                dropdowns.forEach((button) => {
+                    button.parentElement?.classList.remove('open');
+                    button.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+
+        const triggerSecretLogin = () => {
+            if (!brandEntry) {
+                return;
+            }
+
+            const secretUrl = brandEntry.getAttribute('data-admin-entry');
+            if (!secretUrl) {
+                return;
+            }
+
+            brandEntry.classList.add('brand-secret-active');
+            startPageProgress();
+            window.setTimeout(() => {
+                window.location.assign(secretUrl);
+            }, 180);
+        };
+
+        if (brandEntry) {
+            let lastTapAt = 0;
+
+            brandEntry.addEventListener('dblclick', (event) => {
+                event.preventDefault();
+                triggerSecretLogin();
+            });
+
+            brandEntry.addEventListener('touchend', (event) => {
+                const now = Date.now();
+                if (now - lastTapAt < 420) {
+                    event.preventDefault();
+                    lastTapAt = 0;
+                    triggerSecretLogin();
+                    return;
+                }
+
+                lastTapAt = now;
+            }, { passive: false });
+        }
+
+        const buttonStateStore = new WeakMap();
+        const setButtonBusy = (button, loadingText = 'Memproses...') => {
+            if (!(button instanceof HTMLElement) || button.classList.contains('is-loading')) {
+                return;
+            }
+
+            if (button instanceof HTMLButtonElement || button instanceof HTMLInputElement) {
+                button.disabled = true;
+            }
+
+            buttonStateStore.set(
+                button,
+                button instanceof HTMLInputElement ? button.value : button.innerHTML
+            );
+            button.classList.add('is-loading');
+            button.setAttribute('aria-busy', 'true');
+
+            if (button instanceof HTMLInputElement) {
+                button.value = loadingText;
+                return;
+            }
+
+            button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span>${loadingText}</span>`;
+        };
+
+        const releaseButtonBusy = (button) => {
+            if (!(button instanceof HTMLElement) || !button.classList.contains('is-loading')) {
+                return;
+            }
+
+            const originalContent = buttonStateStore.get(button);
+            if (typeof originalContent === 'string') {
+                if (button instanceof HTMLInputElement) {
+                    button.value = originalContent;
+                } else {
+                    button.innerHTML = originalContent;
+                }
+            }
+
+            if (button instanceof HTMLButtonElement || button instanceof HTMLInputElement) {
+                button.disabled = false;
+            }
+
+            button.classList.remove('is-loading');
+            button.removeAttribute('aria-busy');
+            buttonStateStore.delete(button);
+        };
+
+        window.AppUi = {
+            setButtonBusy,
+            releaseButtonBusy,
+            getActiveTheme: () => rootElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light',
+        };
+
+        document.addEventListener('submit', (event) => {
+            if (event.defaultPrevented) {
+                return;
+            }
+
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if (String(form.method || 'get').toLowerCase() === 'get') {
+                return;
+            }
+
+            const submitter = event.submitter instanceof HTMLElement
+                ? event.submitter
+                : form.querySelector('button[type="submit"], input[type="submit"]');
+            if (!(submitter instanceof HTMLElement)) {
+                return;
+            }
+
+            setButtonBusy(submitter, submitter.getAttribute('data-loading-text') || 'Memproses...');
         });
 
         const showCopyToast = (message) => {

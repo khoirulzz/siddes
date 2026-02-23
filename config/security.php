@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'admin_login_path' => env('ADMIN_LOGIN_PATH', 'masuk-admin'),
+
     'media' => [
         'allowed_prefixes' => [
             'news/',

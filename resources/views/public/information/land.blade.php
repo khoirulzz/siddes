@@ -56,7 +56,32 @@
         const categoryColors = categoryLabels.map((_, i) => palette[i % palette.length]);
         const statusColors = statusLabels.map((_, i) => palette[i % palette.length]);
 
-        new Chart(document.getElementById('landByCategory'), {
+        const getChartTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                text: isDark ? '#d5e5f6' : '#274761',
+                grid: isDark ? 'rgba(139, 162, 185, 0.22)' : 'rgba(43, 74, 101, 0.12)',
+            };
+        };
+
+        const barOptions = (theme) => ({
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+            },
+        });
+
+        let chartTheme = getChartTheme();
+        const categoryChart = new Chart(document.getElementById('landByCategory'), {
             type: 'bar',
             data: {
                 labels: categoryLabels,
@@ -67,10 +92,10 @@
                     borderRadius: 6
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
 
-        new Chart(document.getElementById('landByStatus'), {
+        const statusChart = new Chart(document.getElementById('landByStatus'), {
             type: 'bar',
             data: {
                 labels: statusLabels,
@@ -80,7 +105,17 @@
                     borderRadius: 6
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions(chartTheme),
         });
+
+        const syncChartsWithTheme = () => {
+            chartTheme = getChartTheme();
+            categoryChart.options = barOptions(chartTheme);
+            statusChart.options = barOptions(chartTheme);
+            categoryChart.update();
+            statusChart.update();
+        };
+
+        window.addEventListener('app:theme-change', syncChartsWithTheme);
     </script>
 @endsection

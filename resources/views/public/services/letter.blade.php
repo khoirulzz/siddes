@@ -104,7 +104,7 @@
                     </div>
 
                     <div class="submit-row">
-                        <button type="submit" class="btn btn-primary btn-lg">Kirim Pengajuan Surat</button>
+                        <button type="submit" class="btn btn-primary btn-lg" data-loading-text="Mengirim surat...">Kirim Pengajuan Surat</button>
                     </div>
                 </form>
             </article>
@@ -399,12 +399,12 @@
                     .replace(/'/g, '&#039;');
             };
 
-            const showNikFeedback = (message, isError = false) => {
-                nikFeedback.innerHTML = `<div class="result-card ${isError ? 'error' : 'success'}">${message}</div>`;
+            const showNikFeedback = (message, type = 'success') => {
+                nikFeedback.innerHTML = `<div class="result-card ${type}">${message}</div>`;
             };
 
-            const showSearchFeedback = (message, isError = false) => {
-                ticketSearchResult.innerHTML = `<div class="result-card ${isError ? 'error' : 'success'}">${message}</div>`;
+            const showSearchFeedback = (message, type = 'success') => {
+                ticketSearchResult.innerHTML = `<div class="result-card ${type}">${message}</div>`;
             };
 
             const setIdentity = (name, address, nikValue) => {
@@ -503,11 +503,12 @@
             btnCheckNik.addEventListener('click', async () => {
                 const nik = nikInput.value.trim();
                 if (nik.length !== 16) {
-                    showNikFeedback('NIK harus 16 digit angka.', true);
+                    showNikFeedback('NIK harus 16 digit angka.', 'error');
                     return;
                 }
 
-                showNikFeedback('Memeriksa data NIK...');
+                showNikFeedback('Memeriksa data NIK...', 'loading');
+                window.AppUi?.setButtonBusy(btnCheckNik, 'Mengecek...');
 
                 try {
                     const response = await fetch(`${checkNikUrl}?nik=${encodeURIComponent(nik)}`, {
@@ -523,10 +524,12 @@
 
                     setIdentity(payload.full_name, payload.address_detail, payload.nik);
                     showForm();
-                    showNikFeedback('NIK valid. Silakan lanjut isi detail surat.', false);
+                    showNikFeedback('NIK valid. Silakan lanjut isi detail surat.', 'success');
                 } catch (error) {
-                    showNikFeedback(error.message || 'Gagal memeriksa NIK.', true);
+                    showNikFeedback(error.message || 'Gagal memeriksa NIK.', 'error');
                     hideForm();
+                } finally {
+                    window.AppUi?.releaseButtonBusy(btnCheckNik);
                 }
             });
 
@@ -546,11 +549,12 @@
             btnSearchTicket.addEventListener('click', async () => {
                 const ticket = ticketInput.value.trim();
                 if (!ticket) {
-                    showSearchFeedback('Nomor surat wajib diisi.', true);
+                    showSearchFeedback('Nomor surat wajib diisi.', 'error');
                     return;
                 }
 
-                showSearchFeedback('Mencari nomor surat...');
+                showSearchFeedback('Mencari nomor surat...', 'loading');
+                window.AppUi?.setButtonBusy(btnSearchTicket, 'Mencari...');
 
                 try {
                     const response = await fetch(`${searchTicketUrl}?q=${encodeURIComponent(ticket)}`, {
@@ -582,7 +586,9 @@
                         </div>
                     `;
                 } catch (error) {
-                    showSearchFeedback(error.message || 'Gagal mencari nomor surat.', true);
+                    showSearchFeedback(error.message || 'Gagal mencari nomor surat.', 'error');
+                } finally {
+                    window.AppUi?.releaseButtonBusy(btnSearchTicket);
                 }
             });
 

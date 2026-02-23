@@ -217,7 +217,7 @@ class LetterSchema
                     [
                         'name' => 'lama_hilang',
                         'label' => 'Lama Kehilangan',
-                        'placeholder' => 'Contoh: 2 hari yang lalu',
+                        'placeholder' => 'Contoh: 2 hari',
                         'required' => true,
                         'max' => 120,
                     ],

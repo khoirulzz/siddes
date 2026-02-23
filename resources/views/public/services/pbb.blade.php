@@ -146,7 +146,7 @@
                     </div>
 
                     <div class="submit-row">
-                        <button type="submit" class="btn btn-primary btn-lg">Kirim Permohonan PBB</button>
+                        <button type="submit" class="btn btn-primary btn-lg" data-loading-text="Mengirim permohonan...">Kirim Permohonan PBB</button>
                     </div>
                 </form>
             </article>
@@ -633,7 +633,8 @@
                     return;
                 }
 
-                showNopMessage('Mencari data NOP...');
+                showNopMessage('Mencari data NOP...', 'loading');
+                window.AppUi?.setButtonBusy(btnSearchNop, 'Mencari...');
 
                 try {
                     const response = await fetch(`${searchNopUrl}?nop=${encodeURIComponent(nop)}`, {
@@ -670,6 +671,8 @@
                 } catch (error) {
                     currentSearchResult = null;
                     showNopMessage(error.message || 'Gagal mencari data NOP.', 'error');
+                } finally {
+                    window.AppUi?.releaseButtonBusy(btnSearchNop);
                 }
             });
 
@@ -702,7 +705,8 @@
                     return;
                 }
 
-                showTicketMessage('Mencari tiket...');
+                showTicketMessage('Mencari tiket...', 'loading');
+                window.AppUi?.setButtonBusy(btnSearchTicket, 'Mencari...');
 
                 try {
                     const response = await fetch(`${searchTicketUrl}?q=${encodeURIComponent(ticket)}`, {
@@ -728,6 +732,8 @@
                     `, 'success');
                 } catch (error) {
                     showTicketMessage(error.message || 'Gagal mencari tiket.', 'error');
+                } finally {
+                    window.AppUi?.releaseButtonBusy(btnSearchTicket);
                 }
             });
 

@@ -96,11 +96,26 @@ class PublicController extends Controller
             ->groupBy('gender')
             ->pluck('total', 'gender');
 
-        $religionSummary = PopulationRecord::query()
-            ->selectRaw('religion, COUNT(*) as total')
-            ->groupBy('religion')
-            ->orderByDesc('total')
-            ->get();
+        $ageSummary = PopulationRecord::query()
+            ->selectRaw(
+                "SUM(CASE
+                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
+                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 0 AND 12
+                    THEN 1 ELSE 0 END) as anak_total,
+                 SUM(CASE
+                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
+                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 13 AND 18
+                    THEN 1 ELSE 0 END) as remaja_total,
+                 SUM(CASE
+                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
+                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 19 AND 59
+                    THEN 1 ELSE 0 END) as dewasa_total,
+                 SUM(CASE
+                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
+                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) > 60
+                    THEN 1 ELSE 0 END) as lansia_total"
+            )
+            ->first();
 
         return view('public.information.population', [
             'totalResidents' => (int) $summaryByHamlet->sum('total'),
@@ -109,7 +124,15 @@ class PublicController extends Controller
                 'Laki-laki' => (int) ($genderSummary['Laki-laki'] ?? 0),
                 'Perempuan' => (int) ($genderSummary['Perempuan'] ?? 0),
             ],
-            'religionSummary' => $religionSummary,
+            'ageRangeSummary' => [
+                'labels' => ['Anak (0-12)', 'Remaja (13-18)', 'Dewasa (19-59)', 'Lansia (>60)'],
+                'data' => [
+                    (int) ($ageSummary?->anak_total ?? 0),
+                    (int) ($ageSummary?->remaja_total ?? 0),
+                    (int) ($ageSummary?->dewasa_total ?? 0),
+                    (int) ($ageSummary?->lansia_total ?? 0),
+                ],
+            ],
         ]);
     }
 

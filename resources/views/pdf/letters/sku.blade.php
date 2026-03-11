@@ -149,7 +149,7 @@ p {
     <table width="100%">
         <tr>
             <td class="logo">
-                <img src="{{ public_path('assets/images/logo_pekalongan.svg') }}"
+                <img src="{{ $logoUrl }}"
                      style="height:95px; width:auto;">
             </td>
             <td class="kop-text">
@@ -259,9 +259,9 @@ p {
     <p>Dikeluarkan di : {{ $villageName }}</p>
     <p>Pada tanggal : {{ $data['tanggal'] }}</p>
     <br>
-    <p>Kepala {{ $villageName }}</p>
+    <p>{{ $data['jabatan_kepala_desa'] }}</p>
     <div class="jarak-ttd"></div>
-    <p><strong>ABDUL HADI</strong></p>
+    <p><strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong></p>
 </div>
 
 </body>

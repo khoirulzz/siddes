@@ -67,8 +67,8 @@
         <div class="org-board">
             <div class="org-row org-row-single">
                 <article class="org-card org-card-head">
-                    <h3>Kepala Desa</h3>
-                    <p>Pimpinan penyelenggaraan pemerintahan desa</p>
+                    <h3>{{ $villageHead['position'] }}</h3>
+                    <p>{{ $villageHead['name'] }}</p>
                 </article>
             </div>
             <div class="org-row org-row-single with-connector">
@@ -132,6 +132,14 @@
 
     <section id="perangkat-desa" class="profile-section reveal-on-scroll">
         <h2>Data Perangkat Desa</h2>
+        <article class="village-head-card">
+            <img src="{{ $villageHead['photo'] }}" alt="{{ $villageHead['name'] }}">
+            <div>
+                <small>Pimpinan Desa</small>
+                <h3>{{ $villageHead['name'] }}</h3>
+                <p>{{ $villageHead['position'] }}</p>
+            </div>
+        </article>
         <div class="staff-grid">
             @foreach($staffMembers as $member)
                 <article class="staff-card interactive-card">

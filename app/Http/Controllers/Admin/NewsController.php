@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\News;
 use App\Services\ImageUploadService;
-use App\Support\PublicMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class NewsController extends Controller
@@ -109,10 +107,7 @@ class NewsController extends Controller
      */
     public function destroy(News $news)
     {
-        $existingPath = PublicMedia::normalizePath((string) $news->thumbnail_path);
-        if ($existingPath) {
-            Storage::disk('public')->delete($existingPath);
-        }
+        $this->imageUploadService->delete((string) $news->thumbnail_path, 'image');
 
         $news->delete();
 
@@ -150,9 +145,8 @@ class NewsController extends Controller
             return;
         }
 
-        $existingPath = $item ? PublicMedia::normalizePath((string) $item->thumbnail_path) : null;
-        if ($existingPath) {
-            Storage::disk('public')->delete($existingPath);
+        if ($item) {
+            $this->imageUploadService->delete((string) $item->thumbnail_path, 'image');
         }
 
         $data['thumbnail_path'] = $this->imageUploadService->storeOptimized(

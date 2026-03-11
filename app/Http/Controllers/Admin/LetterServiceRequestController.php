@@ -69,6 +69,10 @@ class LetterServiceRequestController extends Controller
                 $archivePath = $archiveService->ensureLetterPdfArchive($letterServiceRequest, $documentService);
                 $archiveName = $archiveService->letterPdfDownloadName($letterServiceRequest);
 
+                if (preg_match('/^https?:\/\//i', $archivePath) === 1) {
+                    return redirect()->away($archivePath);
+                }
+
                 return response()->download($archivePath, $archiveName, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'attachment; filename="' . $archiveName . '"',

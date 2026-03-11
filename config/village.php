@@ -3,9 +3,12 @@
 return [
     'name' => 'Desa Lambanggelun',
     'district' => 'Kabupaten Pekalongan',
-    'logo_url' => env('VILLAGE_LOGO_URL', '/assets/images/logo_pekalongan.svg'),
+    'logo_url' => env('VILLAGE_LOGO_URL'),
     'hero_image_url' => 'https://lh3.googleusercontent.com/pw/AP1GczP_zcOCqkbmPK9-ni6MoR02R8TXFqaVHMRxWbVXlpCERulMVJPcfjLb9iZtmQmcozXXKkouRdva4eRgk4VsywbiJotaCCbVASUY8LaC6KpHYhXHUAVbO8qO1nnPy3hAMD9LOi1yhdPkl-ViIKaIHks0=w973-h651-s-no-gm?authuser=0',
     'profile_hero_image_url' => 'https://i.ibb.co.com/BKT8Sk3x/146108-picsay.webp',
+    'head_name' => env('VILLAGE_HEAD_NAME', 'ABDUL HADI'),
+    'head_position' => env('VILLAGE_HEAD_POSITION', 'Kepala Desa Lambanggelun'),
+    'head_photo_url' => env('VILLAGE_HEAD_PHOTO_URL', ''),
     'profile_gallery_images' => [
         'https://i.ibb.co.com/RGtv94C0/teh.webp',
         'https://i.ibb.co.com/6cNNgC6N/file-00000000539871fda52f39986fe461c4.webp',

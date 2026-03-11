@@ -7,7 +7,9 @@ use App\Models\Gallery;
 use App\Models\LandRecord;
 use App\Models\News;
 use App\Models\PopulationRecord;
+use App\Models\VillageStaff;
 use App\Models\VillageActivity;
+use App\Support\PublicMedia;
 
 class PublicController extends Controller
 {
@@ -63,9 +65,29 @@ class PublicController extends Controller
 
     public function profile()
     {
-        return view('public.profile', [
-            'villagePhotos' => config('village.profile_gallery_images', []),
-            'staffMembers' => [
+        $headPhotoValue = trim((string) config('village.head_photo_url', ''));
+        $headPhoto = PublicMedia::toUrl($headPhotoValue) ?: ($headPhotoValue !== '' ? $headPhotoValue : null);
+        $villageHead = [
+            'name' => trim((string) config('village.head_name', 'ABDUL HADI')),
+            'position' => trim((string) config('village.head_position', 'Kepala Desa Lambanggelun')),
+            'photo' => $headPhoto ?: 'https://i.pravatar.cc/300?img=11',
+        ];
+
+        $staffMembers = VillageStaff::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(static fn (VillageStaff $member): array => [
+                'name' => $member->name,
+                'position' => $member->position,
+                'photo' => $member->photo_url ?: 'https://i.pravatar.cc/300?img=11',
+            ])
+            ->values()
+            ->all();
+
+        if ($staffMembers === []) {
+            $staffMembers = [
                 ['name' => 'Ulum Prasetyo', 'position' => 'Kepala Desa', 'photo' => 'https://i.pravatar.cc/300?img=11'],
                 ['name' => 'Nanik Wulandari', 'position' => 'Sekretaris Desa', 'photo' => 'https://i.pravatar.cc/300?img=20'],
                 ['name' => 'Rizal Maulana', 'position' => 'Kaur Tata Usaha dan Umum', 'photo' => 'https://i.pravatar.cc/300?img=15'],
@@ -79,7 +101,13 @@ class PublicController extends Controller
                 ['name' => 'Mochammad Ridwan', 'position' => 'Kepala Dusun Mandelun', 'photo' => 'https://i.pravatar.cc/300?img=16'],
                 ['name' => 'Budi Santoso', 'position' => 'Kepala Dusun Sasak', 'photo' => 'https://i.pravatar.cc/300?img=17'],
                 ['name' => 'Slamet Riyadi', 'position' => 'Kepala Dusun Simendem', 'photo' => 'https://i.pravatar.cc/300?img=19'],
-            ],
+            ];
+        }
+
+        return view('public.profile', [
+            'villagePhotos' => config('village.profile_gallery_images', []),
+            'villageHead' => $villageHead,
+            'staffMembers' => $staffMembers,
         ]);
     }
 

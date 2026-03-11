@@ -3,16 +3,20 @@
 @section('title', 'Beranda - ' . config('village.name'))
 
 @section('content')
-    <section class="hero hero-with-image hero-centered" style="--hero-image: url('{{ config('village.hero_image_url') }}');">
-        <h1>Website Desa Lambanggelun</h1>
-        <p>
-            Portal resmi pemerintah desa untuk informasi publik, layanan digital desa,
-            serta publikasi yang transparan.
-        </p>
+    <section class="hero hero-with-image hero-centered hero-premium" style="--hero-image: url('{{ config('village.hero_image_url') }}');">
+        <div class="hero-branding">
+            <p class="hero-kicker">Sistem Informasi Desa</p>
+            <h1>
+                <span class="hero-name">{{ \Illuminate\Support\Str::upper(config('village.name')) }}</span>
+            </h1>
+            <p class="hero-lead">
+                Menuju Desa Lambanggelun yang transparan, digital, dan inovatif.
+            </p>
+        </div>
         <div class="hero-meta">
-            <span>{{ config('village.district') }}</span>
             <span>Transparan</span>
-            <span>Desa Digital</span>
+            <span>Digital</span>
+            <span>Inovatif</span>
             <span>Pelayanan Publik</span>
         </div>
     </section>

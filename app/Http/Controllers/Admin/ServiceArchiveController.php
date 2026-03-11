@@ -64,6 +64,10 @@ class ServiceArchiveController extends Controller
                 $request->boolean('refresh')
             );
 
+            if (preg_match('/^https?:\/\//i', $path) === 1) {
+                return redirect()->away($path);
+            }
+
             if ($request->query('mode') === 'view') {
                 return response()->file($path, [
                     'Content-Type' => 'application/pdf',

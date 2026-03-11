@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ComplaintReport;
+use App\Services\CloudinaryService;
+use App\Services\ImageUploadService;
 use App\Support\MediaSecurity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +15,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ComplaintReportController extends Controller
 {
+    public function __construct(
+        private readonly CloudinaryService $cloudinaryService,
+        private readonly ImageUploadService $imageUploadService
+    ) {
+    }
+
     public function index()
     {
         $items = ComplaintReport::query()
@@ -59,6 +67,15 @@ class ComplaintReportController extends Controller
         if (! $path) {
             return back()->with('error', 'Lampiran bukti tidak tersedia.');
         }
+
+        if (preg_match('/^https?:\/\//i', $path) === 1) {
+            if (! $this->cloudinaryService->isCloudinaryUrl($path)) {
+                return back()->with('error', 'URL file bukti tidak valid.');
+            }
+
+            return redirect()->away($path);
+        }
+
         if (! MediaSecurity::isAllowedPath($path)) {
             return back()->with('error', 'File bukti tidak valid.');
         }
@@ -81,6 +98,7 @@ class ComplaintReportController extends Controller
 
     public function destroy(ComplaintReport $complaintReport)
     {
+        $this->imageUploadService->delete((string) $complaintReport->evidence_path);
         $complaintReport->delete();
 
         return redirect()->route('dashboard.complaint-reports.index')->with('success', 'Data pengaduan berhasil dihapus.');

@@ -50,21 +50,29 @@ class ComplaintReport extends Model
         }
 
         if (preg_match('/^https?:\/\//i', $path) === 1) {
-            $path = (string) parse_url($path, PHP_URL_PATH);
+            $host = strtolower((string) parse_url($path, PHP_URL_HOST));
+            $appHost = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+
+            if ($host !== '' && $appHost !== '' && $host !== $appHost) {
+                return $path;
+            }
         }
 
-        $path = str_replace('\\', '/', $path);
-        $path = ltrim($path, '/');
+        $normalized = PublicMedia::normalizePath($path);
+        if ($normalized !== null) {
+            return $normalized;
+        }
 
+        $path = str_replace('\\', '/', ltrim($path, '/'));
         if (Str::startsWith($path, 'storage/')) {
             $path = substr($path, strlen('storage/'));
         }
-
         if (Str::startsWith($path, 'public/')) {
             $path = substr($path, strlen('public/'));
         }
 
         $path = trim($path);
+
         return $path !== '' ? $path : null;
     }
 }

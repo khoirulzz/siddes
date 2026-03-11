@@ -10,6 +10,7 @@ use App\Models\LetterServiceRequest;
 use App\Models\PbbPaymentRequest;
 use App\Models\PbbTaxObject;
 use App\Models\PopulationRecord;
+use App\Services\CloudinaryService;
 use App\Services\ImageUploadService;
 use App\Services\LetterDocumentService;
 use App\Services\ServiceArchiveService;
@@ -213,6 +214,10 @@ class PublicServiceController extends Controller
             if ($format === 'pdf') {
                 $archivePath = $archiveService->ensureLetterPdfArchive($letter, $documentService);
                 $archiveName = $archiveService->letterPdfDownloadName($letter);
+
+                if (preg_match('/^https?:\/\//i', $archivePath) === 1) {
+                    return redirect()->away($archivePath);
+                }
 
                 return response()->download($archivePath, $archiveName, [
                     'Content-Type' => 'application/pdf',
@@ -484,7 +489,14 @@ class PublicServiceController extends Controller
         }
 
         $evidencePath = $complaint->resolvedEvidencePath();
-        $hasEvidenceFile = is_string($evidencePath) && $evidencePath !== '' && Storage::disk('public')->exists($evidencePath);
+        $hasEvidenceFile = false;
+        if (is_string($evidencePath) && $evidencePath !== '') {
+            if (preg_match('/^https?:\/\//i', $evidencePath) === 1) {
+                $hasEvidenceFile = true;
+            } else {
+                $hasEvidenceFile = Storage::disk('public')->exists($evidencePath);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -501,7 +513,10 @@ class PublicServiceController extends Controller
         ]);
     }
 
-    public function complaintEvidence(string $ticket): BinaryFileResponse
+    public function complaintEvidence(
+        string $ticket,
+        CloudinaryService $cloudinaryService
+    ): BinaryFileResponse|RedirectResponse
     {
         $normalizedTicket = Str::upper(trim($ticket));
         $complaint = ComplaintReport::query()
@@ -510,6 +525,13 @@ class PublicServiceController extends Controller
 
         $path = $complaint->resolvedEvidencePath();
         abort_if(! $path, 404);
+
+        if (preg_match('/^https?:\/\//i', $path) === 1) {
+            abort_unless($cloudinaryService->isCloudinaryUrl($path), 404);
+
+            return redirect()->away($path);
+        }
+
         abort_unless(MediaSecurity::isAllowedPath($path), 404);
 
         $disk = Storage::disk('public');

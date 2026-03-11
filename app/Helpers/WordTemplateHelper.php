@@ -73,10 +73,7 @@ class WordTemplateHelper
         $preparedTemplatePath = $outputDir . '/prepared_' . uniqid() . '.docx';
         copy($templatePath, $preparedTemplatePath);
 
-        $replacements = [];
-        foreach ($keys as $key) {
-            $replacements['{' . $key . '}'] = '{' . $key . '}';
-        }
+        $replacements = self::buildTokenNormalizationMap($keys);
         self::replaceLiteralTokens($preparedTemplatePath, $replacements);
 
         return $preparedTemplatePath;
@@ -90,11 +87,58 @@ class WordTemplateHelper
     {
         $replacements = [];
         foreach ($data as $key => $value) {
-            $token = '{' . (string) $key . '}';
-            $replacements[$token] = (string) ($value ?? '');
+            $stringKey = trim((string) $key);
+            if ($stringKey === '') {
+                continue;
+            }
+
+            foreach (self::tokenVariants($stringKey) as $token) {
+                $replacements[$token] = (string) ($value ?? '');
+            }
         }
 
         return $replacements;
+    }
+
+    /**
+     * @param array<int, string> $keys
+     * @return array<string, string>
+     */
+    private static function buildTokenNormalizationMap(array $keys): array
+    {
+        $map = [];
+        foreach ($keys as $key) {
+            $stringKey = trim((string) $key);
+            if ($stringKey === '') {
+                continue;
+            }
+
+            $canonical = '{' . $stringKey . '}';
+            foreach (self::tokenVariants($stringKey) as $variant) {
+                $map[$variant] = $canonical;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function tokenVariants(string $key): array
+    {
+        $variants = [
+            '{' . $key . '}',
+            '{ ' . $key . '}',
+            '{' . $key . ' }',
+            '{ ' . $key . ' }',
+            '{' . $key . ')',
+            '{ ' . $key . ')',
+            '{' . $key . ' )',
+            '{ ' . $key . ' )',
+        ];
+
+        return array_values(array_unique($variants));
     }
 
     /**

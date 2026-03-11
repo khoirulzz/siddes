@@ -11,6 +11,7 @@ return [
             'activities/',
             'complaints/',
             'service-archives/',
+            'website/',
         ],
         'allowed_mimes' => [
             'image/jpeg',

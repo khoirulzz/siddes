@@ -153,7 +153,7 @@ p {
     <table width="100%">
         <tr>
             <td class="logo">
-                <img src="{{ public_path('assets/images/logo_pekalongan.svg') }}"
+                <img src="{{ $logoUrl }}"
                      style="height:95px; width:auto;">
             </td>
             <td class="kop-text">
@@ -198,13 +198,13 @@ p {
 ========================= -->
 <p style="margin-top:3px;">Yang bertandatangan di bawah ini :</p>
 <table class="identitas">
-    <tr><td class="label">Nama</td><td class="titik">:</td><td>ABDUL HADI</td></tr>
-    <tr><td class="label">Jenis kelamin</td><td class="titik">:</td><td>Laki – Laki</td></tr>
-    <tr><td class="label">Jabatan</td><td class="titik">:</td><td>KEPALA DESA LAMBANGGELUN</td></tr>
+    <tr><td class="label">Nama</td><td class="titik">:</td><td>{{ $data['nama_kepala_desa'] }}</td></tr>
+    <tr><td class="label">Jenis kelamin</td><td class="titik">:</td><td>Laki-laki</td></tr>
+    <tr><td class="label">Jabatan</td><td class="titik">:</td><td>{{ \Illuminate\Support\Str::upper($data['jabatan_kepala_desa']) }}</td></tr>
     <tr>
         <td class="label">Alamat</td>
         <td class="titik">:</td>
-        <td>Dk. Mandelun RT 001 RW 003 Desa Lambanggelun Kec. Paninggaran Kab. Pekalongan</td>
+        <td>{{ $villageAddress }}</td>
     </tr>
 </table>
 
@@ -253,10 +253,11 @@ p {
 
 <div class="ttd">
     <p>Lambanggelun, {{ $data['tanggal'] }}</p>
-    <p>Kepala Desa Lambanggelun</p>
+    <p>{{ $data['jabatan_kepala_desa'] }}</p>
     <div class="jarak-ttd"></div>
-    <p><strong>ABDUL HADI</strong></p>
+    <p><strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong></p>
 </div>
 
 </body>
 </html>
+

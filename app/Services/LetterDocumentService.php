@@ -7,6 +7,7 @@ use App\Models\LetterNumberCounter;
 use App\Models\LetterServiceRequest;
 use App\Models\PopulationRecord;
 use App\Support\LetterSchema;
+use App\Support\PublicMedia;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -183,7 +184,11 @@ class LetterDocumentService
         $templatePath = $this->templatePath($letter->letter_type);
 
         if ($templatePath && is_file($templatePath)) {
-            $outputPath = WordTemplateHelper::fillTemplate($templatePath, $data);
+            $outputPath = WordTemplateHelper::fillTemplate(
+                $templatePath,
+                $data,
+                $this->buildLiteralReplacements($data)
+            );
         } else {
             $outputPath = $this->buildManualDocx($letter);
         }
@@ -204,6 +209,7 @@ class LetterDocumentService
         $outputPath = $this->tempFilePath('pdf');
         $viewName = $this->pdfViewForType($letter->letter_type);
         $letterNumber = $this->buildLetterNumber($letter, $data);
+        $pdfLetterNumber = $this->buildTemplateLetterNumberForPdf($letter, $data, $letterNumber);
         $issuedAt = $letter->submitted_at ?? $letter->requested_at ?? now();
 
         $html = view($viewName, [
@@ -215,8 +221,9 @@ class LetterDocumentService
             'provinceName' => $data['provinsi'] ?? PopulationRecord::DEFAULT_PROVINCE,
             'postalCode' => $data['kode_pos'] ?? PopulationRecord::DEFAULT_POSTAL_CODE,
             'villageAddress' => config('village.address', ''),
-            'logoUrl' => config('village.logo_url'),
+            'logoUrl' => $this->resolvePdfLogoUrl(),
             'letterNumber' => $letterNumber,
+            'pdfLetterNumber' => $pdfLetterNumber,
             'issuedAt' => $issuedAt,
         ])->render();
 
@@ -244,6 +251,11 @@ class LetterDocumentService
             LetterSchema::TYPE_SKD => 'pdf.letters.domisili',
             LetterSchema::TYPE_SKK => 'pdf.letters.skk',
             LetterSchema::TYPE_SPK => 'pdf.letters.spk',
+            LetterSchema::TYPE_SKB => 'pdf.letters.skb',
+            LetterSchema::TYPE_SKM => 'pdf.letters.skm',
+            LetterSchema::TYPE_SPPK => 'pdf.letters.skck',
+            LetterSchema::TYPE_SPP => 'pdf.letters.spp',
+            LetterSchema::TYPE_SKKER => 'pdf.letters.skker',
             default => 'pdf.letters.sku',
         };
     }
@@ -300,6 +312,11 @@ class LetterDocumentService
         $citizen = PopulationRecord::query()->where('nik', $letter->nik)->first();
         $dynamic = is_array($letter->dynamic_data) ? $letter->dynamic_data : (json_decode((string) $letter->dynamic_data, true) ?: []);
         $dynamic = $this->sanitizeDynamic($dynamic);
+        $headName = $this->cleanText((string) config('village.head_name', 'ABDUL HADI'));
+        $headPosition = $this->cleanText((string) config(
+            'village.head_position',
+            'Kepala Desa ' . config('village.name', PopulationRecord::DEFAULT_VILLAGE)
+        ));
 
         $issuedAt = $letter->submitted_at ?? $letter->requested_at ?? now();
         $monthNumber = (int) $issuedAt->format('n');
@@ -312,19 +329,44 @@ class LetterDocumentService
             ? str_pad((string) $letter->letter_sequence, 3, '0', STR_PAD_LEFT)
             : $this->extractSequence($officialNumber);
 
-        $namaPemohon = $this->cleanText($letter->applicant_name ?: ($citizen?->resolvedName() ?: '-'));
-        $tempatLahir = $this->cleanText($citizen?->resolvedBirthPlace() ?: ((string) ($dynamic['tempat_lahir'] ?? '-')));
+        $namaPemohon = $this->firstMeaningful([
+            $letter->applicant_name,
+            $citizen?->resolvedName(),
+            (string) ($dynamic['nama_pemohon'] ?? ''),
+        ]);
+        $tempatLahir = $this->firstMeaningful([
+            $citizen?->resolvedBirthPlace(),
+            (string) ($dynamic['tempat_lahir'] ?? ''),
+        ]);
         $tanggalLahir = $this->formatDate($citizen?->resolvedBirthDate(), '-');
         if ($tanggalLahir === '-') {
             $tanggalLahir = $this->normalizeDateString((string) ($dynamic['tanggal_lahir'] ?? ''), '-');
         }
 
-        $jenisKelamin = $this->cleanText($citizen?->resolvedGender() ?: ((string) ($dynamic['jenis_kelamin'] ?? '-')));
-        $agama = $this->cleanText($citizen?->resolvedReligion() ?: ((string) ($dynamic['agama'] ?? '-')));
-        $pekerjaan = $this->cleanText($citizen?->resolvedOccupation() ?: ((string) ($dynamic['pekerjaan'] ?? '-')));
-        $dusun = $this->cleanText($citizen?->resolvedHamlet() ?: ((string) ($dynamic['dusun'] ?? '-')));
-        $rt = $this->cleanText($citizen?->resolvedRt() ?: ((string) ($dynamic['rt'] ?? '-')));
-        $rw = $this->cleanText($citizen?->resolvedRw() ?: ((string) ($dynamic['rw'] ?? '-')));
+        $jenisKelamin = $this->firstMeaningful([
+            $citizen?->resolvedGender(),
+            (string) ($dynamic['jenis_kelamin'] ?? ''),
+        ]);
+        $agama = $this->firstMeaningful([
+            $citizen?->resolvedReligion(),
+            (string) ($dynamic['agama'] ?? ''),
+        ]);
+        $pekerjaan = $this->firstMeaningful([
+            $citizen?->resolvedOccupation(),
+            (string) ($dynamic['pekerjaan'] ?? ''),
+        ]);
+        $dusun = $this->firstMeaningful([
+            $citizen?->resolvedHamlet(),
+            (string) ($dynamic['dusun'] ?? ''),
+        ]);
+        $rt = $this->firstMeaningful([
+            $citizen?->resolvedRt(),
+            (string) ($dynamic['rt'] ?? ''),
+        ]);
+        $rw = $this->firstMeaningful([
+            $citizen?->resolvedRw(),
+            (string) ($dynamic['rw'] ?? ''),
+        ]);
         $desa = $this->cleanText($citizen?->resolvedVillage() ?: PopulationRecord::DEFAULT_VILLAGE);
         $kecamatan = $this->cleanText($citizen?->resolvedDistrict() ?: PopulationRecord::DEFAULT_DISTRICT);
         $kabupaten = $this->cleanText($citizen?->resolvedRegency() ?: PopulationRecord::DEFAULT_REGENCY);
@@ -343,6 +385,17 @@ class LetterDocumentService
             ? (int) $dynamic['usia_almarhum']
             : $this->ageByRange($tglLahirAlmarhum, $tglMeninggal);
         $hariMeninggal = $this->cleanText((string) ($dynamic['hari_meninggal'] ?? ($tglMeninggal ? $this->dayName($tglMeninggal) : '-')));
+        $tanggalNikah = $this->parseDate((string) ($dynamic['tanggal_nikah'] ?? ''));
+        $statusKawin = $this->firstMeaningful([
+            (string) ($dynamic['status_kawin'] ?? ''),
+            (string) ($citizen?->status_perkawinan ?? ''),
+        ]);
+        $noHp = $this->cleanText((string) ($dynamic['no_hp'] ?? ($letter->phone ?: '-')));
+        $emailPemohon = $this->cleanText((string) ($dynamic['email'] ?? ($letter->email ?: '-')));
+        $tempatLahirSuami = $this->cleanText((string) ($dynamic['tempat_lahir_suami'] ?? $tempatLahir));
+        $tanggalLahirSuami = $this->normalizeDateString((string) ($dynamic['tanggal_lahir_suami'] ?? ''), $tanggalLahir);
+        $tempatLahirIstri = $this->cleanText((string) ($dynamic['tempat_lahir_istri'] ?? $tempatLahir));
+        $tanggalLahirIstri = $this->normalizeDateString((string) ($dynamic['tanggal_lahir_istri'] ?? ''), $tanggalLahir);
 
         $data = [
             'nomor' => $letter->ticket_number ?: '-',
@@ -378,12 +431,38 @@ class LetterDocumentService
             'kehilangan_benda' => $this->cleanText((string) ($dynamic['kehilangan_benda'] ?? '-')),
             'lokasi_kehilangan' => $this->cleanText((string) ($dynamic['lokasi_kehilangan'] ?? '-')),
             'lama_hilang' => $this->cleanText((string) ($dynamic['lama_hilang'] ?? '-')),
+            'desa_tujuan' => $this->cleanText((string) ($dynamic['desa_tujuan'] ?? '-')),
+            'kec_tujuan' => $this->cleanText((string) ($dynamic['kec_tujuan'] ?? '-')),
+            'kota_tujuan' => $this->cleanText((string) ($dynamic['kota_tujuan'] ?? '-')),
+            'prov_tujuan' => $this->cleanText((string) ($dynamic['prov_tujuan'] ?? '-')),
             'dusun_asal' => $this->cleanText((string) ($dynamic['dusun_asal'] ?? $dusun)),
             'rt_asal' => $this->cleanText((string) ($dynamic['rt_asal'] ?? $rt)),
             'rw_asal' => $this->cleanText((string) ($dynamic['rw_asal'] ?? $rw)),
             'desa_asal' => $this->cleanText((string) ($dynamic['desa_asal'] ?? $desa)),
             'kecamatan_asal' => $this->cleanText((string) ($dynamic['kecamatan_asal'] ?? $kecamatan)),
             'kabupaten_asal' => $this->cleanText((string) ($dynamic['kabupaten_asal'] ?? $kabupaten)),
+            'nama_suami' => $this->cleanText((string) ($dynamic['nama_suami'] ?? '-')),
+            'ayah_suami' => $this->cleanText((string) ($dynamic['ayah_suami'] ?? '-')),
+            'tempat_lahir_suami' => $tempatLahirSuami,
+            'tanggal_lahir_suami' => $tanggalLahirSuami,
+            'nik_suami' => $this->cleanText((string) ($dynamic['nik_suami'] ?? '-')),
+            'pekerjaan_suami' => $this->cleanText((string) ($dynamic['pekerjaan_suami'] ?? '-')),
+            'alamat_suami' => $this->cleanText((string) ($dynamic['alamat_suami'] ?? '-')),
+            'Alamat_suami' => $this->cleanText((string) ($dynamic['Alamat_suami'] ?? ($dynamic['alamat_suami'] ?? '-'))),
+            'nama_istri' => $this->cleanText((string) ($dynamic['nama_istri'] ?? '-')),
+            'ayah_istri' => $this->cleanText((string) ($dynamic['ayah_istri'] ?? '-')),
+            'tempat_lahir_istri' => $tempatLahirIstri,
+            'tanggal_lahir_istri' => $tanggalLahirIstri,
+            'nik_istri' => $this->cleanText((string) ($dynamic['nik_istri'] ?? '-')),
+            'pekerjaan_istri' => $this->cleanText((string) ($dynamic['pekerjaan_istri'] ?? '-')),
+            'alamat_istri' => $this->cleanText((string) ($dynamic['alamat_istri'] ?? '-')),
+            'Alamat_istri' => $this->cleanText((string) ($dynamic['Alamat_istri'] ?? ($dynamic['alamat_istri'] ?? '-'))),
+            'tanggal_nikah' => $this->formatDate($tanggalNikah, '-'),
+            'mas_kawin' => $this->cleanText((string) ($dynamic['mas_kawin'] ?? '-')),
+            'saksi_suami' => $this->cleanText((string) ($dynamic['saksi_suami'] ?? '-')),
+            'hub_dg_suami' => $this->cleanText((string) ($dynamic['hub_dg_suami'] ?? '-')),
+            'saksi_istri' => $this->cleanText((string) ($dynamic['saksi_istri'] ?? '-')),
+            'hub_dg_istri' => $this->cleanText((string) ($dynamic['hub_dg_istri'] ?? '-')),
             'nama_almarhum' => $this->cleanText((string) ($dynamic['nama_almarhum'] ?? '-')),
             'jenis_kelamin_almarhum' => $this->cleanText((string) ($dynamic['jenis_kelamin_almarhum'] ?? '-')),
             'tgl_lahir_almarhum' => $this->formatDate($tglLahirAlmarhum, '-'),
@@ -395,11 +474,39 @@ class LetterDocumentService
             'tempat_meninggal' => $this->cleanText((string) ($dynamic['tempat_meninggal'] ?? '-')),
             'penyebab_meninggal' => $this->cleanText((string) ($dynamic['penyebab_meninggal'] ?? '-')),
             'hubungan_pemohon' => $this->cleanText((string) ($dynamic['hubungan_pemohon'] ?? '-')),
+            'status_kawin' => $statusKawin,
+            'no_hp' => $noHp,
+            'email' => $emailPemohon,
+            'jumlah_penghasilan' => $this->cleanText((string) ($dynamic['jumlah_penghasilan'] ?? '-')),
+            'terbilang_penghasilan' => $this->cleanText((string) ($dynamic['terbilang_penghasilan'] ?? '-')),
+            'tujuan' => $this->cleanText((string) ($dynamic['tujuan'] ?? '-')),
+            'nama_rt' => $this->cleanText((string) ($dynamic['nama_rt'] ?? '-')),
+            'nama_rw' => $this->cleanText((string) ($dynamic['nama_rw'] ?? '-')),
             'usia_pemohon' => $usiaPemohon !== null ? (string) $usiaPemohon : $this->cleanText((string) ($dynamic['usia_pemohon'] ?? '-')),
             'bojongireng' => $dusun,
+            'nama_kepala_desa' => $headName,
+            'kepala_desa' => $headName,
+            'kepala_desa_nama' => $headName,
+            'nama_kades' => $headName,
+            'jabatan_kepala_desa' => $headPosition,
+            'kepala_desa_jabatan' => $headPosition,
+            'jabatan_penandatangan' => $headPosition,
+            'penandatangan' => $headName,
         ];
 
-        foreach (['sku_nomor', 'skd_nomor', 'skk_nomor', 'spk_nomor', 'sktm_nomor'] as $numberKey) {
+        foreach ([
+            'sku_nomor',
+            'skd_nomor',
+            'skk_nomor',
+            'spk_nomor',
+            'sktm_nomor',
+            'skb_nomor',
+            'skm_nomor',
+            'sppk_nomor',
+            'spp_nomor',
+            'skker_nomor',
+            'skkerja_nomor',
+        ] as $numberKey) {
             $data[$numberKey] = $sequencePadded;
         }
 
@@ -414,6 +521,44 @@ class LetterDocumentService
         }
 
         return $data;
+    }
+
+    /**
+     * @param array<string, string> $data
+     * @return array<string, string>
+     */
+    private function buildLiteralReplacements(array $data): array
+    {
+        $headName = trim((string) ($data['nama_kepala_desa'] ?? ''));
+        $headPosition = trim((string) ($data['jabatan_kepala_desa'] ?? ''));
+        $issuedDate = trim((string) ($data['tanggal'] ?? ''));
+        $ayahSuami = trim((string) ($data['ayah_suami'] ?? ''));
+        $tanggalNikah = trim((string) ($data['tanggal_nikah'] ?? ''));
+
+        $replacements = [];
+        if ($headName !== '' && $headName !== '-') {
+            $replacements['ABDUL HADI'] = Str::upper($headName);
+            $replacements['Abdul Hadi'] = $headName;
+        }
+
+        if ($headPosition !== '' && $headPosition !== '-') {
+            $replacements['KEPALA DESA LAMBANGGELUN'] = Str::upper($headPosition);
+            $replacements['Kepala Desa Lambanggelun'] = $headPosition;
+        }
+
+        if ($issuedDate !== '' && $issuedDate !== '-') {
+            $replacements['{tanggal)'] = $issuedDate;
+        }
+
+        if ($ayahSuami !== '' && $ayahSuami !== '-') {
+            $replacements['{ayah_suami)'] = $ayahSuami;
+        }
+
+        if ($tanggalNikah !== '' && $tanggalNikah !== '-') {
+            $replacements['{tanggal_nikah)'] = $tanggalNikah;
+        }
+
+        return $replacements;
     }
 
     /**
@@ -439,6 +584,42 @@ class LetterDocumentService
         }
 
         return $lines;
+    }
+
+    /**
+     * @param array<string, string> $data
+     */
+    private function buildTemplateLetterNumberForPdf(
+        LetterServiceRequest $letter,
+        array $data,
+        string $defaultNumber
+    ): string {
+        $numberKey = LetterSchema::numberPlaceholderForType($letter->letter_type);
+        $sequence = $numberKey ? trim((string) ($data[$numberKey] ?? '')) : '';
+
+        if ($sequence === '' || $sequence === '-') {
+            $sequence = $letter->letter_sequence
+                ? str_pad((string) $letter->letter_sequence, 3, '0', STR_PAD_LEFT)
+                : '000';
+        }
+
+        $romanMonth = trim((string) ($data['bulan_romawi'] ?? ''));
+        if ($romanMonth === '') {
+            $romanMonth = self::ROMAN_MONTHS[(int) now()->format('n')] ?? '';
+        }
+
+        $year = trim((string) ($data['tahun'] ?? ''));
+        if ($year === '') {
+            $year = now()->format('Y');
+        }
+
+        return match ($letter->letter_type) {
+            LetterSchema::TYPE_SKB => "470/{$sequence}/DS-LBG/{$romanMonth}/{$year}",
+            LetterSchema::TYPE_SKM => "472.2/{$sequence}/DS-LBG/{$romanMonth}/{$year}",
+            LetterSchema::TYPE_SPPK => "470/{$sequence}/DS-13/{$romanMonth}/{$year}",
+            LetterSchema::TYPE_SKKER => "470/{$sequence}/LBG/{$romanMonth}/{$year}",
+            default => $defaultNumber,
+        };
     }
 
     private function templatePath(string $letterType): ?string
@@ -489,6 +670,172 @@ class LetterDocumentService
         $clean = trim(preg_replace('/\s+/', ' ', str_replace(["\r", "\n", "\t"], ' ', $value)) ?? '');
 
         return $clean !== '' ? $clean : '-';
+    }
+
+    /**
+     * @param array<int, mixed> $candidates
+     */
+    private function firstMeaningful(array $candidates, string $fallback = '-'): string
+    {
+        foreach ($candidates as $candidate) {
+            $value = $this->normalizeMeaningful($candidate);
+            if ($value !== null) {
+                return $this->cleanText($value);
+            }
+        }
+
+        return $fallback;
+    }
+
+    private function normalizeMeaningful(mixed $candidate): ?string
+    {
+        if ($candidate === null) {
+            return null;
+        }
+
+        $value = trim((string) $candidate);
+        if ($value === '' || $value === '-') {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function resolvePdfLogoUrl(): string
+    {
+        $configuredLogo = trim((string) config('village.logo_url', ''));
+
+        if (str_starts_with($configuredLogo, 'data:')) {
+            return $configuredLogo;
+        }
+
+        $localFromConfig = $this->localLogoPathFromValue($configuredLogo);
+        if ($localFromConfig) {
+            $localSource = $this->imageSourceFromPath($localFromConfig);
+            if ($localSource !== null) {
+                return $localSource;
+            }
+        }
+
+        if ($configuredLogo !== '' && preg_match('/^https?:\/\//i', $configuredLogo) === 1) {
+            $remotePath = (string) parse_url($configuredLogo, PHP_URL_PATH);
+            if ($this->imageMimeFromPath($remotePath) === 'image/svg+xml') {
+                $svgFallbackPath = public_path('assets/images/logo_pekalongan.svg');
+                if (is_file($svgFallbackPath)) {
+                    return $svgFallbackPath;
+                }
+            } else {
+                $remoteDataUri = $this->remoteLogoToDataUri($configuredLogo);
+                if ($remoteDataUri !== null) {
+                    return $remoteDataUri;
+                }
+            }
+        }
+
+        $fallbackPath = public_path('assets/images/logo_pekalongan.svg');
+        $fallbackSource = $this->imageSourceFromPath($fallbackPath);
+        if ($fallbackSource !== null) {
+            return $fallbackSource;
+        }
+
+        return PublicMedia::toUrl($configuredLogo) ?? $configuredLogo;
+    }
+
+    private function localLogoPathFromValue(string $value): ?string
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $value) === 1) {
+            $host = (string) parse_url($value, PHP_URL_HOST);
+            $appHost = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
+            if ($host === '' || $appHost === '' || strcasecmp($host, $appHost) !== 0) {
+                return null;
+            }
+
+            $value = (string) parse_url($value, PHP_URL_PATH);
+        }
+
+        $normalized = PublicMedia::normalizePath($value);
+        if (! $normalized) {
+            return null;
+        }
+
+        $candidates = [
+            storage_path('app/public/' . $normalized),
+            public_path('storage/' . $normalized),
+            public_path($normalized),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function remoteLogoToDataUri(string $url): ?string
+    {
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $mime = $this->imageMimeFromPath($path);
+        if ($mime === 'image/svg+xml') {
+            return null;
+        }
+
+        $context = stream_context_create([
+            'http' => ['timeout' => 2, 'ignore_errors' => true],
+            'https' => ['timeout' => 2, 'ignore_errors' => true],
+        ]);
+
+        $content = @file_get_contents($url, false, $context);
+        if (! is_string($content) || $content === '') {
+            return null;
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    private function imagePathToDataUri(string $path): ?string
+    {
+        $content = @file_get_contents($path);
+        if (! is_string($content) || $content === '') {
+            return null;
+        }
+
+        $mime = $this->imageMimeFromPath($path);
+        if ($mime === 'image/svg+xml') {
+            return null;
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($content);
+    }
+
+    private function imageSourceFromPath(string $path): ?string
+    {
+        if (! is_file($path)) {
+            return null;
+        }
+
+        if ($this->imageMimeFromPath($path) === 'image/svg+xml') {
+            return $path;
+        }
+
+        return $this->imagePathToDataUri($path);
+    }
+
+    private function imageMimeFromPath(string $path): string
+    {
+        return match (strtolower((string) pathinfo($path, PATHINFO_EXTENSION))) {
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream',
+        };
     }
 
     private function downloadFileName(LetterServiceRequest $letter, string $extension): string

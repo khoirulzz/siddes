@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
 use App\Services\ImageUploadService;
-use App\Support\PublicMedia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
@@ -90,10 +88,7 @@ class GalleryController extends Controller
      */
     public function destroy(Gallery $gallery)
     {
-        $existingPath = PublicMedia::normalizePath((string) $gallery->getRawOriginal('image_url'));
-        if ($existingPath) {
-            Storage::disk('public')->delete($existingPath);
-        }
+        $this->imageUploadService->delete((string) $gallery->getRawOriginal('image_url'), 'image');
 
         $gallery->delete();
 
@@ -132,9 +127,8 @@ class GalleryController extends Controller
             return;
         }
 
-        $existingPath = $item ? PublicMedia::normalizePath((string) $item->getRawOriginal('image_url')) : null;
-        if ($existingPath) {
-            Storage::disk('public')->delete($existingPath);
+        if ($item) {
+            $this->imageUploadService->delete((string) $item->getRawOriginal('image_url'), 'image');
         }
 
         $data['image_url'] = $this->imageUploadService->storeOptimized(

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\PublicMedia;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -9,6 +10,10 @@ use Throwable;
 
 class ImageUploadService
 {
+    public function __construct(private readonly CloudinaryService $cloudinaryService)
+    {
+    }
+
     public function storeOptimized(
         UploadedFile $file,
         string $directory,
@@ -21,25 +26,31 @@ class ImageUploadService
         $path = $file->getRealPath();
 
         if (! $path || ! extension_loaded('gd')) {
+            $cloudPath = $this->storeImageInCloudinary($file, $directory);
+            if ($cloudPath !== null) {
+                return $cloudPath;
+            }
+
             return $file->store($directory, 'public');
         }
 
         try {
             $binary = @file_get_contents($path);
             if (! is_string($binary) || $binary === '') {
-                return $file->store($directory, 'public');
+                return $this->storeFallback($file, $directory);
             }
 
             $source = @imagecreatefromstring($binary);
             if (! $source) {
-                return $file->store($directory, 'public');
+                return $this->storeFallback($file, $directory);
             }
 
             $originalWidth = imagesx($source);
             $originalHeight = imagesy($source);
             if ($originalWidth < 1 || $originalHeight < 1) {
                 imagedestroy($source);
-                return $file->store($directory, 'public');
+
+                return $this->storeFallback($file, $directory);
             }
 
             $ratio = min(
@@ -76,17 +87,62 @@ class ImageUploadService
             imagedestroy($canvas);
 
             if (! is_string($encoded) || $encoded === '') {
-                return $file->store($directory, 'public');
+                return $this->storeFallback($file, $directory);
             }
 
             $filename = Str::ulid() . '.' . $extension;
+            $cloudPath = $this->storeEncodedImageInCloudinary($encoded, $filename, $directory);
+            if ($cloudPath !== null) {
+                return $cloudPath;
+            }
+
             $storagePath = $directory . '/' . $filename;
             Storage::disk('public')->put($storagePath, $encoded);
 
             return $storagePath;
         } catch (Throwable) {
-            return $file->store($directory, 'public');
+            return $this->storeFallback($file, $directory);
         }
+    }
+
+    public function storeFile(UploadedFile $file, string $directory, string $resourceType = 'raw'): string
+    {
+        $directory = trim($directory, '/');
+
+        if ($this->cloudinaryService->enabled()) {
+            $cloudUpload = $this->cloudinaryService->uploadPath(
+                $file->getRealPath() ?: '',
+                $this->dynamicFolder($directory),
+                $resourceType
+            );
+
+            if (is_array($cloudUpload) && ! empty($cloudUpload['secure_url'])) {
+                return (string) $cloudUpload['secure_url'];
+            }
+        }
+
+        return $file->store($directory, 'public');
+    }
+
+    public function delete(string $value, ?string $resourceType = null): void
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return;
+        }
+
+        if ($this->cloudinaryService->isCloudinaryUrl($value)) {
+            $this->cloudinaryService->destroyByUrl($value, $resourceType);
+
+            return;
+        }
+
+        $path = PublicMedia::normalizePath($value);
+        if (! $path) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     /**
@@ -115,6 +171,63 @@ class ImageUploadService
         ob_end_clean();
 
         return ['', 'jpg'];
+    }
+
+    private function storeEncodedImageInCloudinary(string $encoded, string $filename, string $directory): ?string
+    {
+        if (! $this->cloudinaryService->enabled()) {
+            return null;
+        }
+
+        $upload = $this->cloudinaryService->uploadBinary(
+            $encoded,
+            $filename,
+            $this->dynamicFolder($directory),
+            'image'
+        );
+
+        return is_array($upload) && ! empty($upload['secure_url'])
+            ? (string) $upload['secure_url']
+            : null;
+    }
+
+    private function storeImageInCloudinary(UploadedFile $file, string $directory): ?string
+    {
+        if (! $this->cloudinaryService->enabled()) {
+            return null;
+        }
+
+        $upload = $this->cloudinaryService->uploadPath(
+            $file->getRealPath() ?: '',
+            $this->dynamicFolder($directory),
+            'image'
+        );
+
+        return is_array($upload) && ! empty($upload['secure_url'])
+            ? (string) $upload['secure_url']
+            : null;
+    }
+
+    private function dynamicFolder(string $directory): string
+    {
+        $base = trim((string) config('cloudinary.folders.dynamic', ''), '/');
+        $directory = trim($directory, '/');
+
+        if ($base === '') {
+            return $directory;
+        }
+
+        return $directory === '' ? $base : $base . '/' . $directory;
+    }
+
+    private function storeFallback(UploadedFile $file, string $directory): string
+    {
+        $cloudPath = $this->storeImageInCloudinary($file, $directory);
+        if ($cloudPath !== null) {
+            return $cloudPath;
+        }
+
+        return $file->store($directory, 'public');
     }
 }
 

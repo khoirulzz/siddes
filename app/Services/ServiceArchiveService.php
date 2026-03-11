@@ -14,8 +14,16 @@ class ServiceArchiveService
     public const PBB_DIRECTORY = self::BASE_DIRECTORY . '/pbb';
     public const COMPLAINT_DIRECTORY = self::BASE_DIRECTORY . '/pengaduan';
 
+    public function __construct(private readonly CloudinaryService $cloudinaryService)
+    {
+    }
+
     public function ensureDirectories(): void
     {
+        if ($this->cloudinaryService->enabled()) {
+            return;
+        }
+
         $disk = Storage::disk('public');
         foreach ($this->directories() as $directory) {
             if (! $disk->exists($directory)) {
@@ -36,11 +44,31 @@ class ServiceArchiveService
 
     public function hasLetterPdfArchive(LetterServiceRequest $letter): bool
     {
+        if ($this->cloudinaryService->enabled()) {
+            $existingUrl = trim((string) $letter->attachment_url);
+
+            return $existingUrl !== '' && $this->cloudinaryService->isCloudinaryUrl($existingUrl);
+        }
+
         return Storage::disk('public')->exists($this->letterArchiveRelativePath($letter));
     }
 
     public function deleteLetterPdfArchive(LetterServiceRequest $letter): void
     {
+        if ($this->cloudinaryService->enabled()) {
+            $deleted = false;
+            $existingUrl = trim((string) $letter->attachment_url);
+            if ($existingUrl !== '' && $this->cloudinaryService->isCloudinaryUrl($existingUrl)) {
+                $deleted = $this->cloudinaryService->destroyByUrl($existingUrl, 'raw');
+            }
+
+            if (! $deleted) {
+                $this->cloudinaryService->destroy($this->letterArchivePublicId($letter), 'raw');
+            }
+
+            return;
+        }
+
         $disk = Storage::disk('public');
         $relativePath = $this->letterArchiveRelativePath($letter);
         if ($disk->exists($relativePath)) {
@@ -53,12 +81,49 @@ class ServiceArchiveService
         LetterDocumentService $documentService,
         bool $forceRegenerate = false
     ): string {
+        if ($this->cloudinaryService->enabled()) {
+            $existingUrl = trim((string) $letter->attachment_url);
+            if (
+                ! $forceRegenerate
+                && $existingUrl !== ''
+                && $this->cloudinaryService->isCloudinaryUrl($existingUrl)
+            ) {
+                return $existingUrl;
+            }
+        }
+
         $this->ensureDirectories();
 
-        $disk = Storage::disk('public');
-        $relativePath = $this->letterArchiveRelativePath($letter);
+        if (! $this->cloudinaryService->enabled()) {
+            $disk = Storage::disk('public');
+            $relativePath = $this->letterArchiveRelativePath($letter);
 
-        if (! $forceRegenerate && $disk->exists($relativePath)) {
+            if (! $forceRegenerate && $disk->exists($relativePath)) {
+                return $disk->path($relativePath);
+            }
+
+            $generated = $documentService->buildDownload($letter, 'pdf');
+            $tempPath = $generated['path'] ?? null;
+            if (! is_string($tempPath) || ! is_file($tempPath)) {
+                throw new RuntimeException('Dokumen PDF surat tidak berhasil dibuat.');
+            }
+
+            $stream = @fopen($tempPath, 'rb');
+            if (! is_resource($stream)) {
+                throw new RuntimeException('Dokumen PDF surat tidak berhasil dibaca.');
+            }
+
+            try {
+                $stored = $disk->put($relativePath, $stream);
+            } finally {
+                fclose($stream);
+                @unlink($tempPath);
+            }
+
+            if (! $stored) {
+                throw new RuntimeException('Dokumen PDF surat tidak berhasil disimpan ke arsip.');
+            }
+
             return $disk->path($relativePath);
         }
 
@@ -68,23 +133,32 @@ class ServiceArchiveService
             throw new RuntimeException('Dokumen PDF surat tidak berhasil dibuat.');
         }
 
-        $stream = @fopen($tempPath, 'rb');
-        if (! is_resource($stream)) {
-            throw new RuntimeException('Dokumen PDF surat tidak berhasil dibaca.');
-        }
-
         try {
-            $stored = $disk->put($relativePath, $stream);
+            $upload = $this->cloudinaryService->uploadPath(
+                $tempPath,
+                $this->archiveFolder(),
+                'raw',
+                $this->letterArchivePublicId($letter)
+            );
         } finally {
-            fclose($stream);
             @unlink($tempPath);
         }
 
-        if (! $stored) {
-            throw new RuntimeException('Dokumen PDF surat tidak berhasil disimpan ke arsip.');
+        $archiveUrl = is_array($upload) ? trim((string) ($upload['secure_url'] ?? '')) : '';
+        if ($archiveUrl === '') {
+            throw new RuntimeException('Dokumen PDF surat tidak berhasil disimpan ke Cloudinary.');
         }
 
-        return $disk->path($relativePath);
+        try {
+            $letter->forceFill([
+                'attachment_url' => $archiveUrl,
+                'attachment_path' => null,
+            ])->save();
+        } catch (\Throwable) {
+            // no-op: arsip tetap bisa diakses dari URL return walau update kolom gagal.
+        }
+
+        return $archiveUrl;
     }
 
     public function letterPdfDownloadName(LetterServiceRequest $letter): string
@@ -104,12 +178,24 @@ class ServiceArchiveService
 
     private function letterArchiveRelativePath(LetterServiceRequest $letter): string
     {
-        $code = Str::slug((string) ($letter->ticket_number ?: 'surat-' . $letter->id));
-        if ($code === '') {
-            $code = 'surat-' . $letter->id;
-        }
+        return self::LETTER_DIRECTORY . '/' . $this->letterArchiveCode($letter) . '.pdf';
+    }
 
-        return self::LETTER_DIRECTORY . '/' . $code . '.pdf';
+    private function letterArchivePublicId(LetterServiceRequest $letter): string
+    {
+        return trim($this->archiveFolder(), '/') . '/surat/' . $this->letterArchiveCode($letter);
+    }
+
+    private function letterArchiveCode(LetterServiceRequest $letter): string
+    {
+        $code = Str::slug((string) ($letter->ticket_number ?: 'surat-' . $letter->id));
+
+        return $code !== '' ? $code : 'surat-' . $letter->id;
+    }
+
+    private function archiveFolder(): string
+    {
+        return trim((string) config('cloudinary.folders.archives', 'sid/archives'), '/');
     }
 
     /**
@@ -125,3 +211,4 @@ class ServiceArchiveService
         ];
     }
 }
+

@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\VillageActivity;
 use App\Services\ImageUploadService;
-use App\Support\PublicMedia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -195,15 +193,8 @@ class VillageActivityController extends Controller
      */
     public function destroy(VillageActivity $villageActivity)
     {
-        $coverPath = PublicMedia::normalizePath((string) $villageActivity->cover_image_path);
-        if ($coverPath) {
-            Storage::disk('public')->delete($coverPath);
-        }
-
-        $documentPath = PublicMedia::normalizePath((string) $villageActivity->document_path);
-        if ($documentPath) {
-            Storage::disk('public')->delete($documentPath);
-        }
+        $this->imageUploadService->delete((string) $villageActivity->cover_image_path, 'image');
+        $this->imageUploadService->delete((string) $villageActivity->document_path);
 
         $villageActivity->delete();
 
@@ -262,9 +253,8 @@ class VillageActivityController extends Controller
         unset($data['cover_image'], $data['document']);
 
         if ($request->hasFile('cover_image')) {
-            $oldCoverPath = $item ? PublicMedia::normalizePath((string) $item->cover_image_path) : null;
-            if ($oldCoverPath) {
-                Storage::disk('public')->delete($oldCoverPath);
+            if ($item) {
+                $this->imageUploadService->delete((string) $item->cover_image_path, 'image');
             }
 
             $data['cover_image_path'] = $this->imageUploadService->storeOptimized(
@@ -277,9 +267,8 @@ class VillageActivityController extends Controller
         }
 
         if ($request->hasFile('document')) {
-            $oldDocumentPath = $item ? PublicMedia::normalizePath((string) $item->document_path) : null;
-            if ($oldDocumentPath) {
-                Storage::disk('public')->delete($oldDocumentPath);
+            if ($item) {
+                $this->imageUploadService->delete((string) $item->document_path);
             }
 
             $documentFile = $request->file('document');

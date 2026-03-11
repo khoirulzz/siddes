@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PbbTaxObjectController;
 use App\Http\Controllers\Admin\PopulationRecordController;
 use App\Http\Controllers\Admin\ServiceArchiveController;
 use App\Http\Controllers\Admin\VillageActivityController;
+use App\Http\Controllers\Admin\WebsiteSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicMediaController;
@@ -123,6 +124,16 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('operators', OperatorController::class)->except('show');
+
+        Route::prefix('website-settings')->name('website-settings.')->group(function () {
+            Route::get('/', [WebsiteSettingController::class, 'edit'])->name('edit');
+            Route::put('/info', [WebsiteSettingController::class, 'updateInfo'])->name('update-info');
+            Route::put('/media', [WebsiteSettingController::class, 'updateMedia'])->name('update-media');
+            Route::put('/headman', [WebsiteSettingController::class, 'updateHeadman'])->name('update-headman');
+            Route::post('/staff', [WebsiteSettingController::class, 'storeStaff'])->name('staff.store');
+            Route::put('/staff/{villageStaff}', [WebsiteSettingController::class, 'updateStaff'])->name('staff.update');
+            Route::delete('/staff/{villageStaff}', [WebsiteSettingController::class, 'destroyStaff'])->name('staff.destroy');
+        });
     });
 
     Route::get('/module/{module}', [DashboardController::class, 'placeholder'])->name('module.placeholder');

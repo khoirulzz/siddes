@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LandRecord;
 use App\Models\PopulationRecord;
 use App\Services\ImageUploadService;
-use App\Support\PublicMedia;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class LandRecordController extends Controller
 {
@@ -157,15 +155,8 @@ class LandRecordController extends Controller
      */
     public function destroy(LandRecord $landRecord)
     {
-        $photoPath = PublicMedia::normalizePath((string) $landRecord->photo_path);
-        if ($photoPath) {
-            Storage::disk('public')->delete($photoPath);
-        }
-
-        $documentPath = PublicMedia::normalizePath((string) $landRecord->document_path);
-        if ($documentPath) {
-            Storage::disk('public')->delete($documentPath);
-        }
+        $this->imageUploadService->delete((string) $landRecord->photo_path, 'image');
+        $this->imageUploadService->delete((string) $landRecord->document_path);
 
         $landRecord->delete();
 
@@ -208,9 +199,8 @@ class LandRecordController extends Controller
         unset($data['photo'], $data['document']);
 
         if ($request->hasFile('photo')) {
-            $oldPhotoPath = $landRecord ? PublicMedia::normalizePath((string) $landRecord->photo_path) : null;
-            if ($oldPhotoPath) {
-                Storage::disk('public')->delete($oldPhotoPath);
+            if ($landRecord) {
+                $this->imageUploadService->delete((string) $landRecord->photo_path, 'image');
             }
 
             $data['photo_path'] = $this->imageUploadService->storeOptimized(
@@ -223,9 +213,8 @@ class LandRecordController extends Controller
         }
 
         if ($request->hasFile('document')) {
-            $oldDocumentPath = $landRecord ? PublicMedia::normalizePath((string) $landRecord->document_path) : null;
-            if ($oldDocumentPath) {
-                Storage::disk('public')->delete($oldDocumentPath);
+            if ($landRecord) {
+                $this->imageUploadService->delete((string) $landRecord->document_path);
             }
 
             $documentFile = $request->file('document');

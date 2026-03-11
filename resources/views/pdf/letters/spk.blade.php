@@ -191,12 +191,12 @@ p {
 <p>Yang bertanda tan gan di bawah ini:</p>
 
 <table class="identitas">
-    <tr><td class="label">Nama</td><td class="sep">:</td><td>ABDUL HADI</td></tr>
-    <tr><td class="label">Jabatan</td><td class="sep">:</td><td>KEPALA DESA LAMBANGGELUN</td></tr>
+    <tr><td class="label">Nama</td><td class="sep">:</td><td>{{ $data['nama_kepala_desa'] }}</td></tr>
+    <tr><td class="label">Jabatan</td><td class="sep">:</td><td>{{ \Illuminate\Support\Str::upper($data['jabatan_kepala_desa']) }}</td></tr>
     <tr>
         <td class="label">Alamat</td>
         <td class="sep">:</td>
-        <td class="text-justify">Dk. Mandelun RT 001 RW 003, Desa Lambanggelun Kec. Paninggaran Kab. Pekalongan</td>
+        <td class="text-justify">{{ $villageAddress }}</td>
     </tr>
 </table>
 
@@ -260,7 +260,7 @@ p {
         <div style="width:50%; float:right; text-align:center;">
             Lambanggelun, {{ $data['tanggal'] }}<br>
             Mengetahui<br>
-            Kepala Desa Lambanggelun
+            {{ $data['jabatan_kepala_desa'] }}
         </div>
 
         <div style="clear:both;"></div>
@@ -277,7 +277,7 @@ p {
 
         <!-- NAMA KEPALA DESA -->
         <div style="width:50%; float:right; text-align:center;">
-            <strong>ABDUL HADI</strong>
+            <strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong>
         </div>
 
         <div style="clear:both;"></div>

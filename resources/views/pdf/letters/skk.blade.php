@@ -230,7 +230,7 @@ p {
 
         <div style="width:50%; float:right; text-align:center;">
             Lambanggelun, {{ $data['tanggal'] }}<br><br>
-            Kepala Desa Lambanggelun
+            {{ $data['jabatan_kepala_desa'] }}
         </div>
 
         <div style="clear:both;"></div>
@@ -244,7 +244,7 @@ p {
         </div>
 
         <div style="width:50%; float:right; text-align:center;">
-            <strong>ABDUL HADI</strong>
+            <strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong>
         </div>
 
         <div style="clear:both;"></div>

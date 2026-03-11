@@ -39,7 +39,7 @@
             <h2>Tambah Data Kependudukan</h2>
             <div class="actions">
                 <a class="btn btn-primary" href="{{ route('dashboard.population-records.create') }}">Tambah Manual (+)</a>
-                <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template') }}">Download Template CSV</a>
+                <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template') }}">Download Template Import</a>
             </div>
         </div>
 
@@ -84,17 +84,25 @@
             <table>
                 <thead>
                     <tr>
+                        <th>No Urut</th>
+                        <th>Status Hubungan</th>
                         <th>Nama Lengkap</th>
                         <th>NIK</th>
                         <th>No KK</th>
+                        <th>Nama Kepala Keluarga</th>
                         <th>Jenis Kelamin</th>
                         <th>Tempat Lahir</th>
                         <th>Tanggal Lahir</th>
                         <th>Agama</th>
                         <th>Pendidikan</th>
-                        <th>Pekerjaan</th>
+                        <th>Jenis Pekerjaan</th>
                         <th>Status Perkawinan</th>
                         <th>Kewarganegaraan</th>
+                        <th>No Paspor</th>
+                        <th>No KITAS/KITAP</th>
+                        <th>Nama Ayah</th>
+                        <th>Nama Ibu</th>
+                        <th>Gol Darah</th>
                         <th>RT</th>
                         <th>RW</th>
                         <th>Dusun</th>
@@ -110,9 +118,12 @@
                 <tbody>
                     @forelse($items as $item)
                         <tr>
+                            <td>{{ $item->currentMembership?->no_urut_kk ?: '-' }}</td>
+                            <td>{{ $item->resolvedStatusHubungan() }}</td>
                             <td>{{ $item->resolvedName() }}</td>
                             <td>{{ $item->nik }}</td>
                             <td>{{ $item->resolvedKkNumber() }}</td>
+                            <td>{{ $item->currentMembership?->household?->nama_kepala_keluarga ?: '-' }}</td>
                             <td>{{ $item->resolvedGender() }}</td>
                             <td>{{ $item->resolvedBirthPlace() }}</td>
                             <td>{{ $item->resolvedBirthDate()?->format('d-m-Y') ?: '-' }}</td>
@@ -121,6 +132,11 @@
                             <td>{{ $item->resolvedOccupation() }}</td>
                             <td>{{ $item->status_perkawinan ?: '-' }}</td>
                             <td>{{ $item->kewarganegaraan ?: '-' }}</td>
+                            <td>{{ $item->no_paspor ?: '-' }}</td>
+                            <td>{{ $item->no_kitas_kitap ?: '-' }}</td>
+                            <td>{{ $item->nama_ayah ?: '-' }}</td>
+                            <td>{{ $item->nama_ibu ?: '-' }}</td>
+                            <td>{{ $item->golongan_darah ?: '-' }}</td>
                             <td>{{ $item->resolvedRt() }}</td>
                             <td>{{ $item->resolvedRw() }}</td>
                             <td>{{ $item->resolvedHamlet() }}</td>
@@ -142,7 +158,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="21">Belum ada data penduduk.</td></tr>
+                        <tr><td colspan="29">Belum ada data penduduk.</td></tr>
                     @endforelse
                 </tbody>
             </table>

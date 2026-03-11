@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class HouseholdMember extends Model
@@ -27,14 +28,13 @@ class HouseholdMember extends Model
         ];
     }
 
-    public function household()
+    public function household(): BelongsTo
     {
         return $this->belongsTo(Household::class);
     }
 
-    public function resident()
+    public function resident(): BelongsTo
     {
         return $this->belongsTo(PopulationRecord::class, 'resident_id');
     }
 }
-

@@ -42,7 +42,7 @@ return new class extends Migration
 
                 $table->index(['household_id', 'is_current']);
                 $table->index(['resident_id', 'is_current']);
-                $table->unique(['household_id', 'resident_id', 'is_current'], 'hh_member_unique_current');
+                $table->index(['household_id', 'resident_id']);
             });
         }
 
@@ -238,4 +238,3 @@ return new class extends Migration
         });
     }
 };
-

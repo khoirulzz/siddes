@@ -4,6 +4,10 @@
 @section('page_title', $title)
 
 @section('content')
+    @php
+        $household = $item->currentMembership?->household;
+    @endphp
+
     <section class="panel">
         <form method="POST" action="{{ $route }}">
             @csrf
@@ -11,7 +15,89 @@
                 @method($method)
             @endif
 
+            <h2 style="margin-bottom:0.85rem;">Data Wilayah & Keluarga</h2>
             <div class="form-grid">
+                <div class="field">
+                    <label for="no_kk">Nomor KK</label>
+                    <input id="no_kk" type="text" name="no_kk" inputmode="numeric" value="{{ old('no_kk', $item->no_kk ?: $item->nkk ?: $household?->no_kk) }}" required>
+                </div>
+
+                <div class="field">
+                    <label for="nama_kepala_keluarga">Nama Kepala Keluarga</label>
+                    <input id="nama_kepala_keluarga" type="text" name="nama_kepala_keluarga" value="{{ old('nama_kepala_keluarga', $item->nama_kepala_keluarga ?: $household?->nama_kepala_keluarga) }}">
+                </div>
+
+                <div class="field full">
+                    <label for="alamat">Alamat</label>
+                    <textarea id="alamat" name="alamat" placeholder="Contoh: RT 001 RW 002 Dusun Bojongireng">{{ old('alamat', $item->address_detail ?: $household?->alamat) }}</textarea>
+                </div>
+
+                <div class="field">
+                    <label for="rt">RT</label>
+                    <input id="rt" type="text" name="rt" inputmode="numeric" value="{{ old('rt', $item->rt ?: $household?->rt) }}">
+                </div>
+
+                <div class="field">
+                    <label for="rw">RW</label>
+                    <input id="rw" type="text" name="rw" inputmode="numeric" value="{{ old('rw', $item->rw ?: $household?->rw) }}">
+                </div>
+
+                <div class="field">
+                    <label for="kode_pos">Kode Pos</label>
+                    <input id="kode_pos" type="text" name="kode_pos" inputmode="numeric" value="{{ old('kode_pos', $item->kode_pos ?: $household?->kode_pos ?: \App\Models\PopulationRecord::DEFAULT_POSTAL_CODE) }}">
+                </div>
+
+                <div class="field">
+                    <label for="dusun">Dusun</label>
+                    <select id="dusun" name="dusun" required>
+                        <option value="">Pilih Dusun</option>
+                        @foreach($hamlets as $hamlet)
+                            <option value="{{ $hamlet }}" @selected(old('dusun', $item->dusun ?: $item->hamlet ?: $household?->dusun) === $hamlet)>
+                                {{ $hamlet }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="desa">Desa/Kelurahan</label>
+                    <input id="desa" type="text" name="desa" value="{{ old('desa', $item->desa ?: $household?->desa ?: \App\Models\PopulationRecord::DEFAULT_VILLAGE) }}">
+                </div>
+
+                <div class="field">
+                    <label for="kecamatan">Kecamatan</label>
+                    <input id="kecamatan" type="text" name="kecamatan" value="{{ old('kecamatan', $item->kecamatan ?: $household?->kecamatan ?: \App\Models\PopulationRecord::DEFAULT_DISTRICT) }}">
+                </div>
+
+                <div class="field">
+                    <label for="kabupaten">Kabupaten/Kota</label>
+                    <input id="kabupaten" type="text" name="kabupaten" value="{{ old('kabupaten', $item->kabupaten ?: $household?->kabupaten ?: \App\Models\PopulationRecord::DEFAULT_REGENCY) }}">
+                </div>
+
+                <div class="field">
+                    <label for="provinsi">Provinsi</label>
+                    <input id="provinsi" type="text" name="provinsi" value="{{ old('provinsi', $item->provinsi ?: $household?->provinsi ?: \App\Models\PopulationRecord::DEFAULT_PROVINCE) }}">
+                </div>
+            </div>
+
+            <h2 style="margin:1.1rem 0 0.85rem;">Biodata Anggota Keluarga</h2>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="no_urut_kk">No Urut di KK</label>
+                    <input id="no_urut_kk" type="number" min="1" max="999" name="no_urut_kk" value="{{ old('no_urut_kk', $item->currentMembership?->no_urut_kk) }}">
+                </div>
+
+                <div class="field">
+                    <label for="status_hubungan">Status Hubungan Dalam Keluarga</label>
+                    <select id="status_hubungan" name="status_hubungan" required>
+                        @foreach($statusHubunganOptions as $statusHubungan)
+                            <option value="{{ $statusHubungan }}" @selected(old('status_hubungan', $item->status_hubungan ?: $item->currentMembership?->status_hubungan ?: 'Kepala Keluarga') === $statusHubungan)>
+                                {{ $statusHubungan }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="field">
                     <label for="nama_lengkap">Nama Lengkap</label>
                     <input id="nama_lengkap" type="text" name="nama_lengkap" value="{{ old('nama_lengkap', $item->nama_lengkap ?: $item->full_name) }}" required>
@@ -20,11 +106,6 @@
                 <div class="field">
                     <label for="nik">NIK</label>
                     <input id="nik" type="text" name="nik" inputmode="numeric" value="{{ old('nik', $item->nik) }}" required>
-                </div>
-
-                <div class="field">
-                    <label for="no_kk">No. KK</label>
-                    <input id="no_kk" type="text" name="no_kk" inputmode="numeric" value="{{ old('no_kk', $item->no_kk ?: $item->nkk) }}" required>
                 </div>
 
                 <div class="field">
@@ -57,71 +138,61 @@
                 </div>
 
                 <div class="field">
-                    <label for="pekerjaan">Pekerjaan</label>
-                    <input id="pekerjaan" type="text" name="pekerjaan" value="{{ old('pekerjaan', $item->pekerjaan ?: $item->occupation) }}" required>
+                    <label for="jenis_pekerjaan">Jenis Pekerjaan</label>
+                    <input id="jenis_pekerjaan" type="text" name="jenis_pekerjaan" value="{{ old('jenis_pekerjaan', $item->jenis_pekerjaan ?: $item->pekerjaan ?: $item->occupation) }}" required>
                 </div>
+            </div>
 
+            <h2 style="margin:1.1rem 0 0.85rem;">Status & Dokumen Tambahan</h2>
+            <div class="form-grid">
                 <div class="field">
                     <label for="status_perkawinan">Status Perkawinan</label>
-                    <input id="status_perkawinan" type="text" name="status_perkawinan" value="{{ old('status_perkawinan', $item->status_perkawinan) }}">
-                </div>
-
-                <div class="field">
-                    <label for="kewarganegaraan">Kewarganegaraan</label>
-                    <input id="kewarganegaraan" type="text" name="kewarganegaraan" value="{{ old('kewarganegaraan', $item->kewarganegaraan ?: 'WNI') }}">
-                </div>
-
-                <div class="field">
-                    <label for="rt">RT</label>
-                    <input id="rt" type="text" name="rt" inputmode="numeric" value="{{ old('rt', $item->rt) }}">
-                </div>
-
-                <div class="field">
-                    <label for="rw">RW</label>
-                    <input id="rw" type="text" name="rw" inputmode="numeric" value="{{ old('rw', $item->rw) }}">
-                </div>
-
-                <div class="field">
-                    <label for="dusun">Dusun</label>
-                    <select id="dusun" name="dusun" required>
-                        <option value="">Pilih Dusun</option>
-                        @foreach($hamlets as $hamlet)
-                            <option value="{{ $hamlet }}" @selected(old('dusun', $item->dusun ?: $item->hamlet) === $hamlet)>
-                                {{ $hamlet }}
+                    <select id="status_perkawinan" name="status_perkawinan" required>
+                        @foreach($statusPerkawinanOptions as $statusPerkawinan)
+                            <option value="{{ $statusPerkawinan }}" @selected(old('status_perkawinan', $item->status_perkawinan ?: 'Belum Kawin') === $statusPerkawinan)>
+                                {{ $statusPerkawinan }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="field">
-                    <label for="desa">Desa</label>
-                    <input id="desa" type="text" name="desa" value="{{ old('desa', $item->desa ?: \App\Models\PopulationRecord::DEFAULT_VILLAGE) }}">
+                    <label for="kewarganegaraan">Kewarganegaraan</label>
+                    <select id="kewarganegaraan" name="kewarganegaraan" required>
+                        <option value="WNI" @selected(old('kewarganegaraan', $item->kewarganegaraan ?: 'WNI') === 'WNI')>WNI</option>
+                        <option value="WNA" @selected(old('kewarganegaraan', $item->kewarganegaraan) === 'WNA')>WNA</option>
+                    </select>
+                    <small class="muted">Jika WNA, isi minimal No Paspor atau No KITAS/KITAP.</small>
                 </div>
 
                 <div class="field">
-                    <label for="kecamatan">Kecamatan</label>
-                    <input id="kecamatan" type="text" name="kecamatan" value="{{ old('kecamatan', $item->kecamatan ?: \App\Models\PopulationRecord::DEFAULT_DISTRICT) }}">
+                    <label for="no_paspor">No Paspor</label>
+                    <input id="no_paspor" type="text" name="no_paspor" value="{{ old('no_paspor', $item->no_paspor) }}">
                 </div>
 
                 <div class="field">
-                    <label for="kabupaten">Kabupaten</label>
-                    <input id="kabupaten" type="text" name="kabupaten" value="{{ old('kabupaten', $item->kabupaten ?: \App\Models\PopulationRecord::DEFAULT_REGENCY) }}">
+                    <label for="no_kitas_kitap">No KITAS/KITAP</label>
+                    <input id="no_kitas_kitap" type="text" name="no_kitas_kitap" value="{{ old('no_kitas_kitap', $item->no_kitas_kitap) }}">
                 </div>
 
                 <div class="field">
-                    <label for="provinsi">Provinsi</label>
-                    <input id="provinsi" type="text" name="provinsi" value="{{ old('provinsi', $item->provinsi ?: \App\Models\PopulationRecord::DEFAULT_PROVINCE) }}">
+                    <label for="nama_ayah">Nama Ayah</label>
+                    <input id="nama_ayah" type="text" name="nama_ayah" value="{{ old('nama_ayah', $item->nama_ayah) }}">
                 </div>
 
                 <div class="field">
-                    <label for="kode_pos">Kode Pos</label>
-                    <input id="kode_pos" type="text" name="kode_pos" inputmode="numeric" value="{{ old('kode_pos', $item->kode_pos ?: \App\Models\PopulationRecord::DEFAULT_POSTAL_CODE) }}">
+                    <label for="nama_ibu">Nama Ibu</label>
+                    <input id="nama_ibu" type="text" name="nama_ibu" value="{{ old('nama_ibu', $item->nama_ibu) }}">
                 </div>
 
-                <div class="field full">
-                    <label for="address_detail">Alamat Lengkap</label>
-                    <textarea id="address_detail" name="address_detail">{{ old('address_detail', $item->address_detail) }}</textarea>
-                    <small class="muted">Kolom desa-kecamatan-kabupaten-provinsi sudah otomatis terisi dan tetap bisa disesuaikan bila diperlukan.</small>
+                <div class="field">
+                    <label for="golongan_darah">Golongan Darah</label>
+                    <select id="golongan_darah" name="golongan_darah">
+                        <option value="">- Pilih -</option>
+                        @foreach($golonganDarahOptions as $gol)
+                            <option value="{{ $gol }}" @selected(old('golongan_darah', $item->golongan_darah) === $gol)>{{ $gol }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

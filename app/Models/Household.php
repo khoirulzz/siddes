@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 class Household extends Model
@@ -20,14 +21,13 @@ class Household extends Model
         'provinsi',
     ];
 
-    public function members()
+    public function members(): HasMany
     {
         return $this->hasMany(HouseholdMember::class);
     }
 
-    public function currentMembers()
+    public function currentMembers(): HasMany
     {
         return $this->hasMany(HouseholdMember::class)->where('is_current', true);
     }
 }
-

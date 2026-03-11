@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +23,34 @@ class PopulationRecord extends Model
     public const DEFAULT_REGENCY = 'Kabupaten Pekalongan';
     public const DEFAULT_PROVINCE = 'Provinsi Jawa Tengah';
     public const DEFAULT_POSTAL_CODE = '51164';
+
+    public const STATUS_PERKAWINAN_OPTIONS = [
+        'Belum Kawin',
+        'Kawin Tercatat',
+        'Kawin Belum Tercatat',
+        'Cerai Hidup',
+        'Cerai Mati',
+    ];
+
+    public const STATUS_HUBUNGAN_OPTIONS = [
+        'Kepala Keluarga',
+        'Istri',
+        'Suami',
+        'Anak',
+        'Cucu',
+        'Orang Tua',
+        'Mertua',
+        'Famili Lain',
+        'Pembantu',
+        'Lainnya',
+    ];
+
+    public const GOLONGAN_DARAH_OPTIONS = [
+        'A',
+        'B',
+        'AB',
+        'O',
+    ];
 
     protected $fillable = [
         'nama_lengkap',
@@ -47,9 +77,16 @@ class PopulationRecord extends Model
         'kode_pos',
         'pendidikan',
         'status_perkawinan',
+        'status_hubungan',
         'kewarganegaraan',
+        'no_paspor',
+        'no_kitas_kitap',
+        'nama_ayah',
+        'nama_ibu',
+        'golongan_darah',
         'religion',
         'occupation',
+        'jenis_pekerjaan',
         'address_detail',
         'source_file',
     ];
@@ -71,6 +108,18 @@ class PopulationRecord extends Model
         }
     }
 
+    public function householdMemberships(): HasMany
+    {
+        return $this->hasMany(HouseholdMember::class, 'resident_id');
+    }
+
+    public function currentMembership(): HasOne
+    {
+        return $this->hasOne(HouseholdMember::class, 'resident_id')
+            ->where('is_current', true)
+            ->latestOfMany('started_at');
+    }
+
     public function getAgeAttribute(): ?int
     {
         $birthDate = $this->resolvedBirthDate();
@@ -88,7 +137,7 @@ class PopulationRecord extends Model
 
     public function resolvedKkNumber(): string
     {
-        return (string) ($this->no_kk ?: $this->nkk ?: '-');
+        return (string) ($this->no_kk ?: $this->nkk ?: $this->resolvedHouseholdField('no_kk') ?: '-');
     }
 
     public function resolvedBirthPlace(): string
@@ -129,46 +178,64 @@ class PopulationRecord extends Model
 
     public function resolvedOccupation(): string
     {
-        return (string) ($this->pekerjaan ?: $this->occupation ?: '-');
+        return (string) ($this->jenis_pekerjaan ?: $this->pekerjaan ?: $this->occupation ?: '-');
+    }
+
+    public function resolvedStatusHubungan(): string
+    {
+        $fromMembership = $this->relationLoaded('currentMembership')
+            ? $this->currentMembership?->status_hubungan
+            : null;
+
+        return (string) ($this->status_hubungan ?: $fromMembership ?: '-');
     }
 
     public function resolvedHamlet(): string
     {
-        return (string) ($this->dusun ?: $this->hamlet ?: '-');
+        return (string) ($this->dusun ?: $this->hamlet ?: $this->resolvedHouseholdField('dusun') ?: '-');
     }
 
     public function resolvedRt(): string
     {
-        return (string) ($this->rt ?: '-');
+        return (string) ($this->rt ?: $this->resolvedHouseholdField('rt') ?: '-');
     }
 
     public function resolvedRw(): string
     {
-        return (string) ($this->rw ?: '-');
+        return (string) ($this->rw ?: $this->resolvedHouseholdField('rw') ?: '-');
     }
 
     public function resolvedVillage(): string
     {
-        return (string) ($this->desa ?: self::DEFAULT_VILLAGE);
+        return (string) ($this->desa ?: $this->resolvedHouseholdField('desa') ?: self::DEFAULT_VILLAGE);
     }
 
     public function resolvedDistrict(): string
     {
-        return (string) ($this->kecamatan ?: self::DEFAULT_DISTRICT);
+        return (string) ($this->kecamatan ?: $this->resolvedHouseholdField('kecamatan') ?: self::DEFAULT_DISTRICT);
     }
 
     public function resolvedRegency(): string
     {
-        return (string) ($this->kabupaten ?: self::DEFAULT_REGENCY);
+        return (string) ($this->kabupaten ?: $this->resolvedHouseholdField('kabupaten') ?: self::DEFAULT_REGENCY);
     }
 
     public function resolvedProvince(): string
     {
-        return (string) ($this->provinsi ?: self::DEFAULT_PROVINCE);
+        return (string) ($this->provinsi ?: $this->resolvedHouseholdField('provinsi') ?: self::DEFAULT_PROVINCE);
     }
 
     public function resolvedPostalCode(): string
     {
-        return (string) ($this->kode_pos ?: self::DEFAULT_POSTAL_CODE);
+        return (string) ($this->kode_pos ?: $this->resolvedHouseholdField('kode_pos') ?: self::DEFAULT_POSTAL_CODE);
+    }
+
+    private function resolvedHouseholdField(string $field): ?string
+    {
+        if ($this->relationLoaded('currentMembership')) {
+            return $this->currentMembership?->household?->{$field};
+        }
+
+        return $this->currentMembership()->with('household')->first()?->household?->{$field};
     }
 }

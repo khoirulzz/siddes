@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\PopulationRecord;
+use App\Services\PopulationHouseholdSyncService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -11,15 +12,14 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class PopulationRecordsImport implements ToCollection, WithHeadingRow
 {
-    private array $seenNik = [];
-
     public int $inserted = 0;
+
+    public int $updated = 0;
 
     public int $skipped = 0;
 
-    public int $duplicates = 0;
-
     public function __construct(
+        private readonly PopulationHouseholdSyncService $householdSync,
         private readonly ?string $hamletOverride = null,
         private readonly ?string $sourceFile = null,
     ) {
@@ -27,91 +27,153 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows): void
     {
-        $candidateNik = [];
-        foreach ($rows as $row) {
-            $nik = $this->digits($this->value($row, ['nik']));
-            if ($nik) {
-                $candidateNik[$nik] = true;
-            }
-        }
+        foreach ($rows as $index => $row) {
+            $payload = $this->mapRow($row);
 
-        if ($candidateNik !== []) {
-            $existingNik = PopulationRecord::query()
-                ->whereIn('nik', array_keys($candidateNik))
-                ->pluck('nik')
-                ->all();
-
-            foreach ($existingNik as $nik) {
-                $this->seenNik[(string) $nik] = true;
-            }
-        }
-
-        foreach ($rows as $row) {
-            $nik = $this->digits($this->value($row, ['nik']));
-            $fullName = $this->value($row, ['nama_lengkap', 'full_name', 'nama']);
-            $nkk = $this->digits($this->value($row, ['no_kk', 'nkk']));
-            $gender = $this->normalizeGender($this->value($row, ['jenis_kelamin', 'gender']));
-            $religion = $this->value($row, ['agama', 'religion']) ?: '-';
-            $occupation = $this->value($row, ['pekerjaan', 'occupation']) ?: '-';
-            $hamlet = $this->hamletOverride ?: $this->normalizeHamlet($this->value($row, ['dusun', 'hamlet', 'alamat_dusun']));
-            $rt = $this->digits($this->value($row, ['rt'])) ?: null;
-            $rw = $this->digits($this->value($row, ['rw'])) ?: null;
-            $village = $this->value($row, ['desa']) ?: PopulationRecord::DEFAULT_VILLAGE;
-            $district = $this->value($row, ['kecamatan']) ?: PopulationRecord::DEFAULT_DISTRICT;
-            $regency = $this->value($row, ['kabupaten']) ?: PopulationRecord::DEFAULT_REGENCY;
-            $province = $this->value($row, ['provinsi']) ?: PopulationRecord::DEFAULT_PROVINCE;
-            $postalCode = $this->digits($this->value($row, ['kode_pos'])) ?: PopulationRecord::DEFAULT_POSTAL_CODE;
-
-            [$birthPlace, $birthDate] = $this->resolveBirthData($row);
-
-            if (! $nik || ! $fullName || ! $nkk || ! $gender || ! $hamlet || ! $birthPlace || ! $birthDate) {
+            if (! $this->isValidRow($payload)) {
                 $this->skipped++;
                 continue;
             }
 
-            if (isset($this->seenNik[$nik])) {
-                $this->duplicates++;
-                continue;
-            }
-
-            PopulationRecord::create([
-                'nama_lengkap' => $fullName,
-                'full_name' => $fullName,
-                'nik' => $nik,
-                'no_kk' => $nkk,
-                'nkk' => $nkk,
-                'tempat_lahir' => $birthPlace,
-                'birth_place' => $birthPlace,
-                'tanggal_lahir' => $birthDate,
-                'birth_date' => $birthDate,
-                'jenis_kelamin' => $gender,
-                'gender' => $gender,
-                'dusun' => $hamlet,
-                'hamlet' => $hamlet,
-                'rt' => $rt,
-                'rw' => $rw,
-                'agama' => $religion,
-                'religion' => $religion ?: '-',
-                'pekerjaan' => $occupation,
-                'occupation' => $occupation ?: '-',
-                'pendidikan' => $this->value($row, ['pendidikan']),
-                'status_perkawinan' => $this->value($row, ['status_perkawinan']),
-                'kewarganegaraan' => $this->value($row, ['kewarganegaraan']) ?: 'WNI',
-                'desa' => $village,
-                'kecamatan' => $district,
-                'kabupaten' => $regency,
-                'provinsi' => $province,
-                'kode_pos' => $postalCode,
-                'address_detail' => $this->value($row, ['alamat_lengkap', 'alamat', 'address_detail']),
-                'source_file' => $this->sourceFile,
+            $resident = PopulationRecord::query()->firstOrNew([
+                'nik' => $payload['nik'],
             ]);
 
-            $this->seenNik[$nik] = true;
-            $this->inserted++;
+            $isNewResident = ! $resident->exists;
+
+            $resident->fill([
+                'nama_lengkap' => $payload['nama_lengkap'],
+                'full_name' => $payload['nama_lengkap'],
+                'nik' => $payload['nik'],
+                'no_kk' => $payload['no_kk'],
+                'nkk' => $payload['no_kk'],
+                'jenis_kelamin' => $payload['jenis_kelamin'],
+                'gender' => $payload['jenis_kelamin'],
+                'tempat_lahir' => $payload['tempat_lahir'],
+                'birth_place' => $payload['tempat_lahir'],
+                'tanggal_lahir' => $payload['tanggal_lahir'],
+                'birth_date' => $payload['tanggal_lahir'],
+                'agama' => $payload['agama'],
+                'religion' => $payload['agama'],
+                'pendidikan' => $payload['pendidikan'],
+                'jenis_pekerjaan' => $payload['jenis_pekerjaan'],
+                'pekerjaan' => $payload['jenis_pekerjaan'],
+                'occupation' => $payload['jenis_pekerjaan'],
+                'status_perkawinan' => $payload['status_perkawinan'],
+                'status_hubungan' => $payload['status_hubungan'],
+                'kewarganegaraan' => $payload['kewarganegaraan'],
+                'no_paspor' => $payload['no_paspor'],
+                'no_kitas_kitap' => $payload['no_kitas_kitap'],
+                'nama_ayah' => $payload['nama_ayah'],
+                'nama_ibu' => $payload['nama_ibu'],
+                'golongan_darah' => $payload['golongan_darah'],
+                'rt' => $payload['rt'],
+                'rw' => $payload['rw'],
+                'dusun' => $payload['dusun'],
+                'hamlet' => $payload['dusun'],
+                'desa' => $payload['desa'],
+                'kecamatan' => $payload['kecamatan'],
+                'kabupaten' => $payload['kabupaten'],
+                'provinsi' => $payload['provinsi'],
+                'kode_pos' => $payload['kode_pos'],
+                'address_detail' => $payload['alamat'],
+                'source_file' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
+            ]);
+
+            $resident->save();
+            $this->householdSync->sync($resident, $payload, Carbon::now());
+
+            if ($isNewResident) {
+                $this->inserted++;
+            } else {
+                $this->updated++;
+            }
         }
     }
 
-    private function value(Collection $row, array $keys): ?string
+    private function mapRow(Collection $row): array
+    {
+        $noKk = $this->digits($this->pick($row, [
+            'no_kk',
+            'nkk',
+            'nomor_kk',
+            'nomor_kartu_keluarga',
+            'kk',
+        ]));
+
+        $dusunRaw = $this->pick($row, ['dusun', 'hamlet', 'alamat_dusun', 'dukuh']);
+        $dusun = $this->hamletOverride ?: $this->normalizeHamlet($dusunRaw) ?: PopulationRecord::HAMLETS[0];
+        $statusHubungan = $this->normalizeStatusHubungan($this->pick($row, [
+            'status_hubungan',
+            'status_hubungan_dalam_keluarga',
+            'status_hubungan_keluarga',
+            'hubungan_keluarga',
+        ]));
+
+        return [
+            'nik' => $this->digits($this->pick($row, ['nik', 'nomor_induk_kependudukan'])),
+            'no_kk' => $noKk,
+            'nama_lengkap' => $this->pick($row, [
+                'nama_lengkap',
+                'full_name',
+                'nama',
+                'nama_anggota_keluarga',
+            ]),
+            'nama_kepala_keluarga' => $this->pick($row, [
+                'nama_kepala_keluarga',
+                'kepala_keluarga',
+                'nama_kepala_kk',
+            ]),
+            'alamat' => $this->pick($row, ['alamat', 'alamat_lengkap', 'address', 'address_detail']),
+            'rt' => $this->sanitizeCode($this->pick($row, ['rt']), 3),
+            'rw' => $this->sanitizeCode($this->pick($row, ['rw']), 3),
+            'kode_pos' => $this->digits($this->pick($row, ['kode_pos', 'postal_code'])) ?: PopulationRecord::DEFAULT_POSTAL_CODE,
+            'dusun' => $dusun,
+            'desa' => $this->pick($row, ['desa', 'kelurahan']) ?: PopulationRecord::DEFAULT_VILLAGE,
+            'kecamatan' => $this->pick($row, ['kecamatan']) ?: PopulationRecord::DEFAULT_DISTRICT,
+            'kabupaten' => $this->pick($row, ['kabupaten', 'kabupaten_kota', 'kota']) ?: PopulationRecord::DEFAULT_REGENCY,
+            'provinsi' => $this->pick($row, ['provinsi']) ?: PopulationRecord::DEFAULT_PROVINCE,
+            'no_urut_kk' => $this->sanitizeInt($this->pick($row, ['no_urut_kk', 'no', 'urutan'])),
+            'status_hubungan' => $statusHubungan ?: 'Kepala Keluarga',
+            'jenis_kelamin' => $this->normalizeGender($this->pick($row, ['jenis_kelamin', 'gender', 'jk'])),
+            'tempat_lahir' => $this->resolveBirthPlace($row),
+            'tanggal_lahir' => $this->resolveBirthDate($row),
+            'agama' => $this->pick($row, ['agama', 'religion']) ?: '-',
+            'pendidikan' => $this->pick($row, ['pendidikan', 'education']),
+            'jenis_pekerjaan' => $this->pick($row, ['jenis_pekerjaan', 'pekerjaan', 'occupation']) ?: '-',
+            'status_perkawinan' => $this->normalizeStatusPerkawinan($this->pick($row, [
+                'status_perkawinan',
+                'status_kawin',
+                'perkawinan',
+            ])),
+            'kewarganegaraan' => $this->normalizeKewarganegaraan($this->pick($row, [
+                'kewarganegaraan',
+                'warga_negara',
+            ])),
+            'no_paspor' => $this->pick($row, ['no_paspor', 'paspor']),
+            'no_kitas_kitap' => $this->pick($row, ['no_kitas_kitap', 'kitas', 'kitap']),
+            'nama_ayah' => $this->pick($row, ['nama_ayah', 'ayah']),
+            'nama_ibu' => $this->pick($row, ['nama_ibu', 'ibu']),
+            'golongan_darah' => $this->normalizeGolonganDarah($this->pick($row, ['golongan_darah', 'gol_darah'])),
+        ];
+    }
+
+    private function isValidRow(array $payload): bool
+    {
+        if (! $payload['nik'] || ! $payload['no_kk'] || ! $payload['nama_lengkap']) {
+            return false;
+        }
+        if (! $payload['jenis_kelamin'] || ! $payload['tempat_lahir'] || ! $payload['tanggal_lahir']) {
+            return false;
+        }
+        if (($payload['kewarganegaraan'] === 'WNA') && ! $payload['no_paspor'] && ! $payload['no_kitas_kitap']) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function pick(Collection $row, array $keys): ?string
     {
         foreach ($keys as $key) {
             $value = $row->get($key);
@@ -123,73 +185,36 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
         return null;
     }
 
-    private function digits(?string $value): ?string
+    private function resolveBirthPlace(Collection $row): ?string
     {
-        if (! $value) {
-            return null;
+        $birthPlace = $this->pick($row, ['tempat_lahir', 'birth_place']);
+        if ($birthPlace) {
+            return $birthPlace;
         }
 
-        $clean = preg_replace('/\D+/', '', $value) ?: '';
-        return $clean !== '' ? $clean : null;
-    }
-
-    private function normalizeGender(?string $gender): ?string
-    {
-        if (! $gender) {
-            return null;
-        }
-
-        $value = Str::lower($gender);
-        if (in_array($value, ['l', 'lk', 'laki laki', 'laki-laki', 'pria', 'male'], true)) {
-            return 'Laki-laki';
-        }
-
-        if (in_array($value, ['p', 'pr', 'perempuan', 'wanita', 'female'], true)) {
-            return 'Perempuan';
-        }
-
-        return null;
-    }
-
-    private function normalizeHamlet(?string $hamlet): ?string
-    {
-        if (! $hamlet) {
-            return null;
-        }
-
-        foreach (PopulationRecord::HAMLETS as $officialHamlet) {
-            if (Str::lower($officialHamlet) === Str::lower(trim($hamlet))) {
-                return $officialHamlet;
-            }
-        }
-
-        return trim($hamlet);
-    }
-
-    private function resolveBirthData(Collection $row): array
-    {
-        $birthPlace = $this->value($row, ['tempat_lahir', 'birth_place']);
-        $birthDate = $this->parseDate($this->value($row, ['tanggal_lahir', 'birth_date']));
-
-        if ($birthPlace && $birthDate) {
-            return [$birthPlace, $birthDate];
-        }
-
-        $ttl = $this->value($row, ['ttl']);
+        $ttl = $this->pick($row, ['ttl']);
         if (! $ttl) {
-            return [$birthPlace, $birthDate];
+            return null;
         }
 
         $parts = array_map('trim', explode(',', $ttl, 2));
-        if (! $birthPlace && isset($parts[0])) {
-            $birthPlace = $parts[0];
+        return $parts[0] ?? null;
+    }
+
+    private function resolveBirthDate(Collection $row): ?string
+    {
+        $birthDate = $this->parseDate($this->pick($row, ['tanggal_lahir', 'birth_date']));
+        if ($birthDate) {
+            return $birthDate;
         }
 
-        if (! $birthDate && isset($parts[1])) {
-            $birthDate = $this->parseDate($parts[1]);
+        $ttl = $this->pick($row, ['ttl']);
+        if (! $ttl) {
+            return null;
         }
 
-        return [$birthPlace, $birthDate];
+        $parts = array_map('trim', explode(',', $ttl, 2));
+        return isset($parts[1]) ? $this->parseDate($parts[1]) : null;
     }
 
     private function parseDate(mixed $value): ?string
@@ -214,11 +239,136 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
         }
     }
 
+    private function digits(?string $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        $clean = preg_replace('/\D+/', '', $value) ?: '';
+        return $clean !== '' ? $clean : null;
+    }
+
+    private function sanitizeCode(?string $value, int $pad): ?string
+    {
+        $digits = $this->digits($value);
+        return $digits ? str_pad($digits, $pad, '0', STR_PAD_LEFT) : null;
+    }
+
+    private function sanitizeInt(?string $value): ?int
+    {
+        if (! $value) {
+            return null;
+        }
+
+        $numeric = preg_replace('/\D+/', '', $value) ?: '';
+        return $numeric !== '' ? (int) $numeric : null;
+    }
+
+    private function normalizeGender(?string $gender): ?string
+    {
+        if (! $gender) {
+            return null;
+        }
+
+        $value = Str::lower($gender);
+        if (in_array($value, ['l', 'lk', 'laki laki', 'laki-laki', 'pria', 'male'], true)) {
+            return 'Laki-laki';
+        }
+        if (in_array($value, ['p', 'pr', 'perempuan', 'wanita', 'female'], true)) {
+            return 'Perempuan';
+        }
+
+        return null;
+    }
+
+    private function normalizeHamlet(?string $hamlet): ?string
+    {
+        if (! $hamlet) {
+            return null;
+        }
+
+        $value = trim($hamlet);
+        foreach (PopulationRecord::HAMLETS as $officialHamlet) {
+            if (Str::lower($officialHamlet) === Str::lower($value)) {
+                return $officialHamlet;
+            }
+        }
+
+        return $value;
+    }
+
+    private function normalizeStatusPerkawinan(?string $status): string
+    {
+        if (! $status) {
+            return 'Belum Kawin';
+        }
+
+        $value = Str::lower(trim($status));
+        $map = [
+            'belum kawin' => 'Belum Kawin',
+            'kawin' => 'Kawin Tercatat',
+            'kawin tercatat' => 'Kawin Tercatat',
+            'kawin belum tercatat' => 'Kawin Belum Tercatat',
+            'cerai hidup' => 'Cerai Hidup',
+            'cerai mati' => 'Cerai Mati',
+        ];
+
+        return $map[$value] ?? 'Belum Kawin';
+    }
+
+    private function normalizeStatusHubungan(?string $status): ?string
+    {
+        if (! $status) {
+            return null;
+        }
+
+        $value = Str::lower(trim($status));
+        $map = [
+            'kepala keluarga' => 'Kepala Keluarga',
+            'kepala_keluarga' => 'Kepala Keluarga',
+            'istri' => 'Istri',
+            'suami' => 'Suami',
+            'anak' => 'Anak',
+            'cucu' => 'Cucu',
+            'orang tua' => 'Orang Tua',
+            'orang_tua' => 'Orang Tua',
+            'mertua' => 'Mertua',
+            'famili lain' => 'Famili Lain',
+            'famili_lain' => 'Famili Lain',
+            'pembantu' => 'Pembantu',
+            'lainnya' => 'Lainnya',
+            'lain-lain' => 'Lainnya',
+        ];
+
+        return $map[$value] ?? $status;
+    }
+
+    private function normalizeKewarganegaraan(?string $value): string
+    {
+        if (! $value) {
+            return 'WNI';
+        }
+
+        $normalized = Str::upper(trim($value));
+        return $normalized === 'WNA' ? 'WNA' : 'WNI';
+    }
+
+    private function normalizeGolonganDarah(?string $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        $normalized = Str::upper(trim($value));
+        return in_array($normalized, PopulationRecord::GOLONGAN_DARAH_OPTIONS, true) ? $normalized : null;
+    }
+
     public function summary(): array
     {
         return [
             'inserted' => $this->inserted,
-            'duplicates' => $this->duplicates,
+            'updated' => $this->updated,
             'skipped' => $this->skipped,
         ];
     }

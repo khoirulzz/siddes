@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Imports\PopulationRecordsImport;
+use App\Models\Household;
 use App\Models\PopulationRecord;
 use App\Services\PopulationHouseholdSyncService;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,35 +25,72 @@ class PopulationRecordController extends Controller
      */
     public function index(Request $request)
     {
+        $viewMode = $request->query('view') === 'kk' ? 'kk' : 'individual';
         $selectedHamlet = $request->string('hamlet')->toString() ?: 'Semua';
         $search = trim((string) $request->query('q', ''));
 
-        $baseQuery = PopulationRecord::query()
+        $residentQuery = PopulationRecord::query()
             ->with(['currentMembership.household'])
             ->inHamlet($selectedHamlet);
-        $this->applySearchFilter($baseQuery, $search);
+        $this->applySearchFilter($residentQuery, $search);
 
-        $records = (clone $baseQuery)
+        $records = (clone $residentQuery)
             ->orderByRaw('COALESCE(dusun, hamlet)')
             ->orderByRaw('COALESCE(nama_lengkap, full_name)')
             ->paginate(50)
             ->withQueryString();
 
-        $filteredTotal = (clone $baseQuery)->count();
+        $filteredTotal = (clone $residentQuery)->count();
 
-        $summaryByHamlet = (clone $baseQuery)
+        $summaryByHamlet = (clone $residentQuery)
             ->selectRaw('COALESCE(dusun, hamlet) as hamlet_name, COUNT(*) as total')
             ->groupByRaw('COALESCE(dusun, hamlet)')
             ->orderByRaw('COALESCE(dusun, hamlet)')
             ->get();
 
-        $genderByHamlet = (clone $baseQuery)
+        $genderByHamlet = (clone $residentQuery)
             ->selectRaw('COALESCE(jenis_kelamin, gender) as gender_name, COUNT(*) as total')
             ->groupByRaw('COALESCE(jenis_kelamin, gender)')
             ->pluck('total', 'gender_name');
 
+        $householdsQuery = Household::query()
+            ->with([
+                'currentMembers.resident:id,nik,nama_lengkap,full_name',
+            ])
+            ->withCount([
+                'currentMembers as total_members' => function ($query): void {
+                    $query->where('is_current', true);
+                },
+            ]);
+
+        if ($selectedHamlet !== 'Semua') {
+            $householdsQuery->where('dusun', $selectedHamlet);
+        }
+
+        if ($search !== '') {
+            $digits = preg_replace('/\D+/', '', $search) ?: $search;
+            $householdsQuery->where(function ($query) use ($search, $digits): void {
+                $query->where('no_kk', 'like', '%' . $digits . '%')
+                    ->orWhere('nama_kepala_keluarga', 'like', '%' . $search . '%')
+                    ->orWhere('dusun', 'like', '%' . $search . '%')
+                    ->orWhereHas('currentMembers.resident', function ($residentQuery) use ($search, $digits): void {
+                        $residentQuery->where('nik', 'like', '%' . $digits . '%')
+                            ->orWhere('nama_lengkap', 'like', '%' . $search . '%')
+                            ->orWhere('full_name', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $households = $householdsQuery
+            ->orderByDesc('updated_at')
+            ->orderBy('no_kk')
+            ->paginate(30, ['*'], 'kk_page')
+            ->withQueryString();
+
         return view('dashboard.population.index', [
             'items' => $records,
+            'households' => $households,
+            'viewMode' => $viewMode,
             'filteredTotal' => $filteredTotal,
             'hamlets' => PopulationRecord::HAMLETS,
             'selectedHamlet' => $selectedHamlet,

@@ -121,6 +121,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
         
     Route::resource('pbb-tax-objects', PbbTaxObjectController::class);
     Route::post('pbb-tax-objects/import', [PbbTaxObjectController::class, 'import'])->name('pbb-tax-objects.import');
+    Route::get('pbb-tax-objects/template/download', [PbbTaxObjectController::class, 'template'])
+        ->name('pbb-tax-objects.template');
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('operators', OperatorController::class)->except('show');

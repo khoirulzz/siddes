@@ -1,111 +1,76 @@
 @extends('layouts.dashboard')
 
+@section('title', 'Tambah Data PBB')
+@section('page_title', 'Tambah Data PBB')
+
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 text-dark fw-bold">Tambah Data PBB</h1>
-            <p class="text-muted">Isilah formulir di bawah untuk menambah data PBB baru</p>
-        </div>
-    </div>
+    <section class="panel">
+        <form action="{{ route('dashboard.pbb-tax-objects.store') }}" method="POST">
+            @csrf
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-            <form action="{{ route('dashboard.pbb-tax-objects.store') }}" method="POST" novalidate class="needs-validation">
-                @csrf
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="nop" class="form-label fw-bold" style="color: #0066cc;">NOP (Nomor Objek Pajak)</label>
-                        <input type="text" class="form-control @error('nop') is-invalid @enderror" id="nop" name="nop" value="{{ old('nop') }}" required maxlength="20" placeholder="Contoh: 31.30.000.000.0001">
-                        @error('nop')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="tax_year" class="form-label fw-bold" style="color: #0066cc;">Tahun Pajak</label>
-                        <input type="number" class="form-control @error('tax_year') is-invalid @enderror" id="tax_year" name="tax_year" value="{{ old('tax_year', date('Y')) }}" required min="1900" max="2100">
-                        @error('tax_year')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="nop">NOP</label>
+                    <input id="nop" type="text" name="nop" value="{{ old('nop') }}" required>
                 </div>
-
-                <div class="mb-3">
-                    <label for="tax_name" class="form-label fw-bold" style="color: #0066cc;">Nama Pajak</label>
-                    <input type="text" class="form-control @error('tax_name') is-invalid @enderror" id="tax_name" name="tax_name" value="{{ old('tax_name') }}" required maxlength="255" placeholder="Contoh: Tanah dan Bangunan Residensial">
-                    @error('tax_name')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                <div class="field">
+                    <label for="tax_year">Tahun Pajak</label>
+                    <input id="tax_year" type="number" name="tax_year" min="2026" max="{{ date('Y') + 1 }}" value="{{ old('tax_year', date('Y')) }}" required>
                 </div>
-
-                <div class="mb-3">
-                    <label for="owner_name" class="form-label fw-bold" style="color: #0066cc;">Nama Pemilik</label>
-                    <input type="text" class="form-control @error('owner_name') is-invalid @enderror" id="owner_name" name="owner_name" value="{{ old('owner_name') }}" required maxlength="255" placeholder="Nama lengkap pemilik">
-                    @error('owner_name')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                <div class="field">
+                    <label for="nama_wp_sppt">Nama WP SPPT</label>
+                    <input id="nama_wp_sppt" type="text" name="nama_wp_sppt" value="{{ old('nama_wp_sppt') }}" required>
                 </div>
-
-                <div class="mb-3">
-                    <label for="location" class="form-label fw-bold" style="color: #0066cc;">Lokasi</label>
-                    <textarea class="form-control @error('location') is-invalid @enderror" id="location" name="location" rows="2" required placeholder="Alamat lengkap lokasi properti">{{ old('location') }}</textarea>
-                    @error('location')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                <div class="field">
+                    <label for="desa_wp_sppt">Desa WP SPPT</label>
+                    <input id="desa_wp_sppt" type="text" name="desa_wp_sppt" value="{{ old('desa_wp_sppt', config('village.name', 'Desa Lambanggelun')) }}" required>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="land_area" class="form-label fw-bold" style="color: #0066cc;">Luas Tanah (m²)</label>
-                        <input type="number" class="form-control @error('land_area') is-invalid @enderror" id="land_area" name="land_area" value="{{ old('land_area') }}" required step="0.01" min="0" placeholder="0">
-                        @error('land_area')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="building_area" class="form-label fw-bold" style="color: #0066cc;">Luas Bangunan (m²)</label>
-                        <input type="number" class="form-control @error('building_area') is-invalid @enderror" id="building_area" name="building_area" value="{{ old('building_area') }}" required step="0.01" min="0" placeholder="0">
-                        @error('building_area')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="field full">
+                    <label for="jalan_wp_sppt">Jalan WP SPPT</label>
+                    <input id="jalan_wp_sppt" type="text" name="jalan_wp_sppt" value="{{ old('jalan_wp_sppt') }}" required>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="amount_due" class="form-label fw-bold" style="color: #0066cc;">Jumlah Pajak Terhutang (Rp)</label>
-                        <input type="number" class="form-control @error('amount_due') is-invalid @enderror" id="amount_due" name="amount_due" value="{{ old('amount_due') }}" required step="0.01" min="0" placeholder="0">
-                        @error('amount_due')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="status" class="form-label fw-bold" style="color: #0066cc;">Status</label>
-                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                            <option value="">Pilih Status</option>
-                            <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Aktif</option>
-                            <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
-                        </select>
-                        @error('status')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="field">
+                    <label for="rt_wp_sppt">RT WP SPPT</label>
+                    <input id="rt_wp_sppt" type="text" name="rt_wp_sppt" inputmode="numeric" value="{{ old('rt_wp_sppt') }}">
                 </div>
-
-                <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn flex-grow-1" style="background-color: #0066cc; color: white; border: none;">
-                        <i class="bi bi-check-circle"></i> Simpan Data PBB
-                    </button>
-                    <a href="{{ route('dashboard.pbb-tax-objects.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Batal
-                    </a>
+                <div class="field">
+                    <label for="rw_wp_sppt">RW WP SPPT</label>
+                    <input id="rw_wp_sppt" type="text" name="rw_wp_sppt" inputmode="numeric" value="{{ old('rw_wp_sppt') }}">
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
+                <div class="field full">
+                    <label for="jalan_op_sppt">Jalan OP SPPT</label>
+                    <input id="jalan_op_sppt" type="text" name="jalan_op_sppt" value="{{ old('jalan_op_sppt') }}" required>
+                </div>
+                <div class="field">
+                    <label for="rt_op_sppt">RT OP SPPT</label>
+                    <input id="rt_op_sppt" type="text" name="rt_op_sppt" inputmode="numeric" value="{{ old('rt_op_sppt') }}">
+                </div>
+                <div class="field">
+                    <label for="rw_op_sppt">RW OP SPPT</label>
+                    <input id="rw_op_sppt" type="text" name="rw_op_sppt" inputmode="numeric" value="{{ old('rw_op_sppt') }}">
+                </div>
+                <div class="field">
+                    <label for="luas_tanah_sppt">Luas Tanah SPPT</label>
+                    <input id="luas_tanah_sppt" type="number" step="0.01" min="0" name="luas_tanah_sppt" value="{{ old('luas_tanah_sppt', 0) }}">
+                </div>
+                <div class="field">
+                    <label for="luas_bangunan_sppt">Luas Bangunan SPPT</label>
+                    <input id="luas_bangunan_sppt" type="number" step="0.01" min="0" name="luas_bangunan_sppt" value="{{ old('luas_bangunan_sppt', 0) }}">
+                </div>
+                <div class="field">
+                    <label for="pbb_terhutang">PBB Terhutang</label>
+                    <input id="pbb_terhutang" type="number" step="0.01" min="0" name="pbb_terhutang" value="{{ old('pbb_terhutang') }}" required>
+                </div>
+                <div class="field">
+                    <label for="tanggal_pembayaran">Tanggal Pembayaran (Opsional)</label>
+                    <input id="tanggal_pembayaran" type="date" name="tanggal_pembayaran" value="{{ old('tanggal_pembayaran') }}">
+                </div>
+            </div>
+
+            <div class="actions" style="margin-top:0.8rem;">
+                <button class="btn btn-primary" type="submit">Simpan</button>
+                <a class="btn btn-secondary" href="{{ route('dashboard.pbb-tax-objects.index') }}">Kembali</a>
+            </div>
+        </form>
+    </section>
 @endsection

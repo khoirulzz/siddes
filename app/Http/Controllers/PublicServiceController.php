@@ -325,10 +325,10 @@ class PublicServiceController extends Controller
         return response()->json([
             'success' => true,
             'nop' => $taxObject->nop,
-            'tax_name' => $taxObject->tax_name,
+            'tax_name' => $taxObject->resolvedTaxName(),
             'address' => $taxObject->resolvedAddress(),
-            'tax_year' => (int) $taxObject->tax_year,
-            'amount_due' => (float) $taxObject->amount_due,
+            'tax_year' => $taxObject->resolvedTaxYear(),
+            'amount_due' => $taxObject->resolvedAmountDue(),
             'status' => $taxObject->status,
         ]);
     }
@@ -596,13 +596,13 @@ class PublicServiceController extends Controller
                 continue;
             }
 
-            $key = strtoupper((string) $taxObject->nop) . '#' . (int) $taxObject->tax_year;
+            $key = strtoupper((string) $taxObject->nop) . '#' . $taxObject->resolvedTaxYear();
             $resolved[$key] = [
                 'nop' => (string) $taxObject->nop,
-                'tax_name' => (string) $taxObject->tax_name,
+                'tax_name' => $taxObject->resolvedTaxName(),
                 'address' => $taxObject->resolvedAddress(),
-                'tax_year' => (int) $taxObject->tax_year,
-                'amount_due' => (float) $taxObject->amount_due,
+                'tax_year' => $taxObject->resolvedTaxYear(),
+                'amount_due' => $taxObject->resolvedAmountDue(),
             ];
         }
 

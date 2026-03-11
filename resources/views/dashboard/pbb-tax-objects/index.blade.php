@@ -1,121 +1,130 @@
 @extends('layouts.dashboard')
 
+@section('title', 'Master Data PBB')
+@section('page_title', 'Master Data PBB')
+
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 text-dark fw-bold">Master Data PBB</h1>
-            <p class="text-muted">Kelola data pajak bumi dan bangunan</p>
+    <section class="panel">
+        <div class="toolbar">
+            <h2>Master Data PBB per Tahun</h2>
+            <div class="actions">
+                <a class="btn btn-primary" href="{{ route('dashboard.pbb-tax-objects.create') }}">Tambah Data (+)</a>
+                <a class="btn btn-secondary" href="{{ route('dashboard.pbb-tax-objects.template') }}">Download Template</a>
+            </div>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ route('dashboard.pbb-tax-objects.create') }}" class="btn" style="background-color: #0066cc; color: white; border: none;">
-                <i class="bi bi-plus-circle"></i> Tambah Data PBB
-            </a>
-        </div>
-    </div>
 
-    @if($message = Session::get('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle"></i> {{ $message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+        <form method="POST" action="{{ route('dashboard.pbb-tax-objects.import') }}" enctype="multipart/form-data" class="inline-form">
+            @csrf
+            <div class="field">
+                <label for="file">Upload File Excel/CSV</label>
+                <input id="file" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+            </div>
+            <div class="field">
+                <label for="year_override">Override Tahun (Opsional)</label>
+                <input id="year_override" type="number" name="year_override" min="2026" max="{{ date('Y') + 1 }}" placeholder="Kosongkan agar ikut data file">
+            </div>
+            <button class="btn btn-primary" type="submit">Import Data</button>
+        </form>
+    </section>
 
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-            <form method="GET" action="{{ route('dashboard.pbb-tax-objects.index') }}" class="row g-2 align-items-end">
-                <div class="col-md-8">
-                    <label for="q" class="form-label mb-1">Cari NOP / Nama / Pemilik / Lokasi</label>
-                    <input id="q" type="text" name="q" class="form-control" value="{{ $filters['q'] ?? '' }}" placeholder="Contoh: 33.26.010.004.001-0028.0">
-                </div>
-                <div class="col-md-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Cari</button>
-                    <a href="{{ route('dashboard.pbb-tax-objects.index') }}" class="btn btn-outline-secondary">Reset</a>
-                </div>
-            </form>
-        </div>
-    </div>
+    <section class="panel">
+        <h2>Filter Data</h2>
+        <form method="GET" action="{{ route('dashboard.pbb-tax-objects.index') }}" class="inline-form">
+            <div class="field">
+                <label for="q">Cari NOP / Nama WP / Jalan WP / Jalan OP</label>
+                <input id="q" type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Contoh: 33.26.010.004.001-0028.0">
+            </div>
+            <div class="field">
+                <label for="year">Tahun</label>
+                <input id="year" type="number" name="year" value="{{ $filters['year'] ?? '' }}" min="2026" max="{{ date('Y') + 1 }}" placeholder="Semua tahun">
+            </div>
+            <button class="btn btn-primary" type="submit">Cari</button>
+            <a class="btn btn-secondary" href="{{ route('dashboard.pbb-tax-objects.index') }}">Reset</a>
+        </form>
+    </section>
 
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead style="background-color: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+    <section class="panel">
+        <h2>Tabel Master Data PBB</h2>
+        <div class="table-wrap population-table-wrap">
+            <table>
+                <thead>
                     <tr>
-                        <th style="color: #0066cc; font-weight: 600;">NOP</th>
-                        <th style="color: #0066cc; font-weight: 600;">Nama Pajak</th>
-                        <th style="color: #0066cc; font-weight: 600;">Pemilik</th>
-                        <th style="color: #0066cc; font-weight: 600;">Lokasi</th>
-                        <th style="color: #0066cc; font-weight: 600;">Th. Pajak</th>
-                        <th style="color: #0066cc; font-weight: 600;">Jumlah</th>
-                        <th style="color: #0066cc; font-weight: 600;">Status</th>
-                        <th style="color: #0066cc; font-weight: 600; text-align: center;">Aksi</th>
+                        <th>NO</th>
+                        <th>TAHUN</th>
+                        <th>NOP</th>
+                        <th>NAMA WP SPPT</th>
+                        <th>JALAN WP SPPT</th>
+                        <th>RT WP SPPT</th>
+                        <th>RW WP SPPT</th>
+                        <th>DESA WP SPPT</th>
+                        <th>JALAN OP SPPT</th>
+                        <th>RT OP SPPT</th>
+                        <th>RW OP SPPT</th>
+                        <th>LUAS TANAH SPPT</th>
+                        <th>LUAS BANGUNAN SPPT</th>
+                        <th>PBB TERHUTANG</th>
+                        <th>TANGGAL PEMBAYARAN</th>
+                        <th>AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($taxObjects as $taxObject)
+                    @forelse($taxObjects as $item)
                         <tr>
-                            <td class="fw-bold text-dark">{{ $taxObject->nop }}</td>
-                            <td>{{ $taxObject->tax_name }}</td>
-                            <td>{{ $taxObject->owner_name }}</td>
-                            <td>{{ Str::limit($taxObject->location, 30) }}</td>
-                            <td class="text-center">{{ $taxObject->tax_year }}</td>
-                            <td class="text-end">Rp {{ number_format($taxObject->amount_due, 0, ',', '.') }}</td>
+                            <td>{{ ($taxObjects->firstItem() ?? 0) + $loop->index }}</td>
+                            <td>{{ $item->resolvedTaxYear() }}</td>
+                            <td>{{ $item->nop }}</td>
+                            <td>{{ $item->nama_wp_sppt ?: '-' }}</td>
+                            <td>{{ $item->jalan_wp_sppt ?: '-' }}</td>
+                            <td>{{ $item->rt_wp_sppt ?: '-' }}</td>
+                            <td>{{ $item->rw_wp_sppt ?: '-' }}</td>
+                            <td>{{ $item->desa_wp_sppt ?: '-' }}</td>
+                            <td>{{ $item->jalan_op_sppt ?: '-' }}</td>
+                            <td>{{ $item->rt_op_sppt ?: '-' }}</td>
+                            <td>{{ $item->rw_op_sppt ?: '-' }}</td>
+                            <td>{{ number_format($item->resolvedLandArea(), 2, ',', '.') }}</td>
+                            <td>{{ number_format($item->resolvedBuildingArea(), 2, ',', '.') }}</td>
+                            <td>Rp {{ number_format($item->resolvedAmountDue(), 0, ',', '.') }}</td>
+                            <td>{{ $item->resolvedPaidAt()?->format('d-m-Y') ?: '-' }}</td>
                             <td>
-                                @if($taxObject->status === 'active')
-                                    <span class="badge" style="background-color: #00a8e8; color: white;">Aktif</span>
-                                @else
-                                    <span class="badge bg-secondary">Nonaktif</span>
-                                @endif
-                            </td>
-                            <td style="text-align: center;">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('dashboard.pbb-tax-objects.show', $taxObject->id) }}" class="btn" style="background-color: #00a8e8; color: white; border: none;" title="Lihat">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('dashboard.pbb-tax-objects.edit', $taxObject->id) }}" class="btn" style="background-color: #0066cc; color: white; border: none;" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('dashboard.pbb-tax-objects.destroy', $taxObject->id) }}" style="display: inline;" onsubmit="return confirm('Yakin hapus data ini?');">
+                                <div class="actions">
+                                    <a class="btn btn-secondary" href="{{ route('dashboard.pbb-tax-objects.show', $item) }}">Detail</a>
+                                    <a class="btn btn-secondary" href="{{ route('dashboard.pbb-tax-objects.edit', $item) }}">Edit</a>
+                                    <form method="POST" action="{{ route('dashboard.pbb-tax-objects.destroy', $item) }}" onsubmit="return confirm('Yakin hapus data ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        <button class="btn btn-danger" type="submit">Hapus</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox"></i> Belum ada data PBB
-                            </td>
-                        </tr>
+                        <tr><td colspan="16">Belum ada data PBB.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
 
-    @if($taxObjects->hasPages())
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">Menampilkan {{ $taxObjects->from() ?? 0 }} - {{ $taxObjects->to() ?? 0 }} dari {{ $taxObjects->total() }} data</small>
-            <div class="pager-controls">
-                @if($taxObjects->onFirstPage())
-                    <span class="pager-link is-disabled">Sebelumnya</span>
-                @else
-                    <a class="pager-link" href="{{ $taxObjects->previousPageUrl() }}">Sebelumnya</a>
-                @endif
+        @if($taxObjects->hasPages())
+            <div class="table-pagination">
+                <small class="muted">
+                    Menampilkan {{ $taxObjects->firstItem() ?? 0 }} - {{ $taxObjects->lastItem() ?? 0 }} dari {{ $taxObjects->total() }} data
+                </small>
+                <div class="pager-controls">
+                    @if($taxObjects->onFirstPage())
+                        <span class="pager-link is-disabled">Sebelumnya</span>
+                    @else
+                        <a class="pager-link" href="{{ $taxObjects->previousPageUrl() }}">Sebelumnya</a>
+                    @endif
 
-                <span class="pager-meta">Halaman {{ $taxObjects->currentPage() }} / {{ $taxObjects->lastPage() }}</span>
+                    <span class="pager-meta">Halaman {{ $taxObjects->currentPage() }} / {{ $taxObjects->lastPage() }}</span>
 
-                @if($taxObjects->hasMorePages())
-                    <a class="pager-link" href="{{ $taxObjects->nextPageUrl() }}">Berikutnya</a>
-                @else
-                    <span class="pager-link is-disabled">Berikutnya</span>
-                @endif
+                    @if($taxObjects->hasMorePages())
+                        <a class="pager-link" href="{{ $taxObjects->nextPageUrl() }}">Berikutnya</a>
+                    @else
+                        <span class="pager-link is-disabled">Berikutnya</span>
+                    @endif
+                </div>
             </div>
-        </div>
-    @endif
-</div>
+        @endif
+    </section>
 @endsection

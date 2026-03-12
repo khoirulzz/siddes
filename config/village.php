@@ -3,7 +3,7 @@
 return [
     'name' => 'Desa Lambanggelun',
     'district' => 'Kabupaten Pekalongan',
-    'logo_url' => env('VILLAGE_LOGO_URL'),
+    'logo_url' => env('VILLAGE_LOGO_URL', '/assets/images/logo_pekalongan.svg'),
     'hero_image_url' => 'https://lh3.googleusercontent.com/pw/AP1GczP_zcOCqkbmPK9-ni6MoR02R8TXFqaVHMRxWbVXlpCERulMVJPcfjLb9iZtmQmcozXXKkouRdva4eRgk4VsywbiJotaCCbVASUY8LaC6KpHYhXHUAVbO8qO1nnPy3hAMD9LOi1yhdPkl-ViIKaIHks0=w973-h651-s-no-gm?authuser=0',
     'profile_hero_image_url' => 'https://i.ibb.co.com/BKT8Sk3x/146108-picsay.webp',
     'head_name' => env('VILLAGE_HEAD_NAME', 'ABDUL HADI'),

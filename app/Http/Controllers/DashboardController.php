@@ -143,8 +143,8 @@ class DashboardController extends Controller
         $letterStats = LetterServiceRequest::query()
             ->selectRaw(
                 'COUNT(*) as total_all,
-                 SUM(CASE WHEN COALESCE(submitted_at, requested_at, created_at) BETWEEN ? AND ? THEN 1 ELSE 0 END) as period_count,
-                 SUM(CASE WHEN status = ? AND COALESCE(submitted_at, requested_at, created_at) BETWEEN ? AND ? THEN 1 ELSE 0 END) as incoming_count',
+                 SUM(CASE WHEN COALESCE(submitted_at, created_at) BETWEEN ? AND ? THEN 1 ELSE 0 END) as period_count,
+                 SUM(CASE WHEN status = ? AND COALESCE(submitted_at, created_at) BETWEEN ? AND ? THEN 1 ELSE 0 END) as incoming_count',
                 [$periodStart, $periodEnd, 'Diajukan', $periodStart, $periodEnd]
             )
             ->first();

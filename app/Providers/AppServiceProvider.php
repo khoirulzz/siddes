@@ -47,11 +47,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->applyVillageConfigOverrides();
-
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        $this->applyVillageConfigOverrides();
 
         RateLimiter::for('login', function (Request $request) {
             $email = strtolower(trim((string) $request->input('email', '')));

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\ComplaintReport;
 use App\Models\Gallery;
-use App\Models\LandRecord;
+use App\Models\LandTransaction;
 use App\Models\LetterServiceRequest;
 use App\Models\News;
 use App\Models\PbbPaymentRequest;
@@ -193,7 +193,7 @@ class DashboardController extends Controller
         $populationTotalAll = (int) ($populationStats?->total_all ?? 0);
         $populationNew = (int) ($populationStats?->new_count ?? 0);
 
-        $landStats = LandRecord::query()
+        $landStats = LandTransaction::query()
             ->selectRaw(
                 'COUNT(*) as total_all,
                  SUM(CASE WHEN created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as new_count',
@@ -291,10 +291,10 @@ class DashboardController extends Controller
             ],
             [
                 'key' => 'pertanahan_baru',
-                'title' => 'Pertanahan Baru',
+                'title' => 'Transaksi Tanah',
                 'value' => $landNew,
                 'total' => $landTotalAll,
-                'route' => route('dashboard.land-records.index'),
+                'route' => route('dashboard.land-transactions.index'),
                 'tone' => 'amber',
                 'notification' => $landNew,
             ],

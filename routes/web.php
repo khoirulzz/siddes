@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AiContentController;
 use App\Http\Controllers\Admin\ComplaintReportController;
 use App\Http\Controllers\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Admin\LandRecordController;
+use App\Http\Controllers\Admin\LandTransactionController;
 use App\Http\Controllers\Admin\LetterServiceRequestController;
 use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\OperatorController;
@@ -80,6 +81,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,operator'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/monitoring/summary', [DashboardController::class, 'monitoringSummary'])->name('monitoring.summary');
+
+    Route::get('land-transactions/history', [LandTransactionController::class, 'history'])
+        ->name('land-transactions.history');
+    Route::get('land-archives', [LandTransactionController::class, 'archives'])
+        ->name('land-transactions.archives');
+    Route::get('land-transactions/files/{landTransactionFile}', [LandTransactionController::class, 'showFile'])
+        ->name('land-transactions.files.show');
+    Route::delete('land-transactions/files/{landTransactionFile}', [LandTransactionController::class, 'destroyFile'])
+        ->name('land-transactions.files.destroy');
+    Route::resource('land-transactions', LandTransactionController::class);
 
     Route::resources([
         'news' => AdminNewsController::class,

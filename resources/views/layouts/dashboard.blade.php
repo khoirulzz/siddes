@@ -46,11 +46,28 @@
                         </a>
                     </li>
                     <li>
-                        <a class="{{ request()->routeIs('dashboard.land-records.*') ? 'active' : '' }}" href="{{ route('dashboard.land-records.index') }}" title="Pertanahan">
+                        <a class="{{ request()->routeIs(
+                            'dashboard.land-transactions.index',
+                            'dashboard.land-transactions.create',
+                            'dashboard.land-transactions.store',
+                            'dashboard.land-transactions.show',
+                            'dashboard.land-transactions.edit',
+                            'dashboard.land-transactions.update',
+                            'dashboard.land-transactions.history',
+                            'dashboard.land-transactions.destroy'
+                        ) ? 'active' : '' }}" href="{{ route('dashboard.land-transactions.index') }}" title="Transaksi Pertanahan">
                             <span class="menu-link-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none"><path d="M3 19l6-6 4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </span>
-                            <span class="menu-link-label">Pertanahan</span>
+                            <span class="menu-link-label">Transaksi Tanah</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->routeIs('dashboard.land-transactions.archives') ? 'active' : '' }}" href="{{ route('dashboard.land-transactions.archives') }}" title="Arsip Dokumen Pertanahan">
+                            <span class="menu-link-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v4H4zM6 9h12v10H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 13h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            </span>
+                            <span class="menu-link-label">Arsip Tanah</span>
                         </a>
                     </li>
                     <li>

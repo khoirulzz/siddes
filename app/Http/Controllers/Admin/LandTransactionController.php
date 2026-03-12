@@ -32,15 +32,16 @@ class LandTransactionController extends Controller
             'to' => trim((string) $request->query('to', '')),
         ];
 
-        $query = $this->filteredTransactionsQuery($filters)->withCount('files');
+        $baseQuery = $this->filteredTransactionsQuery($filters);
 
-        $items = (clone $query)
+        $items = (clone $baseQuery)
+            ->withCount('files')
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString();
 
-        $summary = (clone $query)
+        $summary = (clone $baseQuery)
             ->selectRaw('COUNT(*) as total_rows, COALESCE(SUM(area_m2), 0) as total_area')
             ->first();
 
@@ -396,4 +397,3 @@ class LandTransactionController extends Controller
         $file->delete();
     }
 }
-

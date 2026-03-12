@@ -1,271 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+
 <style>
-@page {
-    size: A4;
-    margin: 1.5cm 2cm 2cm 2cm;
-}
+@page { margin:10mm 15mm 22mm 22mm; }
 
 body{
-    font-family: "Times New Roman", serif;
-    font-size: 12pt;
-    line-height: 1.3;
+font-family:"timesnewroman";
+font-size:12pt;
+line-height:1.45;
 }
 
-.surat-container{
-    width: 210mm;
-    min-height: 297mm;
-    margin: auto;
+table{border-collapse:collapse}
+
+.kop{
+border-bottom:3px solid #000;
+padding-bottom:8px;
+margin-bottom:10px;
 }
 
-.header{
-    text-align: center;
-    position: relative;
+.logo{width:85px;text-align:center}
+
+.kop-text{text-align:center;}
+
+.kop-l1{margin:0;font-size:16pt;text-transform:uppercase}
+.kop-l2{margin:0;font-size:16pt;text-transform:uppercase}
+.kop-l3{margin:0;font-size:18pt;font-weight:bold;text-transform:uppercase}
+
+.kop-l4{
+margin-top:4px;
+font-size:11pt;
+font-style:italic;
 }
 
-.header img{
-    position: absolute;
-    left: 0;
-    top: -10px;
-    width: 85px;
-}
+.meta{width:100%;margin-top:6px;margin-bottom:12px;}
+.meta td{vertical-align:top;}
 
-.header h1{
-    font-size: 16pt;
-    margin: 0;
-}
-
-.header h2{
-    font-size: 16pt;
-    margin: 0;
-}
-
-.header h3{
-    font-size: 16pt;
-    margin: 0;
-}
-
-.header p{
-    font-size: 10pt;
-    margin: 2px 0;
-}
-
-.garis{
-    border-top: 3px solid black;
-    border-bottom: 1px solid black;
-    margin: 6px 0 10px;
+.kode{
+font-size:9pt;
+text-align:left;
+line-height:1.35;
 }
 
 .judul{
-    text-align:center;
-    font-weight:bold;
-    text-decoration: underline;
+text-align:center;
 }
 
-.nomor{
-    text-align:center;
-    margin-bottom:20px;
+.judul .nama{
+font-weight:bold;
+text-transform:uppercase;
+text-decoration:underline;
+font-size:14pt;
 }
 
-table.data{
-    width:100%;
-    border-collapse: collapse;
+.judul .nomor{
+margin-top:3px;
+font-size:11pt;
 }
 
-table.data td{
-    vertical-align: top;
-    padding:3px 0;
+.data{
+width:100%;
+margin:8px 0;
 }
 
-.kiri{
-    width: 220px;
+.data td{
+padding:2px 0;
+vertical-align:top;
 }
 
-.tengah{
-    width:20px;
+.no{width:25px}
+.label{width:210px}
+.sep{width:12px;text-align:center}
+
+p{
+margin:6px 0;
+text-align:justify;
 }
 
-.ttd{
-    width:100%;
-    margin-top:40px;
-}
+.ttd-main{width:100%;margin-top:30px;}
+.ttd-main td{text-align:center;vertical-align:top;}
 
-.ttd td{
-    text-align:center;
-}
-
-.spasi-ttd{
-    height:80px;
-}
+.ttd-rt-rw{width:70%;margin:8px auto 0;}
+.ttd-rt-rw td{text-align:center;vertical-align:top;}
 </style>
+</head>
 
-<div class="surat-container">
-
-<div class="header">
-
-<img src="https://res.cloudinary.com/dzrca841f/image/upload/v1773304486/Lambang_Kabupaten_Pekalongan-removebg-preview_1_2_ll6wof.png">
-
-<h1>PEMERINTAH KABUPATEN PEKALONGAN</h1>
-<h2>KECAMATAN PANINGGARAN</h2>
-<h3>DESA LAMBANGGELUN</h3>
-
-<p><i>Sekretariat : Jln Raya Lambanggelun - Paninggaran KP 51164</i></p>
-
-<div class="garis"></div>
-
+<body>
+<div class="kop">
+<table width="100%">
+<tr>
+<td class="logo">
+<img src="{{ $logoUrl }}" style="height:95px;width:auto;">
+</td>
+<td class="kop-text">
+<p class="kop-l1">PEMERINTAH KABUPATEN PEKALONGAN</p>
+<p class="kop-l2">KECAMATAN PANINGGARAN</p>
+<p class="kop-l3">DESA LAMBANGGELUN</p>
+<p class="kop-l4">
+Sekretariat : Jln Raya Lambanggelun - Paninggaran KP 51164
+</p>
+</td>
+</tr>
+</table>
 </div>
 
-
-<p>Kode Desa<br>
-<u>33.26.02.13</u></p>
-
-
-<p class="judul">SURAT KETERANGAN KERJA</p>
-
-<p class="nomor">
-No 470/{skker_nomor}/LBG/{bulan_romawi}/{tahun}
-</p>
-
+<table class="meta">
+<tr>
+<td style="width:30%;" class="kode">
+Kode Wilayah<br>
+<strong>33.26.02.13</strong>
+</td>
+<td style="width:40%;" class="judul">
+<div class="nama">SURAT KETERANGAN KERJA</div>
+<div class="nomor">No : {{ $pdfLetterNumber ?? $letterNumber }}</div>
+</td>
+<td style="width:30%;"></td>
+</tr>
+</table>
 
 <p>Yang bertanda tangan di bawah ini :</p>
 
 <table class="data">
-
 <tr>
-<td class="kiri">Nama</td>
-<td class="tengah">:</td>
-<td>ABDUL HADI</td>
+<td class="label">Nama</td>
+<td class="sep">:</td>
+<td>{{ $data['nama_kepala_desa'] }}</td>
 </tr>
 
 <tr>
-<td>Jabatan</td>
-<td>:</td>
-<td>Kepala Desa Lambanggelun</td>
+<td class="label">Jabatan</td>
+<td class="sep">:</td>
+<td>{{ $data['jabatan_kepala_desa'] }}</td>
 </tr>
-
 </table>
-
-<br>
 
 <p>Dengan ini menerangkan bahwa :</p>
 
 <table class="data">
-
 <tr>
-<td class="kiri">1. Nama</td>
-<td class="tengah">:</td>
-<td>{nama_pemohon}</td>
+<td class="no">1.</td>
+<td class="label">Nama</td>
+<td class="sep">:</td>
+<td>{{ $data['nama_pemohon'] }}</td>
 </tr>
 
 <tr>
-<td>2. Tempat & Tanggal Lahir</td>
-<td>:</td>
-<td>{tempat_lahir}, {tanggal_lahir}</td>
+<td class="no">2.</td>
+<td class="label">Tempat & Tanggal lahir</td>
+<td class="sep">:</td>
+<td>{{ $data['tempat_lahir'] }}, {{ $data['tanggal_lahir'] }}</td>
 </tr>
 
 <tr>
-<td>3. Kewarganegaraan / Agama</td>
-<td>:</td>
-<td>Indonesia / {agama}</td>
+<td class="no">3.</td>
+<td class="label">Kewarganegaraan / Agama</td>
+<td class="sep">:</td>
+<td>Indonesia / {{ $data['agama'] }}</td>
 </tr>
 
 <tr>
-<td>4. NIK</td>
-<td>:</td>
-<td>{nik}</td>
+<td class="no">4.</td>
+<td class="label">NIK</td>
+<td class="sep">:</td>
+<td>{{ $data['nik'] }}</td>
 </tr>
 
 <tr>
-<td>5. Tempat Tinggal</td>
-<td>:</td>
+<td class="no">5.</td>
+<td class="label">Tempat tinggal</td>
+<td class="sep">:</td>
 <td>
-Dk. {dusun} RT {rt} RW {rw}, Desa Lambanggelun,
-Kec. Paninggaran, Kab Pekalongan
+Dk. {{ $data['dusun'] }} RT {{ $data['rt'] }} RW {{ $data['rw'] }},
+{{ $villageName }} {{ $districtName }} {{ $regencyName }}
 </td>
 </tr>
 
 <tr>
-<td>6. Pekerjaan</td>
-<td>:</td>
-<td>Pekerjaan</td>
+<td class="no">6.</td>
+<td class="label">Pekerjaan</td>
+<td class="sep">:</td>
+<td>{{ $data['pekerjaan'] }}</td>
 </tr>
 
 <tr>
-<td>Keterangan</td>
-<td>:</td>
+<td></td>
+<td class="label">Keterangan</td>
+<td class="sep">:</td>
 <td>
-Bahwa yang bersangkutan adalah benar Warga Desa Lambanggelun
-dan dalam kondisi sehat.
+Bahwa yang bersangkutan adalah benar warga Desa Lambanggelun dan dalam kondisi sehat.
 </td>
 </tr>
 
 <tr>
-<td>Keperluan</td>
-<td>:</td>
-<td>Surat Pengantar jalan ke {tujuan}</td>
+<td></td>
+<td class="label">Keperluan</td>
+<td class="sep">:</td>
+<td>
+Surat pengantar jalan ke {{ $data['tujuan'] }}
+</td>
 </tr>
-
 </table>
 
-
-<br>
-
 <p>
-Mohon kepada instansi yang berwenang agar memberikan fasilitas
-kepada orang tersebut.
+Mohon kepada instansi yang berwenang agar memberikan fasilitas kepada orang tersebut.
 </p>
 
 <p>
 Demikian surat ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
 </p>
 
-
-<br><br>
-
-<p style="text-align:right">
-Lambanggelun, {tanggal}
-</p>
-
-
-<table class="ttd">
-
+<table class="ttd-main">
 <tr>
-<td>Tanda tangan pemegang</td>
-<td>Kepala Desa Lambanggelun</td>
+<td style="width:50%;">Tanda tangan pemegang</td>
+<td style="width:50%;">Lambanggelun, {{ $data['tanggal'] }}<br>{{ $data['jabatan_kepala_desa'] }}</td>
 </tr>
-
-<tr class="spasi-ttd">
-<td></td>
+<tr>
+<td style="height:75px;"></td>
 <td></td>
 </tr>
-
 <tr>
-<td>{nama_pemohon}</td>
-<td>ABDUL HADI</td>
+<td><strong>{{ $data['nama_pemohon'] }}</strong></td>
+<td><strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong></td>
 </tr>
-
 </table>
 
-
-<br><br>
-
-<p style="text-align:center"><b>Mengetahui,</b></p>
-
-<table class="ttd">
-
+<div style="text-align:center;margin-top:26px;">Mengetahui,</div>
+<table class="ttd-rt-rw">
 <tr>
-<td>RT</td>
-<td>RW</td>
+<td style="width:50%;">RT</td>
+<td style="width:50%;">RW</td>
 </tr>
-
-<tr class="spasi-ttd">
-<td></td>
+<tr>
+<td style="height:56px;"></td>
 <td></td>
 </tr>
-
 <tr>
-<td>{nama_rt}</td>
-<td>{nama_rw}</td>
+<td><strong>{{ $data['nama_rt'] }}</strong></td>
+<td><strong>{{ $data['nama_rw'] }}</strong></td>
 </tr>
-
 </table>
 
-</div>
+</body>
+</html>

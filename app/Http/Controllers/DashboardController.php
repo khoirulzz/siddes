@@ -291,7 +291,7 @@ class DashboardController extends Controller
             ],
             [
                 'key' => 'pertanahan_baru',
-                'title' => 'Transaksi Tanah',
+                'title' => 'Pertanahan',
                 'value' => $landNew,
                 'total' => $landTotalAll,
                 'route' => route('dashboard.land-transactions.index'),

@@ -156,7 +156,7 @@
                     <svg viewBox="0 0 24 24" fill="none"><path d="M3 16l9-8 9 8M5 14v6h14v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 </span>
                 <div>
-                    <h3>Transaksi Tanah</h3>
+                    <h3>Pertanahan</h3>
                     <p>Pencatatan transaksi Letter C dan arsip dokumen.</p>
                 </div>
             </a>

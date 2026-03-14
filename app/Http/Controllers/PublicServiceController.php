@@ -441,7 +441,9 @@ class PublicServiceController extends Controller
 
         if ($request->hasFile('evidence')) {
             $evidenceFile = $request->file('evidence');
-            if (str_starts_with((string) $evidenceFile->getMimeType(), 'image/')) {
+            $evidenceMime = (string) $evidenceFile->getMimeType();
+
+            if (str_starts_with($evidenceMime, 'image/')) {
                 $data['evidence_path'] = $imageUploadService->storeOptimized(
                     $evidenceFile,
                     'complaints/evidence',
@@ -450,7 +452,11 @@ class PublicServiceController extends Controller
                     78
                 );
             } else {
-                $data['evidence_path'] = $evidenceFile->store('complaints/evidence', 'public');
+                $data['evidence_path'] = $imageUploadService->storeFile(
+                    $evidenceFile,
+                    'complaints/evidence',
+                    str_starts_with($evidenceMime, 'video/') ? 'video' : 'raw'
+                );
             }
         }
 

@@ -272,7 +272,9 @@ class VillageActivityController extends Controller
             }
 
             $documentFile = $request->file('document');
-            if (str_starts_with((string) $documentFile->getMimeType(), 'image/')) {
+            $documentMime = (string) $documentFile->getMimeType();
+
+            if (str_starts_with($documentMime, 'image/')) {
                 $data['document_path'] = $this->imageUploadService->storeOptimized(
                     $documentFile,
                     'activities/documents',
@@ -281,7 +283,11 @@ class VillageActivityController extends Controller
                     78
                 );
             } else {
-                $data['document_path'] = $documentFile->store('activities/documents', 'public');
+                $data['document_path'] = $this->imageUploadService->storeFile(
+                    $documentFile,
+                    'activities/documents',
+                    'raw'
+                );
             }
         }
     }

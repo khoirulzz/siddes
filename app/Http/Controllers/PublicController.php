@@ -21,12 +21,6 @@ class PublicController extends Controller
             ->orderBy('hamlet')
             ->get();
 
-        $landSummary = LandRecord::query()
-            ->selectRaw('category, COUNT(*) as total')
-            ->groupBy('category')
-            ->orderByDesc('total')
-            ->get();
-
         $activityCategorySummary = VillageActivity::query()
             ->selectRaw('category, COUNT(*) as total')
             ->groupBy('category')
@@ -47,10 +41,6 @@ class PublicController extends Controller
             'populationChart' => [
                 'labels' => $populationSummary->pluck('hamlet'),
                 'data' => $populationSummary->pluck('total'),
-            ],
-            'landChart' => [
-                'labels' => $landSummary->pluck('category'),
-                'data' => $landSummary->pluck('total'),
             ],
             'activitiesChart' => [
                 'labels' => $activityCategorySummary->keys()->values(),

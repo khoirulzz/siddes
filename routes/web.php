@@ -35,7 +35,6 @@ Route::controller(PublicController::class)->group(function () {
 
     Route::prefix('informasi-publik')->name('information.')->group(function () {
         Route::get('/kependudukan', 'population')->name('population');
-        Route::get('/pertanahan', 'land')->name('land');
         Route::get('/kegiatan-desa', 'activities')->name('activities');
     });
 

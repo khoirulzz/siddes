@@ -71,7 +71,6 @@
                         <button type="button">Informasi Publik</button>
                         <div class="dropdown">
                             <a class="{{ request()->routeIs('information.population') ? 'active' : '' }}" href="{{ route('information.population') }}">Kependudukan</a>
-                            <a class="{{ request()->routeIs('information.land') ? 'active' : '' }}" href="{{ route('information.land') }}">Pertanahan</a>
                             <a class="{{ request()->routeIs('information.activities') ? 'active' : '' }}" href="{{ route('information.activities') }}">Kegiatan Desa</a>
                         </div>
                     </li>

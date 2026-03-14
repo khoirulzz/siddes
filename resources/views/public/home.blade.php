@@ -32,10 +32,6 @@
                 <canvas id="homePopulationChart"></canvas>
             </article>
             <article class="insight-card interactive-card">
-                <h3>Grafik Data Pertanahan</h3>
-                <canvas id="homeLandChart"></canvas>
-            </article>
-            <article class="insight-card interactive-card">
                 <h3>Grafik Kegiatan Desa</h3>
                 <canvas id="homeActivitiesChart"></canvas>
             </article>
@@ -176,10 +172,6 @@
         const populationData = @json($populationChart['data']);
         const populationColors = populationLabels.map((_, i) => palette[i % palette.length]);
 
-        const landLabels = @json($landChart['labels']);
-        const landData = @json($landChart['data']);
-        const landColors = landLabels.map((_, i) => palette[i % palette.length]);
-
         const activitiesLabels = @json($activitiesChart['labels']);
         const activitiesData = @json($activitiesChart['data']);
         const activitiesColors = activitiesLabels.map((_, i) => palette[i % palette.length]);
@@ -223,20 +215,6 @@
             options: barOptions(chartTheme),
         });
 
-        const landChart = new Chart(document.getElementById('homeLandChart'), {
-            type: 'bar',
-            data: {
-                labels: landLabels,
-                datasets: [{
-                    label: 'Pertanahan',
-                    data: landData,
-                    backgroundColor: landColors,
-                    borderRadius: 7
-                }]
-            },
-            options: barOptions(chartTheme),
-        });
-
         const activitiesChart = new Chart(document.getElementById('homeActivitiesChart'), {
             type: 'bar',
             data: {
@@ -253,7 +231,7 @@
 
         const syncChartsWithTheme = () => {
             chartTheme = getChartTheme();
-            [populationChart, landChart, activitiesChart].forEach((chart) => {
+            [populationChart, activitiesChart].forEach((chart) => {
                 chart.options = barOptions(chartTheme);
                 chart.update();
             });

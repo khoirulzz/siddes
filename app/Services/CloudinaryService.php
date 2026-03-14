@@ -190,6 +190,32 @@ class CloudinaryService
         return Str::startsWith($path, trim($cloudName, '/') . '/');
     }
 
+    public function urlReachable(string $url): bool
+    {
+        if (! $this->isCloudinaryUrl($url)) {
+            return false;
+        }
+
+        try {
+            $headResponse = Http::timeout($this->timeoutSeconds())->head($url);
+            if ($headResponse->successful()) {
+                return true;
+            }
+        } catch (\Throwable) {
+            // Fallback to a ranged GET below.
+        }
+
+        try {
+            $getResponse = Http::timeout($this->timeoutSeconds())
+                ->withHeaders(['Range' => 'bytes=0-0'])
+                ->get($url);
+
+            return $getResponse->successful() || $getResponse->status() === 206;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /**
      * @return array{resource_type:string,public_id:string}|null
      */
@@ -237,7 +263,10 @@ class CloudinaryService
             return null;
         }
 
-        $last = preg_replace('/\.[a-z0-9]{1,8}$/i', '', $last) ?: $last;
+        if ($resourceType !== 'raw') {
+            $last = preg_replace('/\.[a-z0-9]{1,8}$/i', '', $last) ?: $last;
+        }
+
         $publicId = implode('/', [...$tail, $last]);
         $publicId = trim($publicId, '/');
         if ($publicId === '') {

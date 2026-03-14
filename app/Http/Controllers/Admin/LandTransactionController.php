@@ -12,10 +12,12 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class LandTransactionController extends Controller
 {
@@ -234,13 +236,25 @@ class LandTransactionController extends Controller
         ]);
     }
 
-    public function showFile(Request $request, LandTransactionFile $landTransactionFile): BinaryFileResponse|RedirectResponse
+    public function showFile(Request $request, LandTransactionFile $landTransactionFile): Response|RedirectResponse
     {
         $path = trim((string) $landTransactionFile->file_path);
         abort_if($path === '', 404);
 
+        $filename = $this->safeFilename(
+            (string) ($landTransactionFile->original_name ?: basename((string) parse_url($path, PHP_URL_PATH)))
+        );
+        $mime = trim((string) $landTransactionFile->mime_type);
+        $mime = $mime !== '' ? $mime : 'application/octet-stream';
+        abort_unless(MediaSecurity::isAllowedMime($mime), 404);
+
         if (preg_match('/^https?:\/\//i', $path) === 1) {
-            return redirect()->away($path);
+            return $this->remoteFileResponse(
+                $path,
+                $filename,
+                $mime,
+                $request->query('mode') === 'download'
+            );
         }
 
         $normalizedPath = PublicMedia::normalizePath($path);
@@ -253,8 +267,7 @@ class LandTransactionController extends Controller
         $mime = (string) ($landTransactionFile->mime_type ?: $disk->mimeType($normalizedPath) ?: 'application/octet-stream');
         abort_unless(MediaSecurity::isAllowedMime($mime), 404);
 
-        $filename = trim((string) ($landTransactionFile->original_name ?: basename($normalizedPath)));
-        $filename = $filename !== '' ? $filename : basename($normalizedPath);
+        $filename = $this->safeFilename((string) ($landTransactionFile->original_name ?: basename($normalizedPath)));
 
         if ($request->query('mode') === 'download') {
             return response()->download(
@@ -395,5 +408,27 @@ class LandTransactionController extends Controller
 
         $this->imageUploadService->delete((string) $file->file_path, $resourceType);
         $file->delete();
+    }
+
+    private function remoteFileResponse(string $url, string $filename, string $mime, bool $download): Response
+    {
+        $response = Http::timeout(30)->get($url);
+        abort_unless($response->successful(), 404);
+
+        $contentType = trim((string) $response->header('Content-Type'));
+        $contentType = $contentType !== '' ? $contentType : $mime;
+
+        return response($response->body(), 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => ($download ? 'attachment' : MediaSecurity::dispositionForMime($mime)) . '; filename="' . $filename . '"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function safeFilename(string $filename): string
+    {
+        $clean = trim(str_replace(["\r", "\n", '"'], '', $filename));
+
+        return $clean !== '' ? $clean : 'dokumen';
     }
 }

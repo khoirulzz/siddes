@@ -87,6 +87,7 @@ class ServiceArchiveService
                 ! $forceRegenerate
                 && $existingUrl !== ''
                 && $this->cloudinaryService->isCloudinaryUrl($existingUrl)
+                && $this->cloudinaryService->urlReachable($existingUrl)
             ) {
                 return $existingUrl;
             }
@@ -136,9 +137,9 @@ class ServiceArchiveService
         try {
             $upload = $this->cloudinaryService->uploadPath(
                 $tempPath,
-                $this->archiveFolder(),
+                $this->letterArchiveCloudFolder(),
                 'raw',
-                $this->letterArchivePublicId($letter)
+                $this->letterArchiveCloudFilename($letter)
             );
         } finally {
             @unlink($tempPath);
@@ -183,7 +184,17 @@ class ServiceArchiveService
 
     private function letterArchivePublicId(LetterServiceRequest $letter): string
     {
-        return trim($this->archiveFolder(), '/') . '/surat/' . $this->letterArchiveCode($letter);
+        return $this->letterArchiveCloudFolder() . '/' . $this->letterArchiveCloudFilename($letter);
+    }
+
+    private function letterArchiveCloudFolder(): string
+    {
+        return trim($this->archiveFolder(), '/') . '/surat';
+    }
+
+    private function letterArchiveCloudFilename(LetterServiceRequest $letter): string
+    {
+        return $this->letterArchiveCode($letter) . '.pdf';
     }
 
     private function letterArchiveCode(LetterServiceRequest $letter): string
@@ -211,4 +222,3 @@ class ServiceArchiveService
         ];
     }
 }
-

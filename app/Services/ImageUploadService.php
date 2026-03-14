@@ -110,10 +110,12 @@ class ImageUploadService
         $directory = trim($directory, '/');
 
         if ($this->cloudinaryService->enabled()) {
+            $publicId = $this->cloudinaryPublicId($file, $resourceType);
             $cloudUpload = $this->cloudinaryService->uploadPath(
                 $file->getRealPath() ?: '',
                 $this->dynamicFolder($directory),
-                $resourceType
+                $resourceType,
+                $publicId
             );
 
             if (is_array($cloudUpload) && ! empty($cloudUpload['secure_url'])) {
@@ -220,6 +222,21 @@ class ImageUploadService
         return $directory === '' ? $base : $base . '/' . $directory;
     }
 
+    private function cloudinaryPublicId(UploadedFile $file, string $resourceType): ?string
+    {
+        if (strtolower(trim($resourceType)) !== 'raw') {
+            return null;
+        }
+
+        $name = Str::slug((string) pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+        $name = $name !== '' ? $name : 'file';
+        $extension = strtolower(trim((string) $file->getClientOriginalExtension()));
+        $extension = preg_replace('/[^a-z0-9]+/i', '', $extension) ?: '';
+        $base = Str::lower((string) Str::ulid()) . '-' . $name;
+
+        return $extension !== '' ? $base . '.' . $extension : $base;
+    }
+
     private function storeFallback(UploadedFile $file, string $directory): string
     {
         $cloudPath = $this->storeImageInCloudinary($file, $directory);
@@ -230,4 +247,3 @@ class ImageUploadService
         return $file->store($directory, 'public');
     }
 }
-

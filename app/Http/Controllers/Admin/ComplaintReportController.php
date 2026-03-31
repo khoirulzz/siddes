@@ -7,11 +7,12 @@ use App\Models\ComplaintReport;
 use App\Services\CloudinaryService;
 use App\Services\ImageUploadService;
 use App\Support\MediaSecurity;
+use App\Support\RemoteMediaResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ComplaintReportController extends Controller
 {
@@ -61,7 +62,7 @@ class ComplaintReportController extends Controller
         ]);
     }
 
-    public function evidence(ComplaintReport $complaintReport): BinaryFileResponse|RedirectResponse
+    public function evidence(ComplaintReport $complaintReport): Response
     {
         $path = $complaintReport->resolvedEvidencePath();
         if (! $path) {
@@ -73,7 +74,13 @@ class ComplaintReportController extends Controller
                 return back()->with('error', 'URL file bukti tidak valid.');
             }
 
-            return redirect()->away($path);
+            return RemoteMediaResponse::fromUrl(
+                $path,
+                basename((string) parse_url($path, PHP_URL_PATH)),
+                'application/octet-stream',
+                false,
+                $this->cloudinaryService
+            );
         }
 
         if (! MediaSecurity::isAllowedPath($path)) {

@@ -6,14 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\ComplaintReport;
 use App\Models\LetterServiceRequest;
 use App\Models\PbbPaymentRequest;
+use App\Services\CloudinaryService;
 use App\Services\LetterDocumentService;
 use App\Services\ServiceArchiveService;
+use App\Support\RemoteMediaResponse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ServiceArchiveController extends Controller
 {
@@ -51,8 +53,9 @@ class ServiceArchiveController extends Controller
         Request $request,
         LetterServiceRequest $letterServiceRequest,
         ServiceArchiveService $archiveService,
-        LetterDocumentService $documentService
-    ): BinaryFileResponse|RedirectResponse {
+        LetterDocumentService $documentService,
+        CloudinaryService $cloudinaryService
+    ): Response {
         try {
             if ($letterServiceRequest->status !== 'Selesai') {
                 return back()->with('error', 'File arsip surat hanya tersedia untuk status Selesai.');
@@ -65,7 +68,13 @@ class ServiceArchiveController extends Controller
             );
 
             if (preg_match('/^https?:\/\//i', $path) === 1) {
-                return redirect()->away($path);
+                return RemoteMediaResponse::fromUrl(
+                    $path,
+                    $archiveService->letterPdfDownloadName($letterServiceRequest),
+                    'application/pdf',
+                    $request->query('mode') !== 'view',
+                    $cloudinaryService
+                );
             }
 
             if ($request->query('mode') === 'view') {

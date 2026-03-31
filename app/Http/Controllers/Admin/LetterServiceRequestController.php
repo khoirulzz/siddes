@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LetterServiceRequest;
+use App\Services\CloudinaryService;
 use App\Services\LetterDocumentService;
 use App\Services\ServiceArchiveService;
+use App\Support\RemoteMediaResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use RuntimeException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class LetterServiceRequestController extends Controller
 {
@@ -57,8 +59,9 @@ class LetterServiceRequestController extends Controller
         Request $request,
         LetterServiceRequest $letterServiceRequest,
         LetterDocumentService $documentService,
-        ServiceArchiveService $archiveService
-    ): BinaryFileResponse|\Illuminate\Http\RedirectResponse {
+        ServiceArchiveService $archiveService,
+        CloudinaryService $cloudinaryService
+    ): Response {
         $format = strtolower((string) $request->query('format', 'pdf'));
         if (! in_array($format, ['pdf', 'docx'], true)) {
             abort(404);
@@ -70,7 +73,13 @@ class LetterServiceRequestController extends Controller
                 $archiveName = $archiveService->letterPdfDownloadName($letterServiceRequest);
 
                 if (preg_match('/^https?:\/\//i', $archivePath) === 1) {
-                    return redirect()->away($archivePath);
+                    return RemoteMediaResponse::fromUrl(
+                        $archivePath,
+                        $archiveName,
+                        'application/pdf',
+                        true,
+                        $cloudinaryService
+                    );
                 }
 
                 return response()->download($archivePath, $archiveName, [

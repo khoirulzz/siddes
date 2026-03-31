@@ -64,69 +64,15 @@
 
     <section id="struktur-organisasi" class="profile-section reveal-on-scroll">
         <h2>Bagan Struktur Organisasi Pemerintah Desa</h2>
-        <div class="org-board">
-            <div class="org-row org-row-single">
-                <article class="org-card org-card-head">
-                    <h3>{{ $villageHead['position'] }}</h3>
-                    <p>{{ $villageHead['name'] }}</p>
-                </article>
-            </div>
-            <div class="org-row org-row-single with-connector">
-                <article class="org-card org-card-core">
-                    <h3>Sekretaris Desa</h3>
-                    <p>Koordinator administrasi dan layanan internal</p>
-                </article>
-            </div>
-            <div class="org-row org-row-multi with-connector" style="--row-columns: 3;">
-                <article class="org-card">
-                    <h3>Kaur Tata Usaha dan Umum</h3>
-                    <p>Administrasi surat-menyurat dan urusan umum</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kaur Keuangan</h3>
-                    <p>Pengelolaan APBDes dan pelaporan keuangan</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kaur Perencanaan</h3>
-                    <p>Penyusunan dokumen rencana pembangunan desa</p>
-                </article>
-            </div>
-            <div class="org-row org-row-multi with-connector" style="--row-columns: 3;">
-                <article class="org-card">
-                    <h3>Kasi Pemerintahan</h3>
-                    <p>Pelayanan urusan pemerintahan dan kependudukan</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kasi Kesejahteraan</h3>
-                    <p>Program sosial, ekonomi, dan pemberdayaan warga</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kasi Pelayanan</h3>
-                    <p>Koordinasi pelayanan publik desa</p>
-                </article>
-            </div>
-            <div class="org-row org-row-multi with-connector" style="--row-columns: 5;">
-                <article class="org-card">
-                    <h3>Kadus Bojongireng</h3>
-                    <p>Koordinator wilayah dusun</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kadus Panumbangan</h3>
-                    <p>Koordinator wilayah dusun</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kadus Mandelun</h3>
-                    <p>Koordinator wilayah dusun</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kadus Sasak</h3>
-                    <p>Koordinator wilayah dusun</p>
-                </article>
-                <article class="org-card">
-                    <h3>Kadus Simendem</h3>
-                    <p>Koordinator wilayah dusun</p>
-                </article>
-            </div>
+        <div class="org-chart-frame">
+            <figure class="org-chart-image-wrap">
+                <img
+                    class="org-chart-image"
+                    src="{{ config('village.organization_chart_url') }}"
+                    alt="Bagan struktur organisasi Pemerintah Desa {{ config('village.name') }}"
+                    loading="lazy"
+                >
+            </figure>
         </div>
     </section>
 

@@ -42,8 +42,18 @@
                 </div>
 
                 <div class="field">
+                    <label for="party_a_identifier">Istri/Pengenal Pihak A (Opsional)</label>
+                    <input id="party_a_identifier" type="text" name="party_a_identifier" value="{{ old('party_a_identifier', $item->party_a_identifier) }}" placeholder="Nama istri atau pengenal lain">
+                </div>
+
+                <div class="field">
                     <label for="party_a_page">Halaman Buku C Pihak A</label>
                     <input id="party_a_page" type="text" name="party_a_page" value="{{ old('party_a_page', $item->party_a_page) }}" placeholder="Contoh: 600" required>
+                </div>
+
+                <div class="field full">
+                    <label for="party_a_address">Alamat Pihak A</label>
+                    <textarea id="party_a_address" name="party_a_address" required placeholder="Alamat lengkap pihak A ditulis manual">{{ old('party_a_address', $item->party_a_address) }}</textarea>
                 </div>
 
                 <div class="field">
@@ -52,8 +62,18 @@
                 </div>
 
                 <div class="field">
+                    <label for="party_b_identifier">Istri/Pengenal Pihak B (Opsional)</label>
+                    <input id="party_b_identifier" type="text" name="party_b_identifier" value="{{ old('party_b_identifier', $item->party_b_identifier) }}" placeholder="Nama istri atau pengenal lain">
+                </div>
+
+                <div class="field">
                     <label for="party_b_page">Halaman Buku C Pihak B</label>
                     <input id="party_b_page" type="text" name="party_b_page" value="{{ old('party_b_page', $item->party_b_page) }}" placeholder="Contoh: 500" required>
+                </div>
+
+                <div class="field full">
+                    <label for="party_b_address">Alamat Pihak B</label>
+                    <textarea id="party_b_address" name="party_b_address" required placeholder="Alamat lengkap pihak B ditulis manual">{{ old('party_b_address', $item->party_b_address) }}</textarea>
                 </div>
 
                 <div class="field full">
@@ -120,4 +140,3 @@
         </form>
     </section>
 @endsection
-

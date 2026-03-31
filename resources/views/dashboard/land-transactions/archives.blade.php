@@ -12,8 +12,8 @@
 
         <form method="GET" action="{{ route('dashboard.land-transactions.archives') }}" class="inline-form">
             <div class="field">
-                <label for="q">Cari File / Nomor / Nama / Halaman</label>
-                <input id="q" type="text" name="q" value="{{ $filters['q'] }}" placeholder="Contoh: AJB atau TNH-260312-ABCD">
+                <label for="q">Cari File / Nomor / Nama / Pengenal / Alamat / Halaman</label>
+                <input id="q" type="text" name="q" value="{{ $filters['q'] }}" placeholder="Contoh: AJB, TNH-260312-ABCD, atau nama istri">
             </div>
             <div class="field">
                 <label for="kind">Jenis File</label>
@@ -63,8 +63,16 @@
                             <td>
                                 @if($file->transaction)
                                     {{ $file->transaction->party_a_name }} ({{ $file->transaction->party_a_page }})
+                                    @if($file->transaction->party_a_identifier)
+                                        <br>
+                                        <small class="muted">{{ $file->transaction->party_a_identifier }}</small>
+                                    @endif
                                     <br>
                                     {{ $file->transaction->party_b_name }} ({{ $file->transaction->party_b_page }})
+                                    @if($file->transaction->party_b_identifier)
+                                        <br>
+                                        <small class="muted">{{ $file->transaction->party_b_identifier }}</small>
+                                    @endif
                                 @else
                                     -
                                 @endif
@@ -110,4 +118,3 @@
         @endif
     </section>
 @endsection
-

@@ -29,7 +29,15 @@
                             <a href="{{ route('dashboard.land-transactions.history', ['name' => $item->party_a_name, 'page' => $item->party_a_page]) }}">
                                 {{ $item->party_a_name }} (Hal. {{ $item->party_a_page }})
                             </a>
+                            @if($item->party_a_identifier)
+                                <br>
+                                <small class="muted">Istri/Pengenal: {{ $item->party_a_identifier }}</small>
+                            @endif
                         </td>
+                    </tr>
+                    <tr>
+                        <th>Alamat Pihak A</th>
+                        <td>{{ $item->party_a_address ?: '-' }}</td>
                     </tr>
                     <tr>
                         <th>Pihak B (Pembeli/Penerima)</th>
@@ -37,7 +45,15 @@
                             <a href="{{ route('dashboard.land-transactions.history', ['name' => $item->party_b_name, 'page' => $item->party_b_page]) }}">
                                 {{ $item->party_b_name }} (Hal. {{ $item->party_b_page }})
                             </a>
+                            @if($item->party_b_identifier)
+                                <br>
+                                <small class="muted">Istri/Pengenal: {{ $item->party_b_identifier }}</small>
+                            @endif
                         </td>
+                    </tr>
+                    <tr>
+                        <th>Alamat Pihak B</th>
+                        <td>{{ $item->party_b_address ?: '-' }}</td>
                     </tr>
                     <tr>
                         <th>Luas Tercatat</th>
@@ -125,8 +141,20 @@
                             <td>{{ $row->transaction_number }}</td>
                             <td>{{ $row->transaction_date?->format('d-m-Y') ?: '-' }}</td>
                             <td>{{ $row->type_label }}</td>
-                            <td>{{ $row->party_a_name }} (Hal. {{ $row->party_a_page }})</td>
-                            <td>{{ $row->party_b_name }} (Hal. {{ $row->party_b_page }})</td>
+                            <td>
+                                {{ $row->party_a_name }} (Hal. {{ $row->party_a_page }})
+                                @if($row->party_a_identifier)
+                                    <br>
+                                    <small class="muted">{{ $row->party_a_identifier }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                {{ $row->party_b_name }} (Hal. {{ $row->party_b_page }})
+                                @if($row->party_b_identifier)
+                                    <br>
+                                    <small class="muted">{{ $row->party_b_identifier }}</small>
+                                @endif
+                            </td>
                             <td>{{ number_format($row->files_count ?? 0, 0, ',', '.') }} file</td>
                             <td><a class="btn btn-secondary" href="{{ route('dashboard.land-transactions.show', $row) }}">Detail</a></td>
                         </tr>
@@ -140,4 +168,3 @@
         </div>
     </section>
 @endsection
-

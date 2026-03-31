@@ -151,21 +151,43 @@
                 </form>
             </article>
 
-            <aside class="service-panel">
-                <h2>Cek Status Tiket PBB</h2>
-                <p class="panel-copy">Masukkan nomor tiket untuk memantau status permohonan.</p>
-                <label class="form-label" for="ticketInput">Nomor Tiket</label>
-                <div class="inline-field">
-                    <input
-                        type="text"
-                        id="ticketInput"
-                        class="form-control"
-                        placeholder="Contoh: PBB-260218-ABCD"
-                        autocomplete="off"
+            <aside class="service-sidebar-stack">
+                <article class="service-panel">
+                    <h2>Cek Status Tiket PBB</h2>
+                    <p class="panel-copy">Masukkan nomor tiket untuk memantau status permohonan.</p>
+                    <label class="form-label" for="ticketInput">Nomor Tiket</label>
+                    <div class="inline-field">
+                        <input
+                            type="text"
+                            id="ticketInput"
+                            class="form-control"
+                            placeholder="Contoh: PBB-260218-ABCD"
+                            autocomplete="off"
+                        >
+                        <button class="btn btn-outline" type="button" id="btnSearchTicket">Cari</button>
+                    </div>
+                    <div id="ticketFeedback" class="feedback-box" style="margin-top:0.7rem;"></div>
+                </article>
+
+                <article class="service-panel service-link-panel">
+                    <div class="service-link-kicker">Cek NOP Layanan PBB</div>
+                    <h2>Cek data NOP dan status pembayaran</h2>
+                    <p class="panel-copy">
+                        Gunakan layanan resmi Pemerintah Kabupaten Pekalongan untuk melihat data NOP
+                        dan status pembayaran PBB secara langsung.
+                    </p>
+                    <a
+                        class="btn btn-primary btn-lg"
+                        href="https://simpelpbb.pekalongankab.go.id/cek-nop"
+                        target="_blank"
+                        rel="noopener"
                     >
-                    <button class="btn btn-outline" type="button" id="btnSearchTicket">Cari</button>
-                </div>
-                <div id="ticketFeedback" class="feedback-box" style="margin-top:0.7rem;"></div>
+                        Buka Cek NOP Resmi
+                    </a>
+                    <small class="text-muted" style="display:block; margin-top:0.65rem;">
+                        Tautan akan membuka halaman eksternal resmi simpelpbb.pekalongankab.go.id.
+                    </small>
+                </article>
             </aside>
         </div>
     </div>
@@ -227,6 +249,12 @@
             min-width: 0;
         }
 
+        .service-sidebar-stack {
+            display: grid;
+            gap: 0.9rem;
+            align-content: start;
+        }
+
         .service-panel {
             border: 1px solid #d7e4f2;
             border-radius: 1rem;
@@ -239,6 +267,24 @@
         .service-panel h2 {
             margin: 0;
             font-size: 1.08rem;
+        }
+
+        .service-link-panel {
+            border-color: #c7dbef;
+            background: linear-gradient(145deg, #f7fbff 0%, #eef5fd 55%, #e6f1fc 100%);
+        }
+
+        .service-link-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            background: rgba(15, 76, 129, 0.1);
+            color: #0f4c81;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.35rem 0.65rem;
+            margin-bottom: 0.6rem;
         }
 
         .panel-copy {

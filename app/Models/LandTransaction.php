@@ -24,8 +24,12 @@ class LandTransaction extends Model
         'transaction_date',
         'transaction_type',
         'party_a_name',
+        'party_a_identifier',
+        'party_a_address',
         'party_a_page',
         'party_b_name',
+        'party_b_identifier',
+        'party_b_address',
         'party_b_page',
         'land_object',
         'area_m2',
@@ -65,4 +69,3 @@ class LandTransaction extends Model
         return self::TYPE_LABELS;
     }
 }
-

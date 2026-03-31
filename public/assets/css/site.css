@@ -627,7 +627,7 @@ html[data-theme="dark"] .theme-toggle .moon {
 
 .home-insight-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.9rem;
     margin-bottom: 1.4rem;
 }
@@ -1593,6 +1593,15 @@ html[data-theme="dark"] .photo-cascade {
     background: #102237;
 }
 
+html[data-theme="dark"] .org-chart-frame {
+    border-color: #2f4a63;
+    background: linear-gradient(180deg, #102033 0%, #0d1828 100%);
+}
+
+html[data-theme="dark"] .org-chart-svg {
+    color: #deebf8;
+}
+
 html[data-theme="dark"] .org-row.with-connector::before,
 html[data-theme="dark"] .org-row-multi.with-connector::after,
 html[data-theme="dark"] .org-row-multi.with-connector .org-card::before {
@@ -1952,6 +1961,64 @@ textarea {
     padding-left: 1.1rem;
     color: var(--muted);
     line-height: 1.7;
+}
+
+.org-chart-frame {
+    margin-top: 0.95rem;
+    border: 1px solid #d4e1eb;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f6fafc 100%);
+    padding: 1rem;
+}
+
+.org-chart-scroll {
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+}
+
+.org-chart-image-wrap {
+    margin: 0;
+}
+
+.org-chart-image {
+    display: block;
+    width: min(100%, 860px);
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+}
+
+.org-chart-svg {
+    display: block;
+    width: 100%;
+    min-width: 900px;
+    height: auto;
+    color: #111827;
+}
+
+.org-line {
+    stroke: currentColor;
+    stroke-width: 4;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.org-text {
+    fill: currentColor;
+    font-family: "Poppins", sans-serif;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.org-text-major {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.org-text-support {
+    font-size: 20px;
 }
 
 .org-board {
@@ -2456,6 +2523,19 @@ textarea {
         padding: 0.85rem;
     }
 
+    .org-chart-frame {
+        padding: 0.8rem;
+    }
+
+    .org-chart-image {
+        width: 100%;
+        max-width: 760px;
+    }
+
+    .org-chart-svg {
+        min-width: 820px;
+    }
+
     .org-row-single {
         grid-template-columns: minmax(220px, 340px);
     }
@@ -2639,6 +2719,18 @@ textarea {
     .theme-toggle {
         width: 38px;
         height: 38px;
+    }
+
+    .org-chart-frame {
+        padding: 0.72rem;
+    }
+
+    .org-chart-image {
+        max-width: 100%;
+    }
+
+    .org-chart-svg {
+        min-width: 760px;
     }
 
     .org-row-single,

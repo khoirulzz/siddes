@@ -32,6 +32,16 @@
                 <canvas id="populationGenderChart"></canvas>
             </article>
         </div>
+        <div class="chart-grid-dashboard" style="margin-top:0.8rem;">
+            <article class="chart-box">
+                <h3>Distribusi Usia Penduduk</h3>
+                <canvas id="populationAgeChart"></canvas>
+            </article>
+            <article class="chart-box">
+                <h3>Distribusi Pendidikan</h3>
+                <canvas id="populationEducationChart" style="min-height:340px;"></canvas>
+            </article>
+        </div>
     </section>
 
     <section class="panel">
@@ -267,8 +277,24 @@
         const hamletLabels = @json($summaryByHamlet->pluck('hamlet_name'));
         const hamletData = @json($summaryByHamlet->pluck('total'));
         const genderData = @json([$genderSummary['Laki-laki'], $genderSummary['Perempuan']]);
+        const ageLabels = @json($ageSummary['labels']);
+        const ageData = @json($ageSummary['data']);
+        const educationLabels = @json($educationSummary['labels']);
+        const educationData = @json($educationSummary['data']);
         const palette = ['#0f4c81', '#1f8a70', '#f59e0b', '#e76f51', '#457b9d', '#8ab17d', '#9d4edd'];
         const hamletColors = hamletLabels.map((_, i) => palette[i % palette.length]);
+        const ageColors = ageLabels.map((_, i) => palette[i % palette.length]);
+        const educationColors = educationLabels.map((_, i) => palette[i % palette.length]);
+
+        const barOptions = {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                },
+            },
+        };
 
         new Chart(document.getElementById('populationHamletChart'), {
             type: 'bar',
@@ -281,7 +307,7 @@
                     borderRadius: 8
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: barOptions
         });
 
         new Chart(document.getElementById('populationGenderChart'), {
@@ -294,6 +320,43 @@
                 }]
             },
             options: { responsive: true }
+        });
+
+        new Chart(document.getElementById('populationAgeChart'), {
+            type: 'bar',
+            data: {
+                labels: ageLabels,
+                datasets: [{
+                    label: 'Jumlah Penduduk',
+                    data: ageData,
+                    backgroundColor: ageColors,
+                    borderRadius: 8
+                }]
+            },
+            options: barOptions
+        });
+
+        new Chart(document.getElementById('populationEducationChart'), {
+            type: 'bar',
+            data: {
+                labels: educationLabels,
+                datasets: [{
+                    label: 'Jumlah Penduduk',
+                    data: educationData,
+                    backgroundColor: educationColors,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                    },
+                },
+            }
         });
     </script>
 @endsection

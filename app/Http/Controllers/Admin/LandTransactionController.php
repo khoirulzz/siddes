@@ -5,24 +5,26 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\LandTransaction;
 use App\Models\LandTransactionFile;
+use App\Services\CloudinaryService;
 use App\Services\ImageUploadService;
 use App\Support\MediaSecurity;
 use App\Support\PublicMedia;
+use App\Support\RemoteMediaResponse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class LandTransactionController extends Controller
 {
-    public function __construct(private readonly ImageUploadService $imageUploadService)
-    {
+    public function __construct(
+        private readonly ImageUploadService $imageUploadService,
+        private readonly CloudinaryService $cloudinaryService
+    ) {
     }
 
     public function index(Request $request)
@@ -220,7 +222,11 @@ class LandTransactionController extends Controller
                         ->orWhereHas('transaction', function (Builder $transactionQuery) use ($keyword): void {
                             $transactionQuery->where('transaction_number', 'like', '%' . $keyword . '%')
                                 ->orWhere('party_a_name', 'like', '%' . $keyword . '%')
+                                ->orWhere('party_a_identifier', 'like', '%' . $keyword . '%')
+                                ->orWhere('party_a_address', 'like', '%' . $keyword . '%')
                                 ->orWhere('party_b_name', 'like', '%' . $keyword . '%')
+                                ->orWhere('party_b_identifier', 'like', '%' . $keyword . '%')
+                                ->orWhere('party_b_address', 'like', '%' . $keyword . '%')
                                 ->orWhere('party_a_page', 'like', '%' . $keyword . '%')
                                 ->orWhere('party_b_page', 'like', '%' . $keyword . '%');
                         });
@@ -305,7 +311,11 @@ class LandTransactionController extends Controller
                 $query->where(function (Builder $builder) use ($keyword): void {
                     $builder->where('transaction_number', 'like', '%' . $keyword . '%')
                         ->orWhere('party_a_name', 'like', '%' . $keyword . '%')
+                        ->orWhere('party_a_identifier', 'like', '%' . $keyword . '%')
+                        ->orWhere('party_a_address', 'like', '%' . $keyword . '%')
                         ->orWhere('party_b_name', 'like', '%' . $keyword . '%')
+                        ->orWhere('party_b_identifier', 'like', '%' . $keyword . '%')
+                        ->orWhere('party_b_address', 'like', '%' . $keyword . '%')
                         ->orWhere('party_a_page', 'like', '%' . $keyword . '%')
                         ->orWhere('party_b_page', 'like', '%' . $keyword . '%')
                         ->orWhere('document_number', 'like', '%' . $keyword . '%')
@@ -327,7 +337,9 @@ class LandTransactionController extends Controller
                 $name = $filters['name'];
                 $query->where(function (Builder $builder) use ($name): void {
                     $builder->where('party_a_name', 'like', '%' . $name . '%')
-                        ->orWhere('party_b_name', 'like', '%' . $name . '%');
+                        ->orWhere('party_a_identifier', 'like', '%' . $name . '%')
+                        ->orWhere('party_b_name', 'like', '%' . $name . '%')
+                        ->orWhere('party_b_identifier', 'like', '%' . $name . '%');
                 });
             })
             ->when($filters['page'] !== '', function (Builder $query) use ($filters): void {
@@ -348,8 +360,12 @@ class LandTransactionController extends Controller
             'transaction_date' => ['required', 'date'],
             'transaction_type' => ['required', 'string', 'in:' . implode(',', array_keys(LandTransaction::typeOptions()))],
             'party_a_name' => ['required', 'string', 'max:160'],
+            'party_a_identifier' => ['nullable', 'string', 'max:160'],
+            'party_a_address' => ['required', 'string', 'max:500'],
             'party_a_page' => ['required', 'string', 'max:50'],
             'party_b_name' => ['required', 'string', 'max:160'],
+            'party_b_identifier' => ['nullable', 'string', 'max:160'],
+            'party_b_address' => ['required', 'string', 'max:500'],
             'party_b_page' => ['required', 'string', 'max:50'],
             'land_object' => ['required', 'string', 'max:5000'],
             'area_m2' => ['nullable', 'numeric', 'min:0'],
@@ -412,17 +428,13 @@ class LandTransactionController extends Controller
 
     private function remoteFileResponse(string $url, string $filename, string $mime, bool $download): Response
     {
-        $response = Http::timeout(30)->get($url);
-        abort_unless($response->successful(), 404);
-
-        $contentType = trim((string) $response->header('Content-Type'));
-        $contentType = $contentType !== '' ? $contentType : $mime;
-
-        return response($response->body(), 200, [
-            'Content-Type' => $contentType,
-            'Content-Disposition' => ($download ? 'attachment' : MediaSecurity::dispositionForMime($mime)) . '; filename="' . $filename . '"',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return RemoteMediaResponse::fromUrl(
+            $url,
+            $filename,
+            $mime,
+            $download,
+            $this->cloudinaryService
+        );
     }
 
     private function safeFilename(string $filename): string

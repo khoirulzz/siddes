@@ -36,8 +36,8 @@
         <h2>Filter Transaksi</h2>
         <form method="GET" action="{{ route('dashboard.land-transactions.index') }}" class="inline-form">
             <div class="field">
-                <label for="q">Cari Nomor / Nama / Halaman / Objek</label>
-                <input id="q" type="text" name="q" value="{{ $filters['q'] }}" placeholder="Contoh: Sukirman atau Hal. 500">
+                <label for="q">Cari Nomor / Nama / Pengenal / Alamat / Halaman / Objek</label>
+                <input id="q" type="text" name="q" value="{{ $filters['q'] }}" placeholder="Contoh: Sukirman, istri, atau alamat pihak">
             </div>
             <div class="field">
                 <label for="type">Jenis Transaksi</label>
@@ -96,6 +96,10 @@
                                 <a href="{{ route('dashboard.land-transactions.history', ['name' => $item->party_a_name, 'page' => $item->party_a_page]) }}">
                                     {{ $item->party_a_name }}
                                 </a>
+                                @if($item->party_a_identifier)
+                                    <br>
+                                    <small class="muted">Istri/Pengenal: {{ $item->party_a_identifier }}</small>
+                                @endif
                                 <br>
                                 <small class="muted">Hal. {{ $item->party_a_page }}</small>
                             </td>
@@ -103,6 +107,10 @@
                                 <a href="{{ route('dashboard.land-transactions.history', ['name' => $item->party_b_name, 'page' => $item->party_b_page]) }}">
                                     {{ $item->party_b_name }}
                                 </a>
+                                @if($item->party_b_identifier)
+                                    <br>
+                                    <small class="muted">Istri/Pengenal: {{ $item->party_b_identifier }}</small>
+                                @endif
                                 <br>
                                 <small class="muted">Hal. {{ $item->party_b_page }}</small>
                             </td>
@@ -154,4 +162,3 @@
         @endif
     </section>
 @endsection
-

@@ -16,6 +16,7 @@ use App\Services\LetterDocumentService;
 use App\Services\ServiceArchiveService;
 use App\Support\LetterSchema;
 use App\Support\MediaSecurity;
+use App\Support\RemoteMediaResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class PublicServiceController extends Controller
 {
@@ -201,8 +202,9 @@ class PublicServiceController extends Controller
         Request $request,
         string $ticket,
         LetterDocumentService $documentService,
-        ServiceArchiveService $archiveService
-    ): BinaryFileResponse|RedirectResponse {
+        ServiceArchiveService $archiveService,
+        CloudinaryService $cloudinaryService
+    ): Response {
         $letter = LetterServiceRequest::query()->where('ticket_number', $ticket)->firstOrFail();
         $format = strtolower((string) $request->query('format', 'pdf'));
 
@@ -216,7 +218,13 @@ class PublicServiceController extends Controller
                 $archiveName = $archiveService->letterPdfDownloadName($letter);
 
                 if (preg_match('/^https?:\/\//i', $archivePath) === 1) {
-                    return redirect()->away($archivePath);
+                    return RemoteMediaResponse::fromUrl(
+                        $archivePath,
+                        $archiveName,
+                        'application/pdf',
+                        true,
+                        $cloudinaryService
+                    );
                 }
 
                 return response()->download($archivePath, $archiveName, [
@@ -522,7 +530,7 @@ class PublicServiceController extends Controller
     public function complaintEvidence(
         string $ticket,
         CloudinaryService $cloudinaryService
-    ): BinaryFileResponse|RedirectResponse
+    ): Response
     {
         $normalizedTicket = Str::upper(trim($ticket));
         $complaint = ComplaintReport::query()
@@ -535,7 +543,13 @@ class PublicServiceController extends Controller
         if (preg_match('/^https?:\/\//i', $path) === 1) {
             abort_unless($cloudinaryService->isCloudinaryUrl($path), 404);
 
-            return redirect()->away($path);
+            return RemoteMediaResponse::fromUrl(
+                $path,
+                basename((string) parse_url($path, PHP_URL_PATH)),
+                'application/octet-stream',
+                false,
+                $cloudinaryService
+            );
         }
 
         abort_unless(MediaSecurity::isAllowedPath($path), 404);

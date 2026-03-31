@@ -196,8 +196,10 @@ class CloudinaryService
             return false;
         }
 
+        $deliveryUrl = $this->deliveryUrl($url);
+
         try {
-            $headResponse = Http::timeout($this->timeoutSeconds())->head($url);
+            $headResponse = Http::timeout($this->timeoutSeconds())->head($deliveryUrl);
             if ($headResponse->successful()) {
                 return true;
             }
@@ -208,12 +210,84 @@ class CloudinaryService
         try {
             $getResponse = Http::timeout($this->timeoutSeconds())
                 ->withHeaders(['Range' => 'bytes=0-0'])
-                ->get($url);
+                ->get($deliveryUrl);
 
             return $getResponse->successful() || $getResponse->status() === 206;
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    public function deliveryUrl(string $url): string
+    {
+        $url = trim($url);
+        if (! $this->isCloudinaryUrl($url) || $this->apiSecret() === '') {
+            return $url;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts)) {
+            return $url;
+        }
+
+        $path = trim((string) ($parts['path'] ?? ''), '/');
+        if ($path === '') {
+            return $url;
+        }
+
+        $segments = explode('/', $path);
+        if (count($segments) < 4) {
+            return $url;
+        }
+
+        [$cloudName, $resourceType, $deliveryType] = array_slice($segments, 0, 3);
+        if ($cloudName === '' || $resourceType === '' || $deliveryType === '') {
+            return $url;
+        }
+
+        if (! in_array($deliveryType, ['upload', 'private', 'authenticated'], true)) {
+            return $url;
+        }
+
+        $remainder = array_slice($segments, 3);
+        if ($remainder === []) {
+            return $url;
+        }
+
+        if (preg_match('/^s--[A-Za-z0-9_-]{8}--$/', (string) $remainder[0]) === 1) {
+            array_shift($remainder);
+        }
+
+        if ($remainder === []) {
+            return $url;
+        }
+
+        // Signed delivery URLs keep PDF and raw assets accessible even when unsigned delivery is restricted.
+        $signature = $this->deliverySignature(implode('/', array_map('rawurldecode', $remainder)));
+        $signedPath = '/' . implode('/', [
+            $cloudName,
+            $resourceType,
+            $deliveryType,
+            's--' . $signature . '--',
+            ...$remainder,
+        ]);
+
+        $rebuiltUrl = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '');
+        if (isset($parts['port'])) {
+            $rebuiltUrl .= ':' . $parts['port'];
+        }
+
+        $rebuiltUrl .= $signedPath;
+
+        if (! empty($parts['query'])) {
+            $rebuiltUrl .= '?' . $parts['query'];
+        }
+
+        if (! empty($parts['fragment'])) {
+            $rebuiltUrl .= '#' . $parts['fragment'];
+        }
+
+        return $rebuiltUrl;
     }
 
     /**
@@ -308,6 +382,14 @@ class CloudinaryService
         }
 
         return sha1(implode('&', $pairs) . $this->apiSecret());
+    }
+
+    private function deliverySignature(string $payload): string
+    {
+        $digest = sha1($payload . $this->apiSecret(), true);
+        $encoded = rtrim(strtr(base64_encode($digest), '+/', '-_'), '=');
+
+        return substr($encoded, 0, 8);
     }
 
     private function uploadEndpoint(string $resourceType): string

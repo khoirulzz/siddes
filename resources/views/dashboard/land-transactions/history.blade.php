@@ -12,8 +12,8 @@
 
         <form method="GET" action="{{ route('dashboard.land-transactions.history') }}" class="inline-form">
             <div class="field">
-                <label for="name">Nama Pihak</label>
-                <input id="name" type="text" name="name" value="{{ $filters['name'] }}" placeholder="Contoh: Sukirman">
+                <label for="name">Nama / Istri / Pengenal</label>
+                <input id="name" type="text" name="name" value="{{ $filters['name'] }}" placeholder="Contoh: Sukirman atau nama istri">
             </div>
             <div class="field">
                 <label for="page">Halaman Buku C</label>
@@ -47,8 +47,20 @@
                             <td>{{ $item->transaction_number }}</td>
                             <td>{{ $item->transaction_date?->format('d-m-Y') ?: '-' }}</td>
                             <td>{{ $item->type_label }}</td>
-                            <td>{{ $item->party_a_name }} (Hal. {{ $item->party_a_page }})</td>
-                            <td>{{ $item->party_b_name }} (Hal. {{ $item->party_b_page }})</td>
+                            <td>
+                                {{ $item->party_a_name }} (Hal. {{ $item->party_a_page }})
+                                @if($item->party_a_identifier)
+                                    <br>
+                                    <small class="muted">{{ $item->party_a_identifier }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                {{ $item->party_b_name }} (Hal. {{ $item->party_b_page }})
+                                @if($item->party_b_identifier)
+                                    <br>
+                                    <small class="muted">{{ $item->party_b_identifier }}</small>
+                                @endif
+                            </td>
                             <td>{{ number_format($item->files_count ?? 0, 0, ',', '.') }} file</td>
                             <td>
                                 <a class="btn btn-secondary" href="{{ route('dashboard.land-transactions.show', $item) }}">Detail</a>
@@ -87,4 +99,3 @@
         @endif
     </section>
 @endsection
-

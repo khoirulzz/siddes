@@ -4,6 +4,7 @@ namespace App\Services\AI;
 
 use App\Models\AiGeneration;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
@@ -17,50 +18,36 @@ class AiWriterService
      *     message:string,
      *     status:int,
      *     data?:array<string, string>,
-     *     model?:string
+     *     model?:string,
+     *     provider?:string
      * }
      */
     public function generate(string $feature, array $input, ?int $userId = null): array
     {
         $writerConfig = config('ai.writer', []);
-        $apiKey = trim((string) ($writerConfig['api_key'] ?? ''));
         $enabled = (bool) ($writerConfig['enabled'] ?? false);
+        $providerOrder = array_values(array_unique(array_filter(
+            (array) ($writerConfig['providers'] ?? ['gemini', 'openrouter']),
+            static fn ($provider) => is_string($provider) && trim($provider) !== ''
+        )));
 
-        if (! $enabled || $apiKey === '') {
+        $fallbackProvider = $providerOrder[0] ?? 'gemini';
+
+        if (! $enabled) {
             return $this->fail(
                 $feature,
                 $input,
                 $userId,
-                (string) ($writerConfig['primary_model'] ?? ''),
-                (string) ($writerConfig['fallback_model'] ?? ''),
+                $fallbackProvider,
+                '',
+                '',
                 503,
-                'Konfigurasi API key OpenRouter belum tersedia.',
+                'Layanan AI dinonaktifkan pada konfigurasi aplikasi.',
                 'Layanan AI belum aktif. Silakan lanjutkan penulisan manual.'
             );
         }
 
         [$systemPrompt, $userPrompt] = $this->buildPrompts($feature, $input);
-        $baseUrl = rtrim((string) ($writerConfig['base_url'] ?? 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = trim((string) ($writerConfig['primary_model'] ?? ''));
-        $fallbackModel = trim((string) ($writerConfig['fallback_model'] ?? ''));
-        $timeoutSeconds = max(8, (int) ($writerConfig['timeout_seconds'] ?? 25));
-        $temperature = (float) ($writerConfig['temperature'] ?? 0.65);
-        $maxTokens = max(300, (int) ($writerConfig['max_tokens'] ?? 1400));
-        $models = array_values(array_unique(array_filter([$primaryModel, $fallbackModel])));
-
-        if ($models === []) {
-            return $this->fail(
-                $feature,
-                $input,
-                $userId,
-                $primaryModel,
-                $fallbackModel,
-                422,
-                'Model AI belum diatur.',
-                'Model AI belum dikonfigurasi. Silakan lanjutkan penulisan manual.'
-            );
-        }
-
         $requestPayload = [
             'feature' => $feature,
             'input' => $input,
@@ -70,96 +57,105 @@ class AiWriterService
             ],
         ];
 
-        $deadline = microtime(true) + $timeoutSeconds;
-        $lastStatus = 500;
-        $lastError = 'Layanan AI tidak tersedia sementara.';
-
-        foreach ($models as $model) {
-            $remaining = (int) floor($deadline - microtime(true));
-            if ($remaining <= 2) {
-                break;
-            }
-
-            try {
-                $response = Http::acceptJson()
-                    ->withToken($apiKey)
-                    ->withHeaders([
-                        'HTTP-Referer' => (string) ($writerConfig['http_referer'] ?? ''),
-                        'X-Title' => (string) ($writerConfig['x_title'] ?? ''),
-                    ])
-                    ->timeout($remaining)
-                    ->post("{$baseUrl}/chat/completions", [
-                        'model' => $model,
-                        'messages' => [
-                            ['role' => 'system', 'content' => $systemPrompt],
-                            ['role' => 'user', 'content' => $userPrompt],
-                        ],
-                        'temperature' => $temperature,
-                        'max_tokens' => $maxTokens,
-                    ]);
-            } catch (ConnectionException $exception) {
-                $lastStatus = 504;
-                $lastError = $exception->getMessage();
-                continue;
-            } catch (Throwable $exception) {
-                $lastStatus = 500;
-                $lastError = $exception->getMessage();
-                continue;
-            }
-
-            if (! $response->successful()) {
-                $lastStatus = $response->status();
-                $lastError = (string) data_get($response->json(), 'error.message', $response->body());
-                continue;
-            }
-
-            $content = $this->extractMessageContent($response->json());
-            $parsed = $this->parseContent($feature, $content);
-
-            if (! $parsed) {
-                $lastStatus = 422;
-                $lastError = 'AI mengembalikan format tidak valid.';
-                continue;
-            }
-
-            $this->logGeneration([
-                'user_id' => $userId,
-                'feature' => $feature,
-                'provider' => 'openrouter',
-                'primary_model' => $primaryModel,
-                'fallback_model' => $fallbackModel ?: null,
-                'used_model' => $model,
-                'request_payload' => $requestPayload,
-                'response_payload' => [
-                    'raw' => $response->json(),
-                    'parsed' => $parsed,
-                ],
-                'status' => 'success',
-                'error_message' => null,
-            ]);
-
-            return [
-                'ok' => true,
-                'message' => $feature === 'news'
-                    ? 'Draft berita berhasil dibuat. Silakan review sebelum tayang.'
-                    : 'Draft pengumuman berhasil dibuat. Silakan review sebelum tayang.',
-                'status' => 200,
-                'data' => $parsed,
-                'model' => $model,
-            ];
+        $providers = $this->configuredProviders($providerOrder);
+        if ($providers === []) {
+            return $this->fail(
+                $feature,
+                $requestPayload,
+                $userId,
+                $fallbackProvider,
+                '',
+                '',
+                503,
+                'Konfigurasi API key Gemini maupun OpenRouter belum tersedia.',
+                'Layanan AI belum aktif. Silakan lanjutkan penulisan manual.'
+            );
         }
 
-        $friendly = $this->friendlyMessage($lastStatus, $lastError);
+        $lastStatus = 500;
+        $lastError = 'Layanan AI tidak tersedia sementara.';
+        $lastProvider = $providers[0]['name'];
+        $lastPrimaryModel = $providers[0]['primary_model'];
+        $lastFallbackModel = $providers[0]['fallback_model'];
+
+        foreach ($providers as $provider) {
+            foreach ($provider['models'] as $model) {
+                $lastProvider = $provider['name'];
+                $lastPrimaryModel = $provider['primary_model'];
+                $lastFallbackModel = $provider['fallback_model'];
+
+                try {
+                    $response = $this->performProviderRequest(
+                        $provider,
+                        $model,
+                        $feature,
+                        $systemPrompt,
+                        $userPrompt
+                    );
+                } catch (ConnectionException $exception) {
+                    $lastStatus = 504;
+                    $lastError = $exception->getMessage();
+                    continue;
+                } catch (Throwable $exception) {
+                    $lastStatus = 500;
+                    $lastError = $exception->getMessage();
+                    continue;
+                }
+
+                if (! $response->successful()) {
+                    $lastStatus = $response->status();
+                    $lastError = $this->providerErrorMessage($provider['name'], $response);
+                    continue;
+                }
+
+                $content = $this->extractMessageContent($provider['name'], $response->json());
+                $parsed = $this->parseContent($feature, $content);
+
+                if (! $parsed) {
+                    $lastStatus = 422;
+                    $lastError = 'AI mengembalikan format tidak valid.';
+                    continue;
+                }
+
+                $this->logGeneration([
+                    'user_id' => $userId,
+                    'feature' => $feature,
+                    'provider' => $provider['name'],
+                    'primary_model' => $provider['primary_model'],
+                    'fallback_model' => $provider['fallback_model'] ?: null,
+                    'used_model' => $model,
+                    'request_payload' => $requestPayload,
+                    'response_payload' => [
+                        'raw' => $response->json(),
+                        'parsed' => $parsed,
+                    ],
+                    'status' => 'success',
+                    'error_message' => null,
+                ]);
+
+                return [
+                    'ok' => true,
+                    'message' => $feature === 'news'
+                        ? 'Draft berita berhasil dibuat. Silakan review sebelum tayang.'
+                        : 'Draft pengumuman berhasil dibuat. Silakan review sebelum tayang.',
+                    'status' => 200,
+                    'data' => $parsed,
+                    'model' => $model,
+                    'provider' => $provider['name'],
+                ];
+            }
+        }
 
         return $this->fail(
             $feature,
             $requestPayload,
             $userId,
-            $primaryModel,
-            $fallbackModel,
+            $lastProvider,
+            $lastPrimaryModel,
+            $lastFallbackModel,
             $this->statusCodeForClient($lastStatus),
             $lastError,
-            $friendly
+            $this->friendlyMessage($lastStatus, $lastError)
         );
     }
 
@@ -198,10 +194,143 @@ class AiWriterService
     }
 
     /**
+     * @param array<int, string> $providerOrder
+     * @return array<int, array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string}>
+     */
+    private function configuredProviders(array $providerOrder): array
+    {
+        $configured = [];
+
+        foreach ($providerOrder as $providerName) {
+            $providerConfig = config("ai.providers.{$providerName}", []);
+            $enabled = (bool) ($providerConfig['enabled'] ?? false);
+            $apiKey = trim((string) ($providerConfig['api_key'] ?? ''));
+            $primaryModel = trim((string) ($providerConfig['primary_model'] ?? ''));
+            $fallbackModel = trim((string) ($providerConfig['fallback_model'] ?? ''));
+            $models = array_values(array_unique(array_filter([$primaryModel, $fallbackModel])));
+
+            if (! $enabled || $apiKey === '' || $models === []) {
+                continue;
+            }
+
+            $configured[] = [
+                'name' => $providerName,
+                'base_url' => rtrim((string) ($providerConfig['base_url'] ?? ''), '/'),
+                'api_key' => $apiKey,
+                'models' => $models,
+                'primary_model' => $primaryModel,
+                'fallback_model' => $fallbackModel,
+                'timeout_seconds' => max(8, (int) ($providerConfig['timeout_seconds'] ?? 25)),
+                'temperature' => (float) ($providerConfig['temperature'] ?? 0.65),
+                'max_tokens' => max(300, (int) ($providerConfig['max_tokens'] ?? 1400)),
+                'http_referer' => trim((string) ($providerConfig['http_referer'] ?? '')),
+                'x_title' => trim((string) ($providerConfig['x_title'] ?? '')),
+            ];
+        }
+
+        return $configured;
+    }
+
+    /**
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     */
+    private function performProviderRequest(
+        array $provider,
+        string $model,
+        string $feature,
+        string $systemPrompt,
+        string $userPrompt
+    ): Response {
+        return match ($provider['name']) {
+            'gemini' => $this->requestGemini($provider, $model, $feature, $systemPrompt, $userPrompt),
+            default => $this->requestOpenRouter($provider, $model, $systemPrompt, $userPrompt),
+        };
+    }
+
+    /**
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     */
+    private function requestGemini(
+        array $provider,
+        string $model,
+        string $feature,
+        string $systemPrompt,
+        string $userPrompt
+    ): Response {
+        return Http::acceptJson()
+            ->withHeaders([
+                'x-goog-api-key' => $provider['api_key'],
+            ])
+            ->timeout($provider['timeout_seconds'])
+            ->post("{$provider['base_url']}/models/{$model}:generateContent", [
+                'system_instruction' => [
+                    'parts' => [
+                        ['text' => $systemPrompt],
+                    ],
+                ],
+                'contents' => [[
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $userPrompt],
+                    ],
+                ]],
+                'generationConfig' => [
+                    'temperature' => $provider['temperature'],
+                    'maxOutputTokens' => $provider['max_tokens'],
+                    'responseMimeType' => 'application/json',
+                    'responseJsonSchema' => $this->responseSchemaForFeature($feature),
+                ],
+            ]);
+    }
+
+    /**
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     */
+    private function requestOpenRouter(
+        array $provider,
+        string $model,
+        string $systemPrompt,
+        string $userPrompt
+    ): Response {
+        return Http::acceptJson()
+            ->withToken($provider['api_key'])
+            ->withHeaders([
+                'HTTP-Referer' => $provider['http_referer'],
+                'X-Title' => $provider['x_title'],
+            ])
+            ->timeout($provider['timeout_seconds'])
+            ->post("{$provider['base_url']}/chat/completions", [
+                'model' => $model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userPrompt],
+                ],
+                'temperature' => $provider['temperature'],
+                'max_tokens' => $provider['max_tokens'],
+            ]);
+    }
+
+    /**
      * @param array<string, mixed> $responseJson
      */
-    private function extractMessageContent(array $responseJson): string
+    private function extractMessageContent(string $provider, array $responseJson): string
     {
+        if ($provider === 'gemini') {
+            $parts = data_get($responseJson, 'candidates.0.content.parts', []);
+            if (! is_array($parts)) {
+                return '';
+            }
+
+            $segments = [];
+            foreach ($parts as $part) {
+                if (is_array($part) && isset($part['text'])) {
+                    $segments[] = (string) $part['text'];
+                }
+            }
+
+            return trim(implode("\n", $segments));
+        }
+
         $content = data_get($responseJson, 'choices.0.message.content', '');
 
         if (is_array($content)) {
@@ -221,6 +350,49 @@ class AiWriterService
         }
 
         return trim((string) $content);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function responseSchemaForFeature(string $feature): array
+    {
+        $properties = [
+            'title' => ['type' => 'string'],
+            'content' => ['type' => 'string'],
+        ];
+        $required = ['title', 'content'];
+
+        if ($feature === 'news') {
+            $properties['excerpt'] = ['type' => 'string'];
+            $required[] = 'excerpt';
+        }
+
+        return [
+            'type' => 'object',
+            'properties' => $properties,
+            'required' => $required,
+        ];
+    }
+
+    private function providerErrorMessage(string $provider, Response $response): string
+    {
+        $json = $response->json();
+        if (is_array($json)) {
+            $error = (string) data_get($json, 'error.message', '');
+            if ($error !== '') {
+                return $error;
+            }
+
+            if ($provider === 'gemini') {
+                $message = (string) data_get($json, 'promptFeedback.blockReasonMessage', '');
+                if ($message !== '') {
+                    return $message;
+                }
+            }
+        }
+
+        return trim($response->body()) ?: 'Layanan AI mengembalikan respons gagal.';
     }
 
     /**
@@ -297,12 +469,12 @@ class AiWriterService
             return 429;
         }
 
-        if ($status >= 500) {
-            return 503;
-        }
-
         if ($status === 504) {
             return 504;
+        }
+
+        if ($status >= 500) {
+            return 503;
         }
 
         return 422;
@@ -320,6 +492,7 @@ class AiWriterService
         string $feature,
         array $input,
         ?int $userId,
+        string $provider,
         string $primaryModel,
         string $fallbackModel,
         int $status,
@@ -329,7 +502,7 @@ class AiWriterService
         $this->logGeneration([
             'user_id' => $userId,
             'feature' => $feature,
-            'provider' => 'openrouter',
+            'provider' => $provider,
             'primary_model' => $primaryModel,
             'fallback_model' => $fallbackModel ?: null,
             'used_model' => null,
@@ -358,4 +531,3 @@ class AiWriterService
         }
     }
 }
-

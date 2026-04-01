@@ -98,7 +98,7 @@
     </section>
 
     <section id="batas-wilayah" class="profile-section reveal-on-scroll">
-        <h2>Batas Wilayah Desa</h2>
+        <h2>Visualisasi Batas Wilayah Desa</h2>
         <div class="profile-boundary">
             @if(config('village.batas_desa'))
                 <figure class="boundary-image-wrap">

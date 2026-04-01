@@ -32,6 +32,16 @@
     <link rel="stylesheet" href="{{ asset('css/public-service-form.css') }}">
 </head>
 <body>
+    @php
+        $phone = (string) config('village.phone');
+        $phoneDial = preg_replace('/[^0-9+]/', '', $phone);
+        $mapLink = config('village.map_link_url', str_replace('&output=embed', '', (string) config('village.map_embed_url')));
+        $showWelcomeBanner = request()->routeIs('home') && filled(config('village.welcome_banner_url'));
+        $welcomeBannerAlt = (string) config('village.welcome_banner_alt', 'Banner selamat datang ' . config('village.name'));
+        $welcomeBannerCooldownHours = max(1, (int) config('village.welcome_banner_cooldown_hours', 24));
+    @endphp
+
+    <div class="site-shell" data-site-shell>
     <div class="page-progress" data-page-progress aria-hidden="true"></div>
     <header class="site-header">
         <div class="container site-header-inner">
@@ -131,11 +141,6 @@
         </div>
     </main>
 
-    @php
-        $phone = (string) config('village.phone');
-        $phoneDial = preg_replace('/[^0-9+]/', '', $phone);
-        $mapLink = config('village.map_link_url', str_replace('&output=embed', '', (string) config('village.map_embed_url')));
-    @endphp
     <footer class="site-footer">
         <div class="container footer-shell">
             <div class="footer-grid">
@@ -240,6 +245,37 @@
             </div>
         </div>
     </footer>
+    </div>
+
+    @if($showWelcomeBanner)
+        <div
+            class="welcome-banner-overlay"
+            data-welcome-banner-overlay
+            data-cooldown-hours="{{ $welcomeBannerCooldownHours }}"
+            hidden
+            aria-hidden="true"
+        >
+            <div
+                class="welcome-banner-dialog"
+                data-welcome-banner-dialog
+                role="dialog"
+                aria-modal="true"
+                aria-label="Banner selamat datang"
+                tabindex="-1"
+            >
+                <div class="welcome-banner-card">
+                    <img
+                        class="welcome-banner-image"
+                        src="{{ config('village.welcome_banner_url') }}"
+                        alt="{{ $welcomeBannerAlt }}"
+                        loading="eager"
+                        fetchpriority="high"
+                        decoding="async"
+                    >
+                </div>
+            </div>
+        </div>
+    @endif
 
     <script>
         const navToggle = document.querySelector('[data-nav-toggle]');
@@ -249,6 +285,10 @@
         const pageProgress = document.querySelector('[data-page-progress]');
         const themeToggle = document.querySelector('[data-theme-toggle]');
         const rootElement = document.documentElement;
+        const siteShell = document.querySelector('[data-site-shell]');
+        const welcomeBannerOverlay = document.querySelector('[data-welcome-banner-overlay]');
+        const welcomeBannerDialog = document.querySelector('[data-welcome-banner-dialog]');
+        const welcomeBannerImage = document.querySelector('.welcome-banner-image');
 
         const themeStorageKey = 'sid_theme';
         const getSystemTheme = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -325,6 +365,194 @@
         };
 
         bootTheme();
+
+        const bannerStorage = (() => {
+            const candidates = [];
+
+            try {
+                if (window.localStorage) {
+                    candidates.push(window.localStorage);
+                }
+            } catch (error) {
+                // Ignore storage access failure
+            }
+
+            try {
+                if (window.sessionStorage) {
+                    candidates.push(window.sessionStorage);
+                }
+            } catch (error) {
+                // Ignore storage access failure
+            }
+
+            return {
+                getItem(key) {
+                    for (const storage of candidates) {
+                        try {
+                            const value = storage.getItem(key);
+                            if (value !== null) {
+                                return value;
+                            }
+                        } catch (error) {
+                            // Ignore storage access failure
+                        }
+                    }
+
+                    return null;
+                },
+                setItem(key, value) {
+                    for (const storage of candidates) {
+                        try {
+                            storage.setItem(key, value);
+                            return true;
+                        } catch (error) {
+                            // Try the next storage option
+                        }
+                    }
+
+                    return false;
+                },
+            };
+        })();
+
+        const welcomeBannerStorageKey = 'sid_welcome_banner_closed_at';
+        const welcomeBannerCooldownMs = Math.max(
+            1,
+            Number(welcomeBannerOverlay?.getAttribute('data-cooldown-hours') || '24')
+        ) * 60 * 60 * 1000;
+        const welcomeBannerAutoCloseDelayMs = 5000;
+        let welcomeBannerOpenTimer = null;
+        let welcomeBannerCloseTimer = null;
+        let welcomeBannerAutoCloseTimer = null;
+        let welcomeBannerRevealTimer = null;
+
+        const setWelcomeBannerState = (isOpen) => {
+            document.body.classList.toggle('welcome-banner-open', isOpen);
+            siteShell?.classList.toggle('is-welcome-banner-blurred', isOpen);
+
+            if (siteShell && 'inert' in siteShell) {
+                siteShell.inert = isOpen;
+            }
+        };
+
+        const readWelcomeBannerClosedAt = () => {
+            const rawValue = bannerStorage.getItem(welcomeBannerStorageKey);
+            const parsedValue = Number(rawValue);
+            return Number.isFinite(parsedValue) ? parsedValue : 0;
+        };
+
+        const shouldShowWelcomeBanner = () => {
+            if (!welcomeBannerOverlay || !welcomeBannerDialog) {
+                return false;
+            }
+
+            const closedAt = readWelcomeBannerClosedAt();
+            if (closedAt <= 0) {
+                return true;
+            }
+
+            return Date.now() - closedAt >= welcomeBannerCooldownMs;
+        };
+
+        const scheduleWelcomeBannerAutoClose = () => {
+            window.clearTimeout(welcomeBannerAutoCloseTimer);
+            welcomeBannerAutoCloseTimer = window.setTimeout(() => {
+                closeWelcomeBanner();
+            }, welcomeBannerAutoCloseDelayMs);
+        };
+
+        const startWelcomeBannerAutoClose = () => {
+            if (!welcomeBannerOverlay || welcomeBannerOverlay.hidden) {
+                return;
+            }
+
+            if (!welcomeBannerImage) {
+                scheduleWelcomeBannerAutoClose();
+                return;
+            }
+
+            if (welcomeBannerImage.complete) {
+                scheduleWelcomeBannerAutoClose();
+                return;
+            }
+
+            const handleReady = () => {
+                welcomeBannerImage.removeEventListener('load', handleReady);
+                welcomeBannerImage.removeEventListener('error', handleReady);
+                scheduleWelcomeBannerAutoClose();
+            };
+
+            welcomeBannerImage.addEventListener('load', handleReady, { once: true });
+            welcomeBannerImage.addEventListener('error', handleReady, { once: true });
+        };
+
+        const openWelcomeBanner = () => {
+            if (!welcomeBannerOverlay || !welcomeBannerDialog || !siteShell) {
+                return;
+            }
+
+            welcomeBannerOpenTimer = null;
+            window.clearTimeout(welcomeBannerCloseTimer);
+            welcomeBannerOverlay.hidden = false;
+            welcomeBannerOverlay.setAttribute('aria-hidden', 'false');
+            setWelcomeBannerState(true);
+
+            window.requestAnimationFrame(() => {
+                welcomeBannerOverlay.classList.remove('is-leaving');
+                welcomeBannerOverlay.classList.add('is-visible');
+                welcomeBannerDialog.focus({ preventScroll: true });
+                startWelcomeBannerAutoClose();
+            });
+        };
+
+        const closeWelcomeBanner = () => {
+            if (!welcomeBannerOverlay || !welcomeBannerDialog || welcomeBannerOverlay.hidden) {
+                return;
+            }
+
+            window.clearTimeout(welcomeBannerOpenTimer);
+            window.clearTimeout(welcomeBannerAutoCloseTimer);
+            bannerStorage.setItem(welcomeBannerStorageKey, String(Date.now()));
+            welcomeBannerOverlay.classList.remove('is-visible');
+            welcomeBannerOverlay.classList.add('is-leaving');
+            welcomeBannerOverlay.setAttribute('aria-hidden', 'true');
+            setWelcomeBannerState(false);
+
+            if (siteShell) {
+                siteShell.classList.remove('is-welcome-banner-revealing');
+                void siteShell.offsetWidth;
+                siteShell.classList.add('is-welcome-banner-revealing');
+                window.clearTimeout(welcomeBannerRevealTimer);
+                welcomeBannerRevealTimer = window.setTimeout(() => {
+                    siteShell.classList.remove('is-welcome-banner-revealing');
+                }, 720);
+            }
+
+            window.clearTimeout(welcomeBannerCloseTimer);
+            welcomeBannerCloseTimer = window.setTimeout(() => {
+                welcomeBannerOverlay.hidden = true;
+                welcomeBannerOverlay.classList.remove('is-leaving');
+            }, 620);
+        };
+
+        if (shouldShowWelcomeBanner()) {
+            welcomeBannerOpenTimer = window.setTimeout(openWelcomeBanner, 700);
+        }
+
+        welcomeBannerOverlay?.addEventListener('click', () => {
+            closeWelcomeBanner();
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (!welcomeBannerOverlay || welcomeBannerOverlay.hidden) {
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeWelcomeBanner();
+            }
+        });
 
         let progressFrame = null;
         let progressValue = 0;

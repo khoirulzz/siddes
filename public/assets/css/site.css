@@ -54,6 +54,256 @@ html[data-theme="dark"] body {
         linear-gradient(180deg, #081220 0%, #0a1625 44%, #0c1b2d 100%);
 }
 
+body.welcome-banner-open {
+    overflow: hidden;
+}
+
+.site-shell {
+    min-height: 100vh;
+    transition: filter 0.55s ease, transform 0.55s ease, opacity 0.55s ease;
+}
+
+.site-shell.is-welcome-banner-blurred {
+    filter: blur(20px) saturate(0.86) brightness(0.98);
+    transform: scale(0.986);
+    pointer-events: none;
+    user-select: none;
+}
+
+.site-shell.is-welcome-banner-revealing {
+    animation: welcomeHomeReveal 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.welcome-banner-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+    overflow: hidden;
+    background:
+        linear-gradient(135deg, rgba(11, 36, 61, 0.32), rgba(16, 65, 102, 0.16) 46%, rgba(31, 138, 112, 0.14)),
+        radial-gradient(circle at 14% 20%, rgba(15, 76, 129, 0.25), transparent 32%),
+        radial-gradient(circle at 84% 18%, rgba(245, 158, 11, 0.18), transparent 24%),
+        radial-gradient(circle at 72% 78%, rgba(31, 138, 112, 0.2), transparent 26%),
+        rgba(7, 18, 30, 0.2);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.42s ease, visibility 0.42s ease;
+    cursor: pointer;
+}
+
+.welcome-banner-overlay::before,
+.welcome-banner-overlay::after,
+.welcome-banner-dialog::before,
+.welcome-banner-dialog::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.welcome-banner-overlay::before {
+    width: clamp(240px, 34vw, 420px);
+    height: clamp(240px, 34vw, 420px);
+    top: 4%;
+    left: -6%;
+    border-radius: 38% 62% 60% 40% / 38% 35% 65% 62%;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(129, 191, 255, 0.7), rgba(15, 76, 129, 0.28) 42%, transparent 76%);
+    filter: blur(10px);
+    opacity: 0.85;
+    animation: welcomeOrbFloat 11s ease-in-out infinite alternate;
+}
+
+.welcome-banner-overlay::after {
+    width: clamp(220px, 28vw, 340px);
+    height: clamp(220px, 28vw, 340px);
+    right: -5%;
+    bottom: 6%;
+    border-radius: 62% 38% 48% 52% / 54% 38% 62% 46%;
+    background:
+        radial-gradient(circle at 42% 42%, rgba(250, 204, 108, 0.58), rgba(245, 158, 11, 0.24) 44%, transparent 74%);
+    filter: blur(8px);
+    opacity: 0.8;
+    animation: welcomeOrbFloat 13s ease-in-out infinite alternate-reverse;
+}
+
+.welcome-banner-overlay.is-visible,
+.welcome-banner-overlay.is-leaving {
+    visibility: visible;
+}
+
+.welcome-banner-overlay.is-visible {
+    opacity: 1;
+}
+
+.welcome-banner-overlay.is-leaving {
+    opacity: 0;
+}
+
+.welcome-banner-dialog {
+    width: min(980px, calc(100vw - 2rem));
+    position: relative;
+    display: grid;
+    justify-items: center;
+    perspective: 2200px;
+    transform-style: preserve-3d;
+    isolation: isolate;
+    opacity: 0;
+    outline: none;
+    will-change: transform, opacity;
+}
+
+.welcome-banner-dialog::before {
+    width: clamp(140px, 24vw, 260px);
+    height: clamp(140px, 24vw, 260px);
+    top: -12%;
+    right: 3%;
+    z-index: 0;
+    border-radius: 28px;
+    border: 1px solid rgba(198, 226, 255, 0.34);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transform: rotate(18deg);
+    backdrop-filter: blur(10px);
+}
+
+.welcome-banner-dialog::after {
+    width: clamp(170px, 26vw, 300px);
+    height: clamp(110px, 18vw, 180px);
+    left: 1%;
+    bottom: -16%;
+    z-index: 0;
+    border-radius: 999px;
+    border: 1px dashed rgba(31, 138, 112, 0.42);
+    background:
+        radial-gradient(circle at 30% 50%, rgba(31, 138, 112, 0.18), transparent 66%);
+    transform: rotate(-14deg);
+}
+
+.welcome-banner-overlay.is-visible .welcome-banner-dialog {
+    opacity: 1;
+    animation: welcomeBannerFlyIn 1.08s cubic-bezier(0.18, 0.88, 0.24, 1.08) both;
+}
+
+.welcome-banner-overlay.is-leaving .welcome-banner-dialog {
+    opacity: 1;
+    animation: welcomeBannerZoomIntoHome 0.62s cubic-bezier(0.32, 0, 0.2, 1) both;
+}
+
+.welcome-banner-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 1.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        0 36px 100px rgba(7, 24, 43, 0.36),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.04));
+    transform-style: preserve-3d;
+}
+
+.welcome-banner-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 10 / 2.5;
+    object-fit: cover;
+}
+
+html[data-theme="dark"] .welcome-banner-overlay {
+    background:
+        linear-gradient(135deg, rgba(2, 9, 17, 0.68), rgba(8, 31, 53, 0.52) 44%, rgba(6, 44, 39, 0.42)),
+        radial-gradient(circle at 16% 18%, rgba(121, 174, 240, 0.22), transparent 30%),
+        radial-gradient(circle at 84% 18%, rgba(245, 158, 11, 0.16), transparent 22%),
+        radial-gradient(circle at 68% 76%, rgba(88, 195, 166, 0.18), transparent 24%),
+        rgba(3, 10, 18, 0.42);
+}
+
+html[data-theme="dark"] .welcome-banner-card {
+    border-color: rgba(141, 177, 216, 0.3);
+    background:
+        linear-gradient(135deg, rgba(9, 22, 37, 0.34), rgba(9, 22, 37, 0.14));
+    box-shadow:
+        0 36px 100px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(190, 220, 255, 0.08) inset;
+}
+
+html[data-theme="dark"] .welcome-banner-dialog::before {
+    border-color: rgba(142, 178, 216, 0.26);
+    background:
+        linear-gradient(135deg, rgba(16, 40, 62, 0.4), rgba(16, 40, 62, 0.12));
+    box-shadow: inset 0 0 0 1px rgba(194, 221, 255, 0.06);
+}
+
+html[data-theme="dark"] .welcome-banner-dialog::after {
+    border-color: rgba(88, 195, 166, 0.32);
+    background:
+        radial-gradient(circle at 30% 50%, rgba(88, 195, 166, 0.16), transparent 66%);
+}
+
+@keyframes welcomeBannerFlyIn {
+    0% {
+        opacity: 0;
+        transform: perspective(2200px) translate3d(0, -16vh, -760px) rotateX(74deg) rotateY(-20deg) rotateZ(7deg) scale(0.34);
+    }
+    46% {
+        opacity: 1;
+        transform: perspective(2200px) translate3d(0, 1.2vh, 110px) rotateX(-14deg) rotateY(10deg) rotateZ(-2deg) scale(1.04);
+    }
+    72% {
+        transform: perspective(2200px) translate3d(0, -0.6vh, 36px) rotateX(5deg) rotateY(-4deg) rotateZ(1deg) scale(0.995);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(2200px) translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
+    }
+}
+
+@keyframes welcomeBannerZoomIntoHome {
+    0% {
+        opacity: 1;
+        transform: perspective(2200px) translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
+    }
+    40% {
+        opacity: 1;
+        transform: perspective(2200px) translate3d(0, -0.6vh, 60px) rotateX(3deg) rotateY(-2deg) rotateZ(0) scale(1.07);
+    }
+    100% {
+        opacity: 0;
+        transform: perspective(2200px) translate3d(0, 3.4vh, 300px) rotateX(-18deg) rotateY(7deg) rotateZ(-1deg) scale(1.24);
+    }
+}
+
+@keyframes welcomeHomeReveal {
+    0% {
+        filter: blur(14px) saturate(0.96) brightness(0.98);
+        transform: scale(1.028);
+    }
+    58% {
+        filter: blur(3px) saturate(1.02) brightness(1);
+        transform: scale(1.008);
+    }
+    100% {
+        filter: none;
+        transform: scale(1);
+    }
+}
+
+@keyframes welcomeOrbFloat {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    100% {
+        transform: translate3d(16px, -18px, 0) rotate(12deg);
+    }
+}
+
 a {
     color: inherit;
     text-decoration: none;
@@ -2470,6 +2720,17 @@ textarea {
     color: #d4e5f7;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .site-shell,
+    .welcome-banner-overlay,
+    .welcome-banner-dialog,
+    .welcome-banner-overlay::before,
+    .welcome-banner-overlay::after {
+        transition: none;
+        animation: none;
+    }
+}
+
 @media (max-width: 1150px) {
     .footer-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2708,6 +2969,49 @@ textarea {
 }
 
 @media (max-width: 640px) {
+    .welcome-banner-overlay {
+        padding: 1rem 0.85rem;
+    }
+
+    .welcome-banner-dialog {
+        width: min(100%, calc(100vw - 1rem));
+    }
+
+    .welcome-banner-card {
+        border-radius: 1.15rem;
+    }
+
+    .welcome-banner-overlay::before {
+        width: 240px;
+        height: 240px;
+        top: 7%;
+        left: -18%;
+        opacity: 0.9;
+    }
+
+    .welcome-banner-overlay::after {
+        width: 220px;
+        height: 220px;
+        right: -20%;
+        bottom: 14%;
+        opacity: 0.88;
+    }
+
+    .welcome-banner-dialog::before {
+        width: 120px;
+        height: 120px;
+        top: -16%;
+        right: 5%;
+        border-radius: 22px;
+    }
+
+    .welcome-banner-dialog::after {
+        width: 150px;
+        height: 88px;
+        left: -2%;
+        bottom: -18%;
+    }
+
     .nav-toggle-text {
         display: none;
     }

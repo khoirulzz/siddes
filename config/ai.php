@@ -11,7 +11,7 @@ return [
             'enabled' => (bool) env('GEMINI', true),
             'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
             'api_key' => env('GEMINI_API_KEY'),
-            'primary_model' => env('GEMINI_MODEL', 'gemini-3-flash-preview'),
+            'primary_model' => env('GEMINI_MODEL', 'gemini-3-flash-lite'),
             'fallback_model' => env('GEMINI_MODEL_FALLBACK', ''),
             'timeout_seconds' => (int) env('GEMINI_TIMEOUT_SECONDS', 25),
             'temperature' => (float) env('GEMINI_TEMPERATURE', 1.0),

@@ -525,14 +525,14 @@
                 window.clearTimeout(welcomeBannerRevealTimer);
                 welcomeBannerRevealTimer = window.setTimeout(() => {
                     siteShell.classList.remove('is-welcome-banner-revealing');
-                }, 720);
+                }, 820);
             }
 
             window.clearTimeout(welcomeBannerCloseTimer);
             welcomeBannerCloseTimer = window.setTimeout(() => {
                 welcomeBannerOverlay.hidden = true;
                 welcomeBannerOverlay.classList.remove('is-leaving');
-            }, 620);
+            }, 780);
         };
 
         if (shouldShowWelcomeBanner()) {
@@ -858,6 +858,92 @@
                 showCopyToast(copied ? 'Berhasil disalin.' : 'Gagal menyalin. Coba lagi.');
             } catch (error) {
                 showCopyToast('Gagal menyalin. Coba lagi.');
+            }
+        });
+
+        const sharePanels = Array.from(document.querySelectorAll('[data-share-panel]'));
+
+        const closeSharePanel = (panel) => {
+            if (!(panel instanceof HTMLElement)) {
+                return;
+            }
+
+            const toggle = panel.querySelector('[data-share-toggle]');
+            const popover = panel.querySelector('[data-share-popover]');
+            if (!(toggle instanceof HTMLElement) || !(popover instanceof HTMLElement)) {
+                return;
+            }
+
+            panel.classList.remove('is-open');
+            popover.hidden = true;
+            toggle.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        };
+
+        const openSharePanel = (panel) => {
+            if (!(panel instanceof HTMLElement)) {
+                return;
+            }
+
+            sharePanels.forEach((item) => {
+                if (item !== panel) {
+                    closeSharePanel(item);
+                }
+            });
+
+            const toggle = panel.querySelector('[data-share-toggle]');
+            const popover = panel.querySelector('[data-share-popover]');
+            if (!(toggle instanceof HTMLElement) || !(popover instanceof HTMLElement)) {
+                return;
+            }
+
+            popover.hidden = false;
+            panel.classList.add('is-open');
+            toggle.classList.add('is-open');
+            toggle.setAttribute('aria-expanded', 'true');
+        };
+
+        sharePanels.forEach((panel) => {
+            const toggle = panel.querySelector('[data-share-toggle]');
+            const actions = panel.querySelectorAll('[data-share-action]');
+
+            if (toggle instanceof HTMLElement) {
+                toggle.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (panel.classList.contains('is-open')) {
+                        closeSharePanel(panel);
+                        return;
+                    }
+
+                    openSharePanel(panel);
+                });
+            }
+
+            actions.forEach((action) => {
+                action.addEventListener('click', () => {
+                    closeSharePanel(panel);
+                });
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+
+            sharePanels.forEach((panel) => {
+                if (!panel.contains(target)) {
+                    closeSharePanel(panel);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                sharePanels.forEach((panel) => closeSharePanel(panel));
             }
         });
     </script>

@@ -44,6 +44,13 @@
             <canvas id="populationByAgeRange"></canvas>
         </article>
         <article class="chart-card">
+            <h3>Distribusi Pendidikan</h3>
+            <canvas id="populationByEducation" class="chart-canvas-tall"></canvas>
+        </article>
+    </section>
+
+    <section class="chart-grid">
+        <article class="chart-card chart-card-wide">
             <h3>Ringkasan per Dusun</h3>
             <div class="table-wrap">
                 <table>
@@ -58,7 +65,7 @@
                     <tbody>
                         @forelse ($summaryByHamlet as $item)
                             <tr>
-                                <td>{{ $item->hamlet }}</td>
+                                <td>{{ $item->hamlet_name }}</td>
                                 <td>{{ number_format($item->male_total, 0, ',', '.') }}</td>
                                 <td>{{ number_format($item->female_total, 0, ',', '.') }}</td>
                                 <td>{{ number_format($item->total, 0, ',', '.') }}</td>
@@ -76,15 +83,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const hamletLabels = @json($summaryByHamlet->pluck('hamlet'));
+        const hamletLabels = @json($summaryByHamlet->pluck('hamlet_name'));
         const hamletData = @json($summaryByHamlet->pluck('total'));
         const genderData = @json([$genderSummary['Laki-laki'], $genderSummary['Perempuan']]);
-        const ageRangeLabels = @json($ageRangeSummary['labels']);
-        const ageRangeData = @json($ageRangeSummary['data']);
+        const ageRangeLabels = @json($ageSummary['labels']);
+        const ageRangeData = @json($ageSummary['data']);
+        const educationLabels = @json($educationSummary['labels']);
+        const educationData = @json($educationSummary['data']);
 
         const palette = ['#0f4c81', '#1f8a70', '#f59e0b', '#e76f51', '#457b9d', '#8ab17d', '#9d4edd'];
         const hamletColors = hamletLabels.map((_, i) => palette[i % palette.length]);
         const ageRangeColors = ageRangeLabels.map((_, i) => palette[i % palette.length]);
+        const educationColors = educationLabels.map((_, i) => palette[i % palette.length]);
 
         const getChartTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -117,6 +127,23 @@
                     labels: {
                         color: theme.text,
                     },
+                },
+            },
+        });
+
+        const horizontalBarOptions = (theme) => ({
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
+                },
+                y: {
+                    grid: { color: theme.grid },
+                    ticks: { color: theme.text },
                 },
             },
         });
@@ -162,14 +189,30 @@
             options: barOptions(chartTheme),
         });
 
+        const educationChart = new Chart(document.getElementById('populationByEducation'), {
+            type: 'bar',
+            data: {
+                labels: educationLabels,
+                datasets: [{
+                    label: 'Jumlah Penduduk',
+                    data: educationData,
+                    backgroundColor: educationColors,
+                    borderRadius: 6
+                }]
+            },
+            options: horizontalBarOptions(chartTheme),
+        });
+
         const syncChartsWithTheme = () => {
             chartTheme = getChartTheme();
             hamletChart.options = barOptions(chartTheme);
             genderChart.options = doughnutOptions(chartTheme);
             ageRangeChart.options = barOptions(chartTheme);
+            educationChart.options = horizontalBarOptions(chartTheme);
             hamletChart.update();
             genderChart.update();
             ageRangeChart.update();
+            educationChart.update();
         };
 
         window.addEventListener('app:theme-change', syncChartsWithTheme);

@@ -8,6 +8,8 @@
         if ($newsParagraphs === []) {
             $newsParagraphs = [(string) $news->content];
         }
+        $shareTitle = $news->title . ' - ' . config('village.name');
+        $shareUrl = request()->fullUrl();
     @endphp
 
     <article class="reader-article">
@@ -33,9 +35,16 @@
                 @endif
             @endforeach
         </div>
+
+        @include('public.partials.share-actions', [
+            'shareTitle' => $shareTitle,
+            'shareUrl' => $shareUrl,
+            'shareLabel' => 'Share with',
+        ])
     </article>
 
     <p style="margin-top:1rem;">
         <a class="btn btn-outline" href="{{ route('news.index') }}">Kembali ke daftar berita</a>
     </p>
 @endsection
+

@@ -8,6 +8,8 @@
         if ($announcementParagraphs === []) {
             $announcementParagraphs = [(string) $announcement->content];
         }
+        $shareTitle = $announcement->title . ' - ' . config('village.name');
+        $shareUrl = request()->fullUrl();
     @endphp
 
     <article class="reader-article">
@@ -17,7 +19,7 @@
             <p class="reader-meta">
                 Dipublikasikan {{ $announcement->created_at?->translatedFormat('d M Y') }}
                 @if($announcement->start_date || $announcement->end_date)
-                    · Berlaku {{ $announcement->start_date?->translatedFormat('d M Y') ?? '-' }}
+                    &middot; Berlaku {{ $announcement->start_date?->translatedFormat('d M Y') ?? '-' }}
                     @if($announcement->end_date)
                         s/d {{ $announcement->end_date->translatedFormat('d M Y') }}
                     @endif
@@ -32,6 +34,12 @@
                 @endif
             @endforeach
         </div>
+
+        @include('public.partials.share-actions', [
+            'shareTitle' => $shareTitle,
+            'shareUrl' => $shareUrl,
+            'shareLabel' => 'Share',
+        ])
 
         @if($announcement->link_url)
             <div class="announcement-detail-link">

@@ -10,9 +10,35 @@ use App\Models\PopulationRecord;
 use App\Models\VillageStaff;
 use App\Models\VillageActivity;
 use App\Support\PublicMedia;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class PublicController extends Controller
 {
+    private const AGE_BRACKETS = [
+        ['label' => 'Balita (0-5 tahun)', 'min' => 0, 'max' => 5],
+        ['label' => 'Kanak-kanak (6-11 tahun)', 'min' => 6, 'max' => 11],
+        ['label' => 'Remaja Awal (12-16 tahun)', 'min' => 12, 'max' => 16],
+        ['label' => 'Remaja Akhir (17-25 tahun)', 'min' => 17, 'max' => 25],
+        ['label' => 'Dewasa Awal (26-35 tahun)', 'min' => 26, 'max' => 35],
+        ['label' => 'Dewasa Akhir (36-45 tahun)', 'min' => 36, 'max' => 45],
+        ['label' => 'Lansia Awal (46-55 tahun)', 'min' => 46, 'max' => 55],
+        ['label' => 'Lansia Akhir (56-65 tahun)', 'min' => 56, 'max' => 65],
+        ['label' => 'Manula (>65 tahun)', 'min' => 66, 'max' => null],
+    ];
+
+    private const EDUCATION_BUCKETS = [
+        'SD/Sederajat',
+        'SMP/Sederajat',
+        'SMA/Sederajat',
+        'Diploma I/II',
+        'Diploma III',
+        'Diploma IV/Sarjana',
+        'Magister',
+        'Doktoral',
+        'Lainnya / Belum Diisi',
+    ];
+
     public function home()
     {
         $populationSummary = PopulationRecord::query()
@@ -104,36 +130,18 @@ class PublicController extends Controller
     public function population()
     {
         $summaryByHamlet = PopulationRecord::query()
-            ->selectRaw("hamlet, COUNT(*) as total, SUM(CASE WHEN gender = 'Laki-laki' THEN 1 ELSE 0 END) as male_total, SUM(CASE WHEN gender = 'Perempuan' THEN 1 ELSE 0 END) as female_total")
-            ->groupBy('hamlet')
-            ->orderBy('hamlet')
+            ->selectRaw("COALESCE(dusun, hamlet) as hamlet_name, COUNT(*) as total, SUM(CASE WHEN COALESCE(jenis_kelamin, gender) = 'Laki-laki' THEN 1 ELSE 0 END) as male_total, SUM(CASE WHEN COALESCE(jenis_kelamin, gender) = 'Perempuan' THEN 1 ELSE 0 END) as female_total")
+            ->groupByRaw('COALESCE(dusun, hamlet)')
+            ->orderByRaw('COALESCE(dusun, hamlet)')
             ->get();
 
         $genderSummary = PopulationRecord::query()
-            ->selectRaw('gender, COUNT(*) as total')
-            ->groupBy('gender')
-            ->pluck('total', 'gender');
+            ->selectRaw('COALESCE(jenis_kelamin, gender) as gender_name, COUNT(*) as total')
+            ->groupByRaw('COALESCE(jenis_kelamin, gender)')
+            ->pluck('total', 'gender_name');
 
-        $ageSummary = PopulationRecord::query()
-            ->selectRaw(
-                "SUM(CASE
-                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
-                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 0 AND 12
-                    THEN 1 ELSE 0 END) as anak_total,
-                 SUM(CASE
-                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
-                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 13 AND 18
-                    THEN 1 ELSE 0 END) as remaja_total,
-                 SUM(CASE
-                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
-                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN 19 AND 59
-                    THEN 1 ELSE 0 END) as dewasa_total,
-                 SUM(CASE
-                    WHEN COALESCE(tanggal_lahir, birth_date) IS NOT NULL
-                     AND TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) > 60
-                    THEN 1 ELSE 0 END) as lansia_total"
-            )
-            ->first();
+        $chartResidents = PopulationRecord::query()
+            ->get(['id', 'tanggal_lahir', 'birth_date', 'pendidikan']);
 
         return view('public.information.population', [
             'totalResidents' => (int) $summaryByHamlet->sum('total'),
@@ -142,15 +150,8 @@ class PublicController extends Controller
                 'Laki-laki' => (int) ($genderSummary['Laki-laki'] ?? 0),
                 'Perempuan' => (int) ($genderSummary['Perempuan'] ?? 0),
             ],
-            'ageRangeSummary' => [
-                'labels' => ['Anak (0-12)', 'Remaja (13-18)', 'Dewasa (19-59)', 'Lansia (>60)'],
-                'data' => [
-                    (int) ($ageSummary?->anak_total ?? 0),
-                    (int) ($ageSummary?->remaja_total ?? 0),
-                    (int) ($ageSummary?->dewasa_total ?? 0),
-                    (int) ($ageSummary?->lansia_total ?? 0),
-                ],
-            ],
+            'ageSummary' => $this->buildAgeSummary($chartResidents),
+            'educationSummary' => $this->buildEducationSummary($chartResidents),
         ]);
     }
 
@@ -293,5 +294,106 @@ class PublicController extends Controller
         return view('public.announcements.show', [
             'announcement' => $announcement,
         ]);
+    }
+
+    /**
+     * @param Collection<int, PopulationRecord> $residents
+     * @return array{labels:array<int,string>,data:array<int,int>}
+     */
+    private function buildAgeSummary(Collection $residents): array
+    {
+        $counts = [];
+        foreach (self::AGE_BRACKETS as $bracket) {
+            $counts[$bracket['label']] = 0;
+        }
+
+        foreach ($residents as $resident) {
+            $age = $resident->age;
+            if ($age === null || $age < 0) {
+                continue;
+            }
+
+            foreach (self::AGE_BRACKETS as $bracket) {
+                if ($age < $bracket['min']) {
+                    continue;
+                }
+
+                if ($bracket['max'] !== null && $age > $bracket['max']) {
+                    continue;
+                }
+
+                $counts[$bracket['label']]++;
+                break;
+            }
+        }
+
+        return [
+            'labels' => array_keys($counts),
+            'data' => array_values($counts),
+        ];
+    }
+
+    /**
+     * @param Collection<int, PopulationRecord> $residents
+     * @return array{labels:array<int,string>,data:array<int,int>}
+     */
+    private function buildEducationSummary(Collection $residents): array
+    {
+        $counts = array_fill_keys(self::EDUCATION_BUCKETS, 0);
+
+        foreach ($residents as $resident) {
+            $bucket = $this->normalizeEducationBucket($resident->pendidikan);
+            $counts[$bucket] = ($counts[$bucket] ?? 0) + 1;
+        }
+
+        return [
+            'labels' => array_keys($counts),
+            'data' => array_values($counts),
+        ];
+    }
+
+    private function normalizeEducationBucket(?string $value): string
+    {
+        $normalized = Str::lower(trim((string) $value));
+        $normalized = preg_replace('/[^a-z0-9]+/i', ' ', $normalized) ?: '';
+        $normalized = trim(preg_replace('/\s+/', ' ', $normalized) ?: '');
+
+        if ($normalized === '') {
+            return 'Lainnya / Belum Diisi';
+        }
+
+        if (Str::contains($normalized, ['s3', 'strata 3', 'doktor', 'doktoral', 'phd'])) {
+            return 'Doktoral';
+        }
+
+        if (Str::contains($normalized, ['s2', 'strata 2', 'magister', 'master'])) {
+            return 'Magister';
+        }
+
+        if (Str::contains($normalized, ['d4', 'd 4', 'd iv', 'diploma 4', 'diploma iv', 's1', 'strata 1', 'sarjana'])) {
+            return 'Diploma IV/Sarjana';
+        }
+
+        if (Str::contains($normalized, ['d3', 'd 3', 'd iii', 'diploma 3', 'diploma iii'])) {
+            return 'Diploma III';
+        }
+
+        if (Str::contains($normalized, ['d1', 'd 1', 'd i', 'diploma 1', 'diploma i', 'd2', 'd 2', 'd ii', 'diploma 2', 'diploma ii'])) {
+            return 'Diploma I/II';
+        }
+
+        if (Str::contains($normalized, ['sma', 'smk', 'slta', 'madrasah aliyah', 'aliyah', 'paket c']) || preg_match('/\bma\b/', $normalized) === 1) {
+            return 'SMA/Sederajat';
+        }
+
+        if (Str::contains($normalized, ['smp', 'sltp', 'madrasah tsanawiyah', 'tsanawiyah', 'paket b']) || preg_match('/\bmts\b/', $normalized) === 1) {
+            return 'SMP/Sederajat';
+        }
+
+        if (Str::contains($normalized, ['sd', 'sekolah dasar', 'madrasah ibtidaiyah', 'ibtidaiyah', 'paket a']) || preg_match('/\bmi\b/', $normalized) === 1) {
+            return 'SD/Sederajat';
+        }
+
+        return 'Lainnya / Belum Diisi';
     }
 }

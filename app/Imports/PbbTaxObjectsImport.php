@@ -5,10 +5,13 @@ namespace App\Imports;
 use App\Models\PbbTaxObject;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class PbbTaxObjectsImport implements ToCollection, WithHeadingRow
+class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings, WithChunkReading
 {
     public int $inserted = 0;
 
@@ -19,57 +22,60 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow
     public function __construct(
         private readonly ?int $yearOverride = null,
         private readonly ?string $sourceFile = null,
+        private readonly string $csvDelimiter = ',',
     ) {
     }
 
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $index => $row) {
-            $payload = $this->mapRow($row);
-            if (! $this->isValidRow($payload)) {
-                $this->skipped++;
-                continue;
+        DB::transaction(function () use ($rows): void {
+            foreach ($rows as $index => $row) {
+                $payload = $this->mapRow($row);
+                if (! $this->isValidRow($payload)) {
+                    $this->skipped++;
+                    continue;
+                }
+
+                $object = PbbTaxObject::query()->firstOrNew([
+                    'nop' => $payload['nop'],
+                    'tax_year' => $payload['tax_year'],
+                ]);
+
+                $isNew = ! $object->exists;
+                $object->fill([
+                    'nop' => $payload['nop'],
+                    'tax_year' => $payload['tax_year'],
+                    'nama_wp_sppt' => $payload['nama_wp_sppt'],
+                    'jalan_wp_sppt' => $payload['jalan_wp_sppt'],
+                    'rt_wp_sppt' => $payload['rt_wp_sppt'],
+                    'rw_wp_sppt' => $payload['rw_wp_sppt'],
+                    'desa_wp_sppt' => $payload['desa_wp_sppt'],
+                    'jalan_op_sppt' => $payload['jalan_op_sppt'],
+                    'rt_op_sppt' => $payload['rt_op_sppt'],
+                    'rw_op_sppt' => $payload['rw_op_sppt'],
+                    'luas_tanah_sppt' => $payload['luas_tanah_sppt'],
+                    'luas_bangunan_sppt' => $payload['luas_bangunan_sppt'],
+                    'pbb_terhutang' => $payload['pbb_terhutang'],
+                    'tanggal_pembayaran' => $payload['tanggal_pembayaran'],
+                    'tax_name' => $payload['nama_wp_sppt'],
+                    'owner_name' => $payload['nama_wp_sppt'],
+                    'location' => $payload['jalan_op_sppt'] ?: $payload['jalan_wp_sppt'],
+                    'tax_address' => $payload['jalan_wp_sppt'],
+                    'land_area' => $payload['luas_tanah_sppt'],
+                    'building_area' => $payload['luas_bangunan_sppt'],
+                    'amount_due' => $payload['pbb_terhutang'],
+                    'status' => $payload['tanggal_pembayaran'] ? 'Lunas' : 'Belum Lunas',
+                    'notes' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
+                ]);
+                $object->save();
+
+                if ($isNew) {
+                    $this->inserted++;
+                } else {
+                    $this->updated++;
+                }
             }
-
-            $object = PbbTaxObject::query()->firstOrNew([
-                'nop' => $payload['nop'],
-                'tax_year' => $payload['tax_year'],
-            ]);
-
-            $isNew = ! $object->exists;
-            $object->fill([
-                'nop' => $payload['nop'],
-                'tax_year' => $payload['tax_year'],
-                'nama_wp_sppt' => $payload['nama_wp_sppt'],
-                'jalan_wp_sppt' => $payload['jalan_wp_sppt'],
-                'rt_wp_sppt' => $payload['rt_wp_sppt'],
-                'rw_wp_sppt' => $payload['rw_wp_sppt'],
-                'desa_wp_sppt' => $payload['desa_wp_sppt'],
-                'jalan_op_sppt' => $payload['jalan_op_sppt'],
-                'rt_op_sppt' => $payload['rt_op_sppt'],
-                'rw_op_sppt' => $payload['rw_op_sppt'],
-                'luas_tanah_sppt' => $payload['luas_tanah_sppt'],
-                'luas_bangunan_sppt' => $payload['luas_bangunan_sppt'],
-                'pbb_terhutang' => $payload['pbb_terhutang'],
-                'tanggal_pembayaran' => $payload['tanggal_pembayaran'],
-                'tax_name' => $payload['nama_wp_sppt'],
-                'owner_name' => $payload['nama_wp_sppt'],
-                'location' => $payload['jalan_op_sppt'] ?: $payload['jalan_wp_sppt'],
-                'tax_address' => $payload['jalan_wp_sppt'],
-                'land_area' => $payload['luas_tanah_sppt'],
-                'building_area' => $payload['luas_bangunan_sppt'],
-                'amount_due' => $payload['pbb_terhutang'],
-                'status' => $payload['tanggal_pembayaran'] ? 'Lunas' : 'Belum Lunas',
-                'notes' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
-            ]);
-            $object->save();
-
-            if ($isNew) {
-                $this->inserted++;
-            } else {
-                $this->updated++;
-            }
-        }
+        });
     }
 
     private function mapRow(Collection $row): array
@@ -120,6 +126,11 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow
     private function isValidRow(array $payload): bool
     {
         if (! $payload['nop'] || ! $payload['tax_year'] || ! $payload['nama_wp_sppt']) {
+            return false;
+        }
+
+        $currentYear = (int) date('Y');
+        if ($payload['tax_year'] < 2026 || $payload['tax_year'] > ($currentYear + 1)) {
             return false;
         }
 
@@ -239,5 +250,20 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow
             'updated' => $this->updated,
             'skipped' => $this->skipped,
         ];
+    }
+
+    public function getCsvSettings(): array
+    {
+        return [
+            'delimiter' => $this->csvDelimiter,
+            'enclosure' => '"',
+            'escape_character' => '\\',
+            'input_encoding' => 'UTF-8',
+        ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 }

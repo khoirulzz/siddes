@@ -216,7 +216,7 @@ Lambanggelun, {{ $data['tanggal'] }}<br>
 
 </div>
 
-<br><br><br><br><br><br>
+<br><br><br><br>
 
 <div style="width:100%;">
 

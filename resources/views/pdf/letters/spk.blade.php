@@ -86,7 +86,7 @@ table {
 }
 
 .judul .nomor {
-    margin-top: 2px; /* DIKECILKAN */
+    margin-top: 1px; /* DIKECILKAN */
     font-size: 11pt;
 }
 
@@ -188,7 +188,7 @@ p {
      IDENTITAS PEJABAT
 ========================= -->
 
-<p>Yang bertanda tan gan di bawah ini:</p>
+<p>Yang bertanda tangan di bawah ini:</p>
 
 <table class="identitas">
     <tr><td class="label">Nama</td><td class="sep">:</td><td>{{ $data['nama_kepala_desa'] }}</td></tr>

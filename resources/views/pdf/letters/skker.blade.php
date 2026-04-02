@@ -112,7 +112,7 @@ Kode Wilayah<br>
 <strong>33.26.02.13</strong>
 </td>
 <td style="width:40%;" class="judul">
-<div class="nama">SURAT KETERANGAN KERJA</div>
+<div class="nama"><strong><u>SURAT KETERANGAN KERJA</u></strong></div>
 <div class="nomor">No : {{ $pdfLetterNumber ?? $letterNumber }}</div>
 </td>
 <td style="width:30%;"></td>

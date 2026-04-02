@@ -226,7 +226,7 @@ Camat Paninggaran
 <strong>{{ $data['nama_pemohon'] }}</strong>
 </td>
 <td>
-<strong>..............................................</strong>
+<strong>Arif Nugroho, S.STP.,M.M.</strong>
 </td>
 <td>
 <strong>{{ \Illuminate\Support\Str::upper($data['nama_kepala_desa']) }}</strong>

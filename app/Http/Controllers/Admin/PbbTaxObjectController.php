@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Imports\PbbTaxObjectsImport;
 use App\Models\PbbTaxObject;
+use App\Support\SpreadsheetImportHelper;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -34,8 +35,16 @@ class PbbTaxObjectController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        $availableYears = PbbTaxObject::query()
+            ->select('tax_year')
+            ->whereNotNull('tax_year')
+            ->distinct()
+            ->orderByDesc('tax_year')
+            ->pluck('tax_year');
+
         return view('dashboard.pbb-tax-objects.index', [
             'taxObjects' => $taxObjects,
+            'availableYears' => $availableYears,
             'filters' => [
                 'q' => $keyword,
                 'year' => $year,
@@ -96,17 +105,54 @@ class PbbTaxObjectController extends Controller
             'year_override' => ['nullable', 'integer', 'min:2026', 'max:' . (date('Y') + 1)],
         ]);
 
+        $file = $request->file('file');
+        if ($file === null) {
+            return redirect()->back()->withErrors(['file' => 'File import tidak ditemukan.']);
+        }
+
+        $csvDelimiter = SpreadsheetImportHelper::detectCsvDelimiter($file);
+        $readerType = SpreadsheetImportHelper::resolveReaderType($file);
+
         $import = new PbbTaxObjectsImport(
             isset($payload['year_override']) ? (int) $payload['year_override'] : null,
-            $request->file('file')->getClientOriginalName(),
+            $file->getClientOriginalName(),
+            $csvDelimiter,
         );
 
-        Excel::import($import, $request->file('file'));
+        try {
+            Excel::import($import, $file, null, $readerType);
+        } catch (\Throwable $exception) {
+            report($exception);
+            return redirect()->back()->withErrors([
+                'file' => 'Import gagal diproses. Pastikan format kolom sesuai template dan file tidak rusak.',
+            ]);
+        }
+
         $summary = $import->summary();
 
         $message = "Import selesai: {$summary['inserted']} data baru, {$summary['updated']} data diperbarui, {$summary['skipped']} baris dilewati.";
 
         return redirect()->route('dashboard.pbb-tax-objects.index')->with('success', $message);
+    }
+
+    public function destroyByYear(Request $request)
+    {
+        $payload = $request->validate([
+            'year' => ['required', 'integer', 'min:2025', 'max:' . (date('Y') + 20)],
+        ]);
+
+        $year = (int) $payload['year'];
+        $deleted = PbbTaxObject::query()->where('tax_year', $year)->delete();
+
+        if ($deleted === 0) {
+            return redirect()
+                ->route('dashboard.pbb-tax-objects.index')
+                ->with('success', "Tidak ada data PBB tahun {$year} yang dihapus.");
+        }
+
+        return redirect()
+            ->route('dashboard.pbb-tax-objects.index')
+            ->with('success', "Berhasil menghapus {$deleted} data PBB tahun {$year}.");
     }
 
     public function template()

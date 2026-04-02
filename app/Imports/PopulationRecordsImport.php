@@ -6,11 +6,14 @@ use App\Models\PopulationRecord;
 use App\Services\PopulationHouseholdSyncService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class PopulationRecordsImport implements ToCollection, WithHeadingRow
+class PopulationRecordsImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings, WithChunkReading
 {
     public int $inserted = 0;
 
@@ -22,73 +25,76 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
         private readonly PopulationHouseholdSyncService $householdSync,
         private readonly ?string $hamletOverride = null,
         private readonly ?string $sourceFile = null,
+        private readonly string $csvDelimiter = ',',
     ) {
     }
 
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $index => $row) {
-            $payload = $this->mapRow($row);
+        DB::transaction(function () use ($rows): void {
+            foreach ($rows as $index => $row) {
+                $payload = $this->mapRow($row);
 
-            if (! $this->isValidRow($payload)) {
-                $this->skipped++;
-                continue;
+                if (! $this->isValidRow($payload)) {
+                    $this->skipped++;
+                    continue;
+                }
+
+                $resident = PopulationRecord::query()->firstOrNew([
+                    'nik' => $payload['nik'],
+                ]);
+
+                $isNewResident = ! $resident->exists;
+
+                $resident->fill([
+                    'nama_lengkap' => $payload['nama_lengkap'],
+                    'full_name' => $payload['nama_lengkap'],
+                    'nik' => $payload['nik'],
+                    'no_kk' => $payload['no_kk'],
+                    'nkk' => $payload['no_kk'],
+                    'jenis_kelamin' => $payload['jenis_kelamin'],
+                    'gender' => $payload['jenis_kelamin'],
+                    'tempat_lahir' => $payload['tempat_lahir'],
+                    'birth_place' => $payload['tempat_lahir'],
+                    'tanggal_lahir' => $payload['tanggal_lahir'],
+                    'birth_date' => $payload['tanggal_lahir'],
+                    'agama' => $payload['agama'],
+                    'religion' => $payload['agama'],
+                    'pendidikan' => $payload['pendidikan'],
+                    'jenis_pekerjaan' => $payload['jenis_pekerjaan'],
+                    'pekerjaan' => $payload['jenis_pekerjaan'],
+                    'occupation' => $payload['jenis_pekerjaan'],
+                    'status_perkawinan' => $payload['status_perkawinan'],
+                    'status_hubungan' => $payload['status_hubungan'],
+                    'kewarganegaraan' => $payload['kewarganegaraan'],
+                    'no_paspor' => $payload['no_paspor'],
+                    'no_kitas_kitap' => $payload['no_kitas_kitap'],
+                    'nama_ayah' => $payload['nama_ayah'],
+                    'nama_ibu' => $payload['nama_ibu'],
+                    'golongan_darah' => $payload['golongan_darah'],
+                    'rt' => $payload['rt'],
+                    'rw' => $payload['rw'],
+                    'dusun' => $payload['dusun'],
+                    'hamlet' => $payload['dusun'],
+                    'desa' => $payload['desa'],
+                    'kecamatan' => $payload['kecamatan'],
+                    'kabupaten' => $payload['kabupaten'],
+                    'provinsi' => $payload['provinsi'],
+                    'kode_pos' => $payload['kode_pos'],
+                    'address_detail' => $payload['alamat'],
+                    'source_file' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
+                ]);
+
+                $resident->save();
+                $this->householdSync->sync($resident, $payload, Carbon::now());
+
+                if ($isNewResident) {
+                    $this->inserted++;
+                } else {
+                    $this->updated++;
+                }
             }
-
-            $resident = PopulationRecord::query()->firstOrNew([
-                'nik' => $payload['nik'],
-            ]);
-
-            $isNewResident = ! $resident->exists;
-
-            $resident->fill([
-                'nama_lengkap' => $payload['nama_lengkap'],
-                'full_name' => $payload['nama_lengkap'],
-                'nik' => $payload['nik'],
-                'no_kk' => $payload['no_kk'],
-                'nkk' => $payload['no_kk'],
-                'jenis_kelamin' => $payload['jenis_kelamin'],
-                'gender' => $payload['jenis_kelamin'],
-                'tempat_lahir' => $payload['tempat_lahir'],
-                'birth_place' => $payload['tempat_lahir'],
-                'tanggal_lahir' => $payload['tanggal_lahir'],
-                'birth_date' => $payload['tanggal_lahir'],
-                'agama' => $payload['agama'],
-                'religion' => $payload['agama'],
-                'pendidikan' => $payload['pendidikan'],
-                'jenis_pekerjaan' => $payload['jenis_pekerjaan'],
-                'pekerjaan' => $payload['jenis_pekerjaan'],
-                'occupation' => $payload['jenis_pekerjaan'],
-                'status_perkawinan' => $payload['status_perkawinan'],
-                'status_hubungan' => $payload['status_hubungan'],
-                'kewarganegaraan' => $payload['kewarganegaraan'],
-                'no_paspor' => $payload['no_paspor'],
-                'no_kitas_kitap' => $payload['no_kitas_kitap'],
-                'nama_ayah' => $payload['nama_ayah'],
-                'nama_ibu' => $payload['nama_ibu'],
-                'golongan_darah' => $payload['golongan_darah'],
-                'rt' => $payload['rt'],
-                'rw' => $payload['rw'],
-                'dusun' => $payload['dusun'],
-                'hamlet' => $payload['dusun'],
-                'desa' => $payload['desa'],
-                'kecamatan' => $payload['kecamatan'],
-                'kabupaten' => $payload['kabupaten'],
-                'provinsi' => $payload['provinsi'],
-                'kode_pos' => $payload['kode_pos'],
-                'address_detail' => $payload['alamat'],
-                'source_file' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
-            ]);
-
-            $resident->save();
-            $this->householdSync->sync($resident, $payload, Carbon::now());
-
-            if ($isNewResident) {
-                $this->inserted++;
-            } else {
-                $this->updated++;
-            }
-        }
+        });
     }
 
     private function mapRow(Collection $row): array
@@ -163,7 +169,13 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
         if (! $payload['nik'] || ! $payload['no_kk'] || ! $payload['nama_lengkap']) {
             return false;
         }
+        if (strlen((string) $payload['nik']) !== 16 || strlen((string) $payload['no_kk']) !== 16) {
+            return false;
+        }
         if (! $payload['jenis_kelamin'] || ! $payload['tempat_lahir'] || ! $payload['tanggal_lahir']) {
+            return false;
+        }
+        if ($payload['tanggal_lahir'] > Carbon::now()->format('Y-m-d')) {
             return false;
         }
         if (($payload['kewarganegaraan'] === 'WNA') && ! $payload['no_paspor'] && ! $payload['no_kitas_kitap']) {
@@ -371,5 +383,20 @@ class PopulationRecordsImport implements ToCollection, WithHeadingRow
             'updated' => $this->updated,
             'skipped' => $this->skipped,
         ];
+    }
+
+    public function getCsvSettings(): array
+    {
+        return [
+            'delimiter' => $this->csvDelimiter,
+            'enclosure' => '"',
+            'escape_character' => '\\',
+            'input_encoding' => 'UTF-8',
+        ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 }

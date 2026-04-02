@@ -62,7 +62,7 @@ table{border-collapse:collapse}
 }
 
 .judul .nomor{
-    margin-top:4px;
+    margin-top:1px;
     font-size:11pt;
 }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Imports\PopulationRecordsImport;
 use App\Models\Household;
 use App\Models\PopulationRecord;
+use App\Support\SpreadsheetImportHelper;
 use App\Services\PopulationHouseholdSyncService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -343,13 +344,29 @@ class PopulationRecordController extends Controller
             'hamlet_override' => ['nullable', Rule::in(PopulationRecord::HAMLETS)],
         ]);
 
+        $file = $request->file('file');
+        if ($file === null) {
+            return redirect()->back()->withErrors(['file' => 'File import tidak ditemukan.']);
+        }
+
+        $csvDelimiter = SpreadsheetImportHelper::detectCsvDelimiter($file);
+        $readerType = SpreadsheetImportHelper::resolveReaderType($file);
+
         $import = new PopulationRecordsImport(
             app(PopulationHouseholdSyncService::class),
             $payload['hamlet_override'] ?? null,
-            $request->file('file')->getClientOriginalName(),
+            $file->getClientOriginalName(),
+            $csvDelimiter,
         );
 
-        Excel::import($import, $request->file('file'));
+        try {
+            Excel::import($import, $file, null, $readerType);
+        } catch (\Throwable $exception) {
+            report($exception);
+            return redirect()->back()->withErrors([
+                'file' => 'Import gagal diproses. Pastikan format kolom sesuai template dan file tidak rusak.',
+            ]);
+        }
 
         $summary = $import->summary();
         $message = "Import selesai: {$summary['inserted']} data baru, {$summary['updated']} data diperbarui, {$summary['skipped']} baris dilewati.";

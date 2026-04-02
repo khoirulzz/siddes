@@ -18,12 +18,28 @@
             <div class="field">
                 <label for="file">Upload File Excel/CSV</label>
                 <input id="file" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                <small class="muted">Mendukung file .xlsx, .xls, .csv, .txt dengan pemisah koma (,) atau titik koma (;).</small>
             </div>
             <div class="field">
                 <label for="year_override">Override Tahun (Opsional)</label>
                 <input id="year_override" type="number" name="year_override" min="2026" max="{{ date('Y') + 1 }}" placeholder="Kosongkan agar ikut data file">
             </div>
             <button class="btn btn-primary" type="submit">Import Data</button>
+        </form>
+
+        <form method="POST" action="{{ route('dashboard.pbb-tax-objects.destroy-year') }}" class="inline-form" onsubmit="return confirm('Yakin hapus semua data PBB pada tahun yang dipilih? Proses ini tidak bisa dibatalkan.');">
+            @csrf
+            @method('DELETE')
+            <div class="field">
+                <label for="delete_year">Hapus Semua Data per Tahun</label>
+                <select id="delete_year" name="year" required {{ $availableYears->isEmpty() ? 'disabled' : '' }}>
+                    <option value="">Pilih Tahun</option>
+                    @foreach($availableYears as $availableYear)
+                        <option value="{{ $availableYear }}" {{ (int) ($filters['year'] ?? 0) === (int) $availableYear ? 'selected' : '' }}>{{ $availableYear }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button class="btn btn-danger" type="submit" {{ $availableYears->isEmpty() ? 'disabled' : '' }}>Hapus Data Tahun Terpilih</button>
         </form>
     </section>
 
@@ -51,7 +67,7 @@
                     <tr>
                         <th>NO</th>
                         <th>TAHUN</th>
-                        <th>NOP</th>
+                        <th>NOMOR OBJEK PAJAK (NOP)</th>
                         <th>NAMA WP SPPT</th>
                         <th>JALAN WP SPPT</th>
                         <th>RT WP SPPT</th>

@@ -38,7 +38,7 @@
         @include('public.partials.share-actions', [
             'shareTitle' => $shareTitle,
             'shareUrl' => $shareUrl,
-            'shareLabel' => 'Share',
+            'shareLabel' => 'Share with',
         ])
 
         @if($announcement->link_url)

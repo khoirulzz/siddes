@@ -129,6 +129,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
     Route::get('population-records/template/download', [PopulationRecordController::class, 'template'])
         ->name('population-records.template');
         
+    Route::delete('pbb-tax-objects/destroy-by-year', [PbbTaxObjectController::class, 'destroyByYear'])
+        ->name('pbb-tax-objects.destroy-year');
     Route::resource('pbb-tax-objects', PbbTaxObjectController::class);
     Route::post('pbb-tax-objects/import', [PbbTaxObjectController::class, 'import'])->name('pbb-tax-objects.import');
     Route::get('pbb-tax-objects/template/download', [PbbTaxObjectController::class, 'template'])

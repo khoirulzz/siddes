@@ -7,6 +7,7 @@ use App\Imports\PbbTaxObjectsImport;
 use App\Models\PbbTaxObject;
 use App\Support\SpreadsheetImportHelper;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -111,28 +112,62 @@ class PbbTaxObjectController extends Controller
         }
 
         $csvDelimiter = SpreadsheetImportHelper::detectCsvDelimiter($file);
-        $readerType = SpreadsheetImportHelper::resolveReaderType($file);
-
         $import = new PbbTaxObjectsImport(
             isset($payload['year_override']) ? (int) $payload['year_override'] : null,
             $file->getClientOriginalName(),
             $csvDelimiter,
         );
 
-        try {
-            Excel::import($import, $file, null, $readerType);
-        } catch (\Throwable $exception) {
-            report($exception);
+        // Try dengan reader type yang terdeteksi, jika gagal coba alternatif
+        $summary = $this->attemptImportWithFallback($file, $import);
+        
+        if ($summary === null) {
             return redirect()->back()->withErrors([
                 'file' => 'Import gagal diproses. Pastikan format kolom sesuai template dan file tidak rusak.',
             ]);
         }
 
-        $summary = $import->summary();
-
         $message = "Import selesai: {$summary['inserted']} data baru, {$summary['updated']} data diperbarui, {$summary['skipped']} baris dilewati.";
 
         return redirect()->route('dashboard.pbb-tax-objects.index')->with('success', $message);
+    }
+
+    private function attemptImportWithFallback(UploadedFile $file, PbbTaxObjectsImport $import): ?array
+    {
+        $detectedReader = SpreadsheetImportHelper::resolveReaderType($file);
+        
+        // Prioritas readers untuk dicoba
+        $readerPriorities = [];
+        if ($detectedReader) {
+            array_push($readerPriorities, $detectedReader);
+        }
+        
+        // Tambahkan fallback readers
+        $fallbackReaders = SpreadsheetImportHelper::getFallbackReaders($detectedReader);
+        $readerPriorities = array_merge($readerPriorities, $fallbackReaders);
+        
+        foreach ($readerPriorities as $readerType) {
+            try {
+                $importInstance = new PbbTaxObjectsImport(
+                    $import->getYearOverride(),
+                    $import->getSourceFile(),
+                    $import->getCsvDelimiter(),
+                );
+                
+                Excel::import($importInstance, $file, null, $readerType);
+                
+                return $importInstance->summary();
+            } catch (\Throwable $exception) {
+                // Log dan lanjut ke reader berikutnya
+                \Illuminate\Support\Facades\Log::warning("Import failed with reader {$readerType}", [
+                    'file' => $file->getClientOriginalName(),
+                    'error' => $exception->getMessage(),
+                ]);
+                continue;
+            }
+        }
+        
+        return null;
     }
 
     public function destroyByYear(Request $request)

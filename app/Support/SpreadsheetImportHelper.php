@@ -84,6 +84,20 @@ class SpreadsheetImportHelper
         };
     }
 
+    public static function getFallbackReaders(?string $detectedReader): array
+    {
+        $allReaders = [
+            ExcelReaderType::CSV,
+            ExcelReaderType::XLSX,
+            ExcelReaderType::XLS,
+        ];
+
+        // Hapus reader yang sudah dicoba dari fallback
+        $fallback = array_filter($allReaders, fn ($reader) => $reader !== $detectedReader);
+        
+        return array_values($fallback);
+    }
+
     private static function isCsv(UploadedFile $file): bool
     {
         return in_array(strtolower($file->getClientOriginalExtension()), self::CSV_EXTENSIONS, true);

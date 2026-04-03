@@ -18,7 +18,7 @@
             <div class="field">
                 <label for="file">Upload File Excel/CSV</label>
                 <input id="file" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
-                <small class="muted">Mendukung file .xlsx, .xls, .csv, .txt dengan pemisah koma (,) atau titik koma (;).</small>
+                <small class="muted">file .xlsx, .xls, .csv, .txt</small>
             </div>
             <div class="field">
                 <label for="year_override">Override Tahun (Opsional)</label>

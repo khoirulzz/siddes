@@ -2523,7 +2523,7 @@ textarea {
     margin-top: 0.95rem;
     border: 1px solid #d4e1eb;
     border-radius: 1rem;
-    background: linear-gradient(180deg, #ffffff 0%, #f6fafc 100%);
+    background: #fff;
     padding: 1rem;
 }
 

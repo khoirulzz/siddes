@@ -26,9 +26,26 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsv
     ) {
     }
 
+    public function getYearOverride(): ?int
+    {
+        return $this->yearOverride;
+    }
+
+    public function getSourceFile(): ?string
+    {
+        return $this->sourceFile;
+    }
+
+    public function getCsvDelimiter(): string
+    {
+        return $this->csvDelimiter;
+    }
+
     public function collection(Collection $rows): void
     {
         DB::transaction(function () use ($rows): void {
+            $upsertData = [];
+            
             foreach ($rows as $index => $row) {
                 $payload = $this->mapRow($row);
                 if (! $this->isValidRow($payload)) {
@@ -36,13 +53,7 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsv
                     continue;
                 }
 
-                $object = PbbTaxObject::query()->firstOrNew([
-                    'nop' => $payload['nop'],
-                    'tax_year' => $payload['tax_year'],
-                ]);
-
-                $isNew = ! $object->exists;
-                $object->fill([
+                $upsertData[] = [
                     'nop' => $payload['nop'],
                     'tax_year' => $payload['tax_year'],
                     'nama_wp_sppt' => $payload['nama_wp_sppt'],
@@ -66,16 +77,57 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsv
                     'amount_due' => $payload['pbb_terhutang'],
                     'status' => $payload['tanggal_pembayaran'] ? 'Lunas' : 'Belum Lunas',
                     'notes' => $this->sourceFile ?: ('import-row-' . ($index + 1)),
-                ]);
-                $object->save();
+                ];
+            }
 
-                if ($isNew) {
-                    $this->inserted++;
-                } else {
-                    $this->updated++;
-                }
+            if (! empty($upsertData)) {
+                $this->processBatchUpsert($upsertData);
             }
         });
+    }
+
+    private function processBatchUpsert(array $upsertData): void
+    {
+        $uniqueKeys = ['nop', 'tax_year'];
+        $updateKeys = [
+            'nama_wp_sppt', 'jalan_wp_sppt', 'rt_wp_sppt', 'rw_wp_sppt', 'desa_wp_sppt',
+            'jalan_op_sppt', 'rt_op_sppt', 'rw_op_sppt', 'luas_tanah_sppt', 'luas_bangunan_sppt',
+            'pbb_terhutang', 'tanggal_pembayaran', 'tax_name', 'owner_name', 'location',
+            'tax_address', 'land_area', 'building_area', 'amount_due', 'status', 'notes',
+        ];
+
+        $nops = array_column($upsertData, 'nop');
+        $years = array_unique(array_column($upsertData, 'tax_year'));
+
+        $existingKeys = PbbTaxObject::query()
+            ->whereIn('nop', $nops)
+            ->whereIn('tax_year', $years)
+            ->get()
+            ->map(function (PbbTaxObject $object): string {
+                return $object->nop . '|' . $object->tax_year;
+            })
+            ->toArray();
+
+        $existingKeys = array_flip($existingKeys);
+
+        $insertCount = 0;
+        $updateCount = 0;
+        foreach ($upsertData as $row) {
+            $key = $row['nop'] . '|' . $row['tax_year'];
+            if (isset($existingKeys[$key])) {
+                $updateCount++;
+            } else {
+                $insertCount++;
+            }
+        }
+
+        try {
+            PbbTaxObject::upsert($upsertData, $uniqueKeys, $updateKeys);
+            $this->inserted += $insertCount;
+            $this->updated += $updateCount;
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function mapRow(Collection $row): array

@@ -43,7 +43,31 @@ class PublicMedia
             return null;
         }
 
+        if (self::isCloudinaryPath($path)) {
+            return self::resolveCloudinaryUrl($path);
+        }
+
         return url('/media/public/' . self::encodePathSegments($path));
+    }
+
+    private static function isCloudinaryPath(string $path): bool
+    {
+        $segments = array_values(array_filter(explode('/', $path), static fn ($segment) => $segment !== ''));
+        if (count($segments) < 4) {
+            return false;
+        }
+
+        $resourceType = $segments[1] ?? '';
+        $deliveryType = $segments[2] ?? '';
+
+        return in_array($resourceType, ['image', 'video', 'raw', 'auto'], true)
+            && in_array($deliveryType, ['upload', 'private', 'authenticated'], true);
+    }
+
+    private static function resolveCloudinaryUrl(string $path): string
+    {
+        $scheme = config('cloudinary.secure', true) ? 'https' : 'http';
+        return $scheme . '://res.cloudinary.com/' . ltrim($path, '/');
     }
 
     public static function normalizePath(?string $value): ?string
@@ -66,6 +90,10 @@ class PublicMedia
 
         if (Str::startsWith($raw, 'public/')) {
             $raw = substr($raw, strlen('public/'));
+        }
+
+        if (Str::startsWith($raw, 'media/public/')) {
+            $raw = substr($raw, strlen('media/public/'));
         }
 
         $raw = trim($raw);

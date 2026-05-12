@@ -42,3 +42,5 @@ php artisan migrate --force
 - Aktifkan HTTPS + redirect HTTP ke HTTPS
 - Set backup database harian
 - Monitor error log (`storage/logs/laravel.log`)
+
+7. 

@@ -43,4 +43,4 @@ php artisan migrate --force
 - Set backup database harian
 - Monitor error log (`storage/logs/laravel.log`)
 
-7. 
+7. xxxxxxxxxx

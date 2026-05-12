@@ -97,7 +97,7 @@ FIELDS:
 {tanggal} : tanggal penerbitan surat
 
 
-3. SURAT: Surat Keterangan Kematian
+3. SURAT: Surat Keterangan Kematian.
 
 KODE: SKK
 

@@ -1,0 +1,661 @@
+UN', 'DARAT SIUPAS', '001', '002', '2.76', '0.00', '32759.00', NULL, 'MARTUTI', 'MARTUTI', 'DARAT SIUPAS', '2.76', '0.00', 'JL DESA', 2026, '32759.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3000, '33-26-020-013-025-0032-0', 'ERNI RIYANTI', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'SAWAH SABRANG', '001', '002', '6.06', '0.00', '71878.00', NULL, 'ERNI RIYANTI', 'ERNI RIYANTI', 'SAWAH SABRANG', '6.06', '0.00', 'JL DESA', 2026, '71878.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3001, '33-26-020-013-025-0033-0', 'SUPRIYONO', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIUPAS', '001', '002', '1.12', '0.00', '15750.00', NULL, 'SUPRIYONO', 'SUPRIYONO', 'DARAT SIUPAS', '1.12', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3002, '33-26-020-013-025-0034-0', 'ROSIDAH KUSDIYANTO', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIUPAS', '001', '002', '4.65', '0.00', '55113.00', NULL, 'ROSIDAH KUSDIYANTO', 'ROSIDAH KUSDIYANTO', 'DARAT SIUPAS', '4.65', '0.00', 'JL DESA', 2026, '55113.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3003, '33-26-020-013-025-0035-0', 'CASMARI', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIUPAS', '001', '002', '3.31', '0.00', '39226.00', NULL, 'CASMARI', 'CASMARI', 'DARAT SIUPAS', '3.31', '0.00', 'JL DESA', 2026, '39226.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3004, '33-26-020-013-025-0036-0', 'YUNI SULISTYOWATI', 'DK PANUMBANGAN', '001', '002', 'LAMBANGGELUN', 'SAWAH SABRANG', '001', '002', '5.54', '0.00', '65696.00', NULL, 'YUNI SULISTYOWATI', 'YUNI SULISTYOWATI', 'SAWAH SABRANG', '5.54', '0.00', 'DK PANUMBANGAN', 2026, '65696.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3005, '33-26-020-013-025-0037-0', 'SRI SETYANINGSIH', 'DK PURI', '003', '016', 'KEDUNGWUNI TIMUR', 'DARAT SIUPAS', '001', '002', '2.58', '0.00', '30659.00', NULL, 'SRI SETYANINGSIH', 'SRI SETYANINGSIH', 'DARAT SIUPAS', '2.58', '0.00', 'DK PURI', 2026, '30659.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3006, '33-26-020-013-025-0038-0', 'SUPARNO', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIUPAS', '001', '002', '3.58', '0.00', '30258.00', NULL, 'SUPARNO', 'SUPARNO', 'DARAT SIUPAS', '3.58', '0.00', 'JL DESA', 2026, '30258.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3007, '33-26-020-013-025-0039-0', 'KARTI DAPAR', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '686.00', '0.00', '15750.00', NULL, 'KARTI DAPAR', 'KARTI DAPAR', 'DARAT SIGINTUNG', '686.00', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3008, '33-26-020-013-025-0040-0', 'RUMI AMAD', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '2.73', '0.00', '23057.00', NULL, 'RUMI AMAD', 'RUMI AMAD', 'DARAT SIGINTUNG', '2.73', '0.00', 'JL DESA', 2026, '23057.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),(3009, '33-26-020-013-025-0041-0', 'KHOLIDAH ROHIM', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '2.00', '0.00', '16885.00', NULL, 'KHOLIDAH ROHIM', 'KHOLIDAH ROHIM', 'DARAT SIGINTUNG', '2.00', '0.00', 'JL DESA', 2026, '16885.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3010, '33-26-020-013-025-0042-0', 'DASTA KUTI', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '2.53', '0.00', '21351.00', NULL, 'DASTA KUTI', 'DASTA KUTI', 'DARAT SIGINTUNG', '2.53', '0.00', 'JL DESA', 2026, '21351.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3011, '33-26-020-013-025-0043-0', 'HARDIYANTO', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '1.94', '0.00', '16344.00', NULL, 'HARDIYANTO', 'HARDIYANTO', 'DARAT SIGINTUNG', '1.94', '0.00', 'JL DESA', 2026, '16344.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3012, '33-26-020-013-025-0044-0', 'DASTA KUTI', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '2.57', '0.00', '21731.00', NULL, 'DASTA KUTI', 'DASTA KUTI', 'DARAT SIGINTUNG', '2.57', '0.00', 'JL DESA', 2026, '21731.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3013, '33-26-020-013-025-0046-0', 'NURYATI', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '1.76', '0.00', '15750.00', NULL, 'NURYATI', 'NURYATI', 'DARAT SIGINTUNG', '1.76', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3014, '33-26-020-013-025-0047-0', 'RUWED CASNO', 'JL DESA', '004', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '004', '002', '1.75', '0.00', '20764.00', NULL, 'RUWED CASNO', 'RUWED CASNO', 'DARAT SIGINTUNG', '1.75', '0.00', 'JL DESA', 2026, '20764.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3015, '33-26-020-013-025-0048-0', 'YULI KUTI', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '2.91', '0.00', '34527.00', NULL, 'YULI KUTI', 'YULI KUTI', 'DARAT SIGINTUNG', '2.91', '0.00', 'JL DESA', 2026, '34527.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),(3016, '33-26-020-013-025-0049-0', 'SUSWANTI', 'JL DESA', '004', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '004', '002', '1.81', '0.00', '21476.00', NULL, 'SUSWANTI', 'SUSWANTI', 'DARAT SIGINTUNG', '1.81', '0.00', 'JL DESA', 2026, '21476.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3017, '33-26-020-013-025-0050-0', 'SARNO', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '1.01', '0.00', '15750.00', NULL, 'SARNO', 'SARNO', 'DARAT SIGINTUNG', '1.01', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3018, '33-26-020-013-025-0051-0', 'PARTINAH', 'JL DESA', '001', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '001', '002', '945.00', '0.00', '15750.00', NULL, 'PARTINAH', 'PARTINAH', 'DARAT SIGINTUNG', '945.00', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3019, '33-26-020-013-025-0052-0', 'MUNASIFAH', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '1.58', '0.00', '18688.00', NULL, 'MUNASIFAH', 'MUNASIFAH', 'DARAT SIGINTUNG', '1.58', '0.00', 'JL DESA', 2026, '18688.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),(3020, '33-26-020-013-025-0053-0', 'KONIPAH DUNI', 'JL DESA', '004', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '004', '002', '632.00', '0.00', '15750.00', NULL, 'KONIPAH DUNI', 'KONIPAH DUNI', 'DARAT SIGINTUNG', '632.00', '0.00', 'JL DESA', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3021, '33-26-020-013-025-0054-0', 'SUYUD PURWADI', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '2.19', '0.00', '25926.00', NULL, 'SUYUD PURWADI', 'SUYUD PURWADI', 'DARAT SIGINTUNG', '2.19', '0.00', 'JL DESA', 2026, '25926.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3022, '33-26-020-013-025-0055-0', 'WARSONO', 'JL DESA', '004', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '004', '002', '1.89', '0.00', '22425.00', NULL, 'WARSONO', 'WARSONO', 'DARAT SIGINTUNG', '1.89', '0.00', 'JL DESA', 2026, '22425.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3023, '33-26-020-013-025-0056-0', 'SUROSO', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '1.87', '0.00', '22152.00', NULL, 'SUROSO', 'SUROSO', 'DARAT SIGINTUNG', '1.87', '0.00', 'JL DESA', 2026, '22152.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3024, '33-26-020-013-025-0057-0', 'SUROSO', 'JL DESA', '003', '002', 'LAMBANGGELUN', 'DARAT SIGINTUNG', '003', '002', '1.87', '0.00', '15763.00', NULL, 'SUROSO', 'SUROSO', 'DARAT SIGINTUNG', '1.87', '0.00', 'JL DESA', 2026, '15763.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3025, '33-26-020-013-025-0058-0', 'TEGUH ARIANTO', 'DK MEKAR AGUNG', '004', '008', 'KEBONAGUNG', 'DARAT SIUPAS', '000', '000', '1.00', '0.00', '15750.00', NULL, 'TEGUH ARIANTO', 'TEGUH ARIANTO', 'DARAT SIUPAS', '1.00', '0.00', 'DK MEKAR AGUNG', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3026, '33-26-020-013-026-0001-0', 'GIAT', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '1.67', '0.00', '19779.00', NULL, 'GIAT', 'GIAT', 'SAWAH SICENGIS', '1.67', '0.00', 'JL KP RT', 2026, '19779.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3027, '33-26-020-013-026-0002-0', 'SEMIATI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '1.43', '0.00', '16931.00', NULL, 'SEMIATI', 'SEMIATI', 'SAWAH SICENGIS', '1.43', '0.00', 'JL KP RT', 2026, '16931.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3028, '33-26-020-013-026-0003-0', 'KARJANI', 'DK SIBERUK', '000', '000', 'LAMBANGGELUN', 'SAWAH SICENGIS', '003', '004', '1.43', '0.00', '16931.00', NULL, 'KARJANI', 'KARJANI', 'SAWAH SICENGIS', '1.43', '0.00', 'DK SIBERUK', 2026, '16931.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3029, '33-26-020-013-026-0004-0', 'TAONI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '1.91', '0.00', '22651.00', NULL, 'TAONI', 'TAONI', 'SAWAH SICENGIS', '1.91', '0.00', 'JL KP RT', 2026, '22651.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3030, '33-26-020-013-026-0005-0', 'SITI WANTI TUTUR', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '443.00', '0.00', '15750.00', NULL, 'SITI WANTI TUTUR', 'SITI WANTI TUTUR', 'SAWAH SICENGIS', '443.00', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3031, '33-26-020-013-026-0006-0', 'RESMI EKA WILANTI', 'JL KP RT', '003', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '003', '004', '1.07', '0.00', '15750.00', NULL, 'RESMI EKA WILANTI', 'RESMI EKA WILANTI', 'SAWAH SICENGIS', '1.07', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3032, '33-26-020-013-026-0007-0', 'MUDAKIR', 'DK DLIMAS', '003', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '003', '004', '1.07', '0.00', '15750.00', NULL, 'MUDAKIR', 'MUDAKIR', 'SAWAH SICENGIS', '1.07', '0.00', 'DK DLIMAS', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3033, '33-26-020-013-026-0008-0', 'SAWAL RUNTAH', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '3.61', '0.00', '42797.00', NULL, 'SAWAL RUNTAH', 'SAWAL RUNTAH', 'SAWAH SICENGIS', '3.61', '0.00', 'JL KP RT', 2026, '42797.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:53', '2026-04-02 01:33:53'),
+(3034, '33-26-020-013-026-0009-0', 'USMI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '2.54', '0.00', '30184.00', NULL, 'USMI', 'USMI', 'SAWAH SICENGIS', '2.54', '0.00', 'JL KP RT', 2026, '30184.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3035, '33-26-020-013-026-0010-0', 'RASMI CASUMI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '2.99', '0.00', '35512.00', NULL, 'RASMI CASUMI', 'RASMI CASUMI', 'SAWAH SICENGIS', '2.99', '0.00', 'JL KP RT', 2026, '35512.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3036, '33-26-020-013-026-0011-0', 'EKA WARTINI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '1.76', '0.00', '20907.00', NULL, 'EKA WARTINI', 'EKA WARTINI', 'SAWAH SICENGIS', '1.76', '0.00', 'JL KP RT', 2026, '20907.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3037, '33-26-020-013-026-0012-0', 'TUMYATI TRIYATI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'DARAT SICENGIS', '004', '004', '1.30', '0.00', '15750.00', NULL, 'TUMYATI TRIYATI', 'TUMYATI TRIYATI', 'DARAT SICENGIS', '1.30', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3038, '33-26-020-013-026-0013-0', 'TUMYATI TRIYATI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '1.49', '0.00', '17715.00', NULL, 'TUMYATI TRIYATI', 'TUMYATI TRIYATI', 'SAWAH SICENGIS', '1.49', '0.00', 'JL KP RT', 2026, '17715.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3039, '33-26-020-013-026-0014-0', 'SUKINI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '2.63', '0.00', '31146.00', NULL, 'SUKINI', 'SUKINI', 'SAWAH SICENGIS', '2.63', '0.00', 'JL KP RT', 2026, '31146.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3040, '33-26-020-013-026-0015-0', 'SAMPAN DARYATI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '2.81', '0.00', '33341.00', NULL, 'SAMPAN DARYATI', 'SAMPAN DARYATI', 'SAWAH SICENGIS', '2.81', '0.00', 'JL KP RT', 2026, '33341.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3041, '33-26-020-013-026-0016-0', 'MUHAYAT', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'DARAT SICENGIS', '004', '004', '3.63', '0.00', '43058.00', NULL, 'MUHAYAT', 'MUHAYAT', 'DARAT SICENGIS', '3.63', '0.00', 'JL KP RT', 2026, '43058.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3042, '33-26-020-013-026-0017-0', 'WARYU DARIYAH', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '2.90', '0.00', '34384.00', NULL, 'WARYU DARIYAH', 'WARYU DARIYAH', 'SAWAH SICENGIS', '2.90', '0.00', 'JL KP RT', 2026, '34384.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3043, '33-26-020-013-026-0018-0', 'WARYU DARIYAH', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'DARQAT SICENGIS', '004', '004', '1.35', '0.00', '16065.00', NULL, 'WARYU DARIYAH', 'WARYU DARIYAH', 'DARQAT SICENGIS', '1.35', '0.00', 'JL KP RT', 2026, '16065.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3044, '33-26-020-013-026-0019-0', 'KAWI DAMUSRI', 'JL KP RT', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '493.00', '0.00', '15750.00', NULL, 'KAWI DAMUSRI', 'KAWI DAMUSRI', 'SAWAH SICENGIS', '493.00', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3045, '33-26-020-013-026-0020-0', 'KARYUDI', 'DK SIBERUK', '004', '004', 'LAMBANGGELUN', 'SAWAH SICENGIS', '004', '004', '962.00', '0.00', '15750.00', NULL, 'KARYUDI', 'KARYUDI', 'SAWAH SICENGIS', '962.00', '0.00', 'DK SIBERUK', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3046, '33-26-020-013-027-0001-0', 'WAJI', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '1.77', '0.00', '21013.00', NULL, 'WAJI', 'WAJI', 'DARAT SASAK', '1.77', '0.00', 'JL KP RT', 2026, '21013.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3047, '33-26-020-013-027-0002-0', 'SIDIK', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '1.09', '0.00', '15750.00', NULL, 'SIDIK', 'SIDIK', 'DARAT SASAK', '1.09', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3048, '33-26-020-013-027-0003-0', 'WANTO', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '3.88', '0.00', '46001.00', NULL, 'WANTO', 'WANTO', 'DARAT SASAK', '3.88', '0.00', 'JL KP RT', 2026, '46001.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3049, '33-26-020-013-027-0004-0', 'SUROTO', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '536.00', '0.00', '15750.00', NULL, 'SUROTO', 'SUROTO', 'DARAT SASAK', '536.00', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3050, '33-26-020-013-027-0005-0', 'WARNO', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '1.34', '0.00', '15888.00', NULL, 'WARNO', 'WARNO', 'DARAT SASAK', '1.34', '0.00', 'JL KP RT', 2026, '15888.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3051, '33-26-020-013-027-0006-0', 'ABDULLAH ROHIM', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '1.01', '0.00', '15750.00', NULL, 'ABDULLAH ROHIM', 'ABDULLAH ROHIM', 'DARAT SASAK', '1.01', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54'),
+(3052, '33-26-020-013-027-0007-0', 'JAI', 'JL KP RT', '000', '000', 'LAMBANGGELUN', 'DARAT SASAK', '000', '000', '657.00', '0.00', '15750.00', NULL, 'JAI', 'JAI', 'DARAT SASAK', '657.00', '0.00', 'JL KP RT', 2026, '15750.00', 'Belum Lunas', 'Data PBB 2026.csv', '2026-04-02 01:33:54', '2026-04-02 01:33:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `population_records`
+--
+
+CREATE TABLE `population_records` (
+  `id` bigint UNSIGNED NOT NULL,
+  `full_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nama_lengkap` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nik` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nkk` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `no_kk` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birth_place` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tempat_lahir` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `birth_date` date NOT NULL,
+  `tanggal_lahir` date DEFAULT NULL,
+  `gender` enum('Laki-laki','Perempuan') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `jenis_kelamin` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `hamlet` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,  `dusun` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `desa` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `kecamatan` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `kabupaten` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `provinsi` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `kode_pos` varchar(12) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `religion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `agama` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pendidikan` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `occupation` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pekerjaan` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `jenis_pekerjaan` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_perkawinan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_hubungan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `kewarganegaraan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `no_paspor` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `no_kitas_kitap` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nama_ayah` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nama_ibu` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `golongan_darah` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rt` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rw` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address_detail` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `source_file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `population_records`
+--
+
+INSERT INTO `population_records` (`id`, `full_name`, `nama_lengkap`, `nik`, `nkk`, `no_kk`, `birth_place`, `tempat_lahir`, `birth_date`, `tanggal_lahir`, `gender`, `jenis_kelamin`, `hamlet`, `dusun`, `desa`, `kecamatan`, `kabupaten`, `provinsi`, `kode_pos`, `religion`, `agama`, `pendidikan`, `occupation`, `pekerjaan`, `jenis_pekerjaan`, `status_perkawinan`, `status_hubungan`, `kewarganegaraan`, `no_paspor`, `no_kitas_kitap`, `nama_ayah`, `nama_ibu`, `golongan_darah`, `rt`, `rw`, `address_detail`, `source_file`, `created_at`, `updated_at`) VALUES
+(1, 'Budi Santoso', 'Budi Santoso', '3326010101800001', '3326010101010001', '3326010101010001', 'Pekalongan', 'Pekalongan', '1980-01-01', '1980-01-01', 'Laki-laki', 'Laki-laki', 'Bojongireng', 'Bojongireng', 'Desa Lambanggelun', 'Kecamatan Paninggaran', 'Kabupaten Pekalongan', 'Provinsi Jawa Tengah', '51164', 'Islam', 'Islam', 'SMA/Sederajat', 'Petani', 'Petani', 'Petani', 'Kawin Tercatat', 'Kepala Keluarga', 'WNI', NULL, NULL, 'Sutrisno', 'Suminah', 'O', '001', '002', 'RT 001 RW 002 Dusun Bojongireng', 'dummy-seed-v2', '2026-03-11 12:15:47', '2026-03-11 12:15:47'),
+(2, 'Siti Aminah', 'Siti Aminah', '3326014502850002', '3326010101010001', '3326010101010001', 'Pekalongan', 'Pekalongan', '1985-02-05', '1985-02-05', 'Perempuan', 'Perempuan', 'Bojongireng', 'Bojongireng', 'Desa Lambanggelun', 'Kecamatan Paninggaran', 'Kabupaten Pekalongan', 'Provinsi Jawa Tengah', '51164', 'Islam', 'Islam', 'SMA/Sederajat', 'Ibu Rumah Tangga', 'Ibu Rumah Tangga', 'Ibu Rumah Tangga', 'Kawin Tercatat', 'Istri', 'WNI', NULL, NULL, 'Kasim', 'Sukarti', 'A', '001', '002', 'RT 001 RW 002 Dusun Bojongireng', 'dummy-seed-v2', '2026-03-11 12:15:47', '2026-03-11 12:15:47'),
+(3, 'Rina Lestari', 'Rina Lestari', '3326014706100003', '3326010101010001', '3326010101010001', 'Pekalongan', 'Pekalongan', '2010-06-07', '2010-06-07', 'Perempuan', 'Perempuan', 'Bojongireng', 'Bojongireng', 'Desa Lambanggelun', 'Kecamatan Paninggaran', 'Kabupaten Pekalongan', 'Provinsi Jawa Tengah', '51164', 'Islam', 'Islam', 'Pelajar', 'Pelajar/Mahasiswa', 'Pelajar/Mahasiswa', 'Pelajar/Mahasiswa', 'Belum Kawin', 'Anak', 'WNI', NULL, NULL, 'Budi Santoso', 'Siti Aminah', 'B', '001', '002', 'RT 001 RW 002 Dusun Bojongireng', 'dummy-seed-v2', '2026-03-11 12:15:47', '2026-03-11 12:15:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` bigint UNSIGNED DEFAULT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_activity` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sessions`
+--
+
+INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('2NLST6b4ZV2FDrErsT4H4ORQBr22XB12tXMrVN5u', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWkJSRGREZmtvUHM4QjY2czUyTGJsdDR2Z0Z2UlZ1ZlVJWHdtZHZiViI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly93ZWJkZXMudGVzdC9kYXNoYm9hcmQvd2Vic2l0ZS1zZXR0aW5ncyI7czo1OiJyb3V0ZSI7czozMToiZGFzaGJvYXJkLndlYnNpdGUtc2V0dGluZ3MuZWRpdCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1775380864),
+('rz0TNEoCGRvzOif0uSFGRv1Dje1jIHIwRZ4Xo5m9', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.119.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiaVRnaWJIWGRsSVVJNjA3d0tyMEU3aWNLeE81TGRrYlc4eGIyWFhNMCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1778537380),
+('s4ZgKiRuUR0VTq4Pqq03bpMzUgDOx1BvFB4KxYhj', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiU1dPQUdPWWVVYnRSTTJKbUtUZXBwSTFnUkZNa1lrTllTTmFOMnR3dSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1778537375);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'operator',
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remember_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `email`, `role`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'Admin Desa Lambanggelun', 'admin@lambanggelun.id', 'admin', NULL, '$2y$12$vJia/MYFEMy/xqaUZU5tEeGsGA7A1DQboueRB.1ZEVmzOldr/WC9S', 'PYG8wQetY2Fp9dhUzChQflddwQuoyisoSez5E1hgXYBdsZLsdfjtGNCKSdJt', '2026-02-13 01:03:21', '2026-02-13 01:03:21'),
+(2, 'Operator Desa Lambanggelun', 'operator@lambanggelun.id', 'operator', NULL, '$2y$12$GHKyBARkirROpu48KlwACesJDrAiTgrlHwFOm2GieAolPLgikpbze', 'X3AtPxR0RrFe3B6Y2IqjvP2AzwjHTjELPtkk5BY2vDi0E9QRePfTWUIZQuYI', '2026-02-13 01:03:22', '2026-02-13 01:03:22'),
+(3, 'operator 2', 'operator2@lambanggelun.id', 'operator', NULL, '$2y$12$oBR/U8JqvjrDn/OxBsg2MeAy/X.e.CT7tIsciUHGaU7tM1okiKpI.', 'e5IskUaSfPrGyOsbZg3rUVwumEOA2dA1s2GzV1cuio2LdFMellS26vXw4n4H', '2026-02-22 07:09:59', '2026-02-22 07:09:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `village_activities`
+--
+
+CREATE TABLE `village_activities` (
+  `id` bigint UNSIGNED NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activity_date` date NOT NULL,
+  `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `person_in_charge` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Perencanaan',
+  `budget` decimal(16,2) DEFAULT NULL,
+  `summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `cover_image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `document_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `village_activities`
+--
+
+INSERT INTO `village_activities` (`id`, `title`, `slug`, `category`, `activity_date`, `location`, `person_in_charge`, `status`, `budget`, `summary`, `description`, `cover_image_path`, `document_path`, `created_at`, `updated_at`) VALUES
+(1, 'Pembangunan Drainase Lingkungan Dusun Bojongireng', 'pembangunan-drainase-lingkungan-dusun-bojongireng', 'Infrastruktur', '2025-01-20', 'Dusun Bojongireng', 'Kasi Kesejahteraan', 'Selesai', '185000000.00', 'Pembangunan saluran drainase untuk mengurangi genangan saat musim hujan.', 'Kegiatan pembangunan drainase dilakukan sepanjang 450 meter di titik rawan genangan sebagai program prioritas infrastruktur desa.', 'https://images.unsplash.com/photo-1494522358652-f30e61a60313?auto=format&fit=crop&w=1200&q=80', NULL, '2026-02-13 01:03:22', '2026-02-13 01:03:22'),
+(2, 'Pelatihan UMKM dan Digital Marketing Warga', 'pelatihan-umkm-dan-digital-marketing-warga', 'Pemberdayaan Masyarakat', '2025-04-12', 'Balai Desa Lambanggelun', 'Kasi Pelayanan', 'Selesai', '47500000.00', 'Pelatihan penguatan kapasitas UMKM desa untuk pemasaran digital.', 'Program pelatihan mencakup branding produk, foto produk, strategi marketplace, dan literasi keuangan bagi pelaku UMKM desa.', 'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1200&q=80', NULL, '2026-02-13 01:03:22', '2026-02-13 01:03:22'),
+(3, 'Normalisasi Saluran Irigasi Pertanian', 'normalisasi-saluran-irigasi-pertanian', 'Pertanian', '2025-08-08', 'Area Sawah Dusun Simendem', 'Kasi Pemerintahan', 'Berjalan', '96000000.00', 'Kegiatan normalisasi saluran irigasi sebagai dukungan produktivitas pertanian.', 'Kegiatan meliputi pembersihan sedimentasi, perbaikan tanggul kecil, dan penataan alur irigasi primer menuju petak sawah warga.', 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80', NULL, '2026-02-13 01:03:22', '2026-02-13 01:03:22'),
+(4, 'Festival Budaya dan Kesenian Desa', 'festival-budaya-dan-kesenian-desa', 'Sosial Budaya', '2026-02-02', 'Lapangan Desa Lambanggelun', 'Sekretaris Desa', 'Perencanaan', NULL, 'Agenda budaya tahunan sebagai ruang ekspresi seni warga desa.', 'Kegiatan festival budaya disiapkan untuk menampilkan kesenian lokal, bazar UMKM, serta promosi potensi desa ke masyarakat luas.', 'https://images.unsplash.com/photo-1472653431158-6364773b2a56?auto=format&fit=crop&w=1200&q=80', NULL, '2026-02-13 01:03:22', '2026-02-13 01:03:22'),
+(5, 'Peringatan HUT RI Desa Lambanggelun', 'peringatan-hut-ri-desa-lambanggelun', 'Sosial', '2026-02-22', 'Lapangan SDN 02 Lambanggelun', 'Karang taruna', 'Berjalan', NULL, NULL, NULL, NULL, NULL, '2026-02-22 08:00:26', '2026-02-22 08:00:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `village_staff`
+--
+
+CREATE TABLE `village_staff` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `position` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `photo_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sort_order` int UNSIGNED NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `village_staff`
+--
+
+INSERT INTO `village_staff` (`id`, `name`, `position`, `photo_path`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(2, 'Obama', 'Sekretaris Desa', 'website/staff/01KJ4AQ524DE9SR565HKW7EMCK.webp', 2, 1, '2026-02-22 21:04:31', '2026-02-22 21:04:31'),
+(3, 'Trump', 'Kaur Pemerintahan', 'website/staff/01KJ4AW4655E8PZHR9KNZ8V396.webp', 0, 1, '2026-02-22 21:07:14', '2026-02-22 21:09:47'),
+(4, 'biden', 'Kaur Pelayanan Publik', 'website/staff/01KJ4AXWZY0JQE2WZFXCJN5RW9.webp', 3, 1, '2026-02-22 21:08:13', '2026-02-22 21:09:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `website_settings`
+--
+
+CREATE TABLE `website_settings` (
+  `id` bigint UNSIGNED NOT NULL,
+  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` longtext COLLATE utf8mb4_unicode_ci,
+  `updated_by` bigint UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `website_settings`
+--
+
+INSERT INTO `website_settings` (`id`, `key`, `value`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'village_head_name', 'ABDUL HADI', 1, '2026-02-22 21:01:20', '2026-04-05 02:21:03'),
+(2, 'village_head_position', 'Kepala Desa Lambanggelun', 1, '2026-02-22 21:01:20', '2026-04-05 02:21:03'),
+(3, 'village_head_photo_url', 'https://res.cloudinary.com/dcf6mkq3q/image/upload/v1775380868/sid/dynamic/website/head/xqotnvlgahu3yoe2lkpy.webp', 1, '2026-02-22 21:01:20', '2026-04-05 02:21:03'),
+(4, 'village_hero_image_url', 'https://res.cloudinary.com/dcf6mkq3q/image/upload/v1775023165/sid/dynamic/website/branding/j0smrxzp4ymrozmqvf0o.webp', 1, '2026-02-22 21:02:28', '2026-03-31 22:59:24'),
+(5, 'village_profile_hero_image_url', 'https://res.cloudinary.com/dcf6mkq3q/image/upload/v1774976595/sid/dynamic/website/branding/yg22izvgn3mdpqxsqogn.webp', 1, '2026-02-22 21:02:28', '2026-03-31 22:59:24'),
+(6, 'village_profile_gallery_images', '[\"https://res.cloudinary.com/dcf6mkq3q/image/upload/v1773221078/file_00000000539871fda52f39986fe461c4_jikjsq.webp\",\"https://res.cloudinary.com/dcf6mkq3q/image/upload/v1773221076/kuntul_iycang.webp\",\"https://res.cloudinary.com/dcf6mkq3q/image/upload/v1773221074/Curug_ig846m.webp\",\"https://res.cloudinary.com/dcf6mkq3q/image/upload/v1773221073/teh_z0pvtp.webp\"]', 1, '2026-02-22 21:02:28', '2026-03-31 22:59:24'),
+(13, 'village_name', 'Desa Lambanggelun', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(14, 'village_district', 'Kabupaten Pekalongan', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(15, 'village_address', 'Kantor Desa Lambanggelun, Kabupaten Pekalongan, Jawa Tengah', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(16, 'village_phone', '(0285) 123 123', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(17, 'village_email', 'desa@lambanggelun.id', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(18, 'village_instagram_url', 'https://instagram.com/pemdes_lambanggelun', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(19, 'village_facebook_url', 'https://facebook.com/desa.lambanggelun.1', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24'),
+(20, 'village_map_link_url', 'https://maps.google.com/?q=Desa+Lambanggelun,+Kabupaten+Pekalongan', 1, '2026-02-22 21:24:24', '2026-02-22 21:24:24');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `ai_generations`
+--
+ALTER TABLE `ai_generations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ai_generations_user_id_foreign` (`user_id`),
+  ADD KEY `ai_generations_feature_status_index` (`feature`,`status`),
+  ADD KEY `ai_generations_created_at_index` (`created_at`);
+
+--
+-- Indexes for table `announcements`
+--
+ALTER TABLE `announcements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `announcements_active_period_idx` (`is_active`,`start_date`,`end_date`),  ADD KEY `announcements_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `cache`
+--
+ALTER TABLE `cache`
+  ADD PRIMARY KEY (`key`),
+  ADD KEY `cache_expiration_index` (`expiration`);
+
+--
+-- Indexes for table `cache_locks`
+--
+ALTER TABLE `cache_locks`
+  ADD PRIMARY KEY (`key`),
+  ADD KEY `cache_locks_expiration_index` (`expiration`);
+
+--
+-- Indexes for table `complaint_reports`
+--
+ALTER TABLE `complaint_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `complaint_reports_ticket_code_unique` (`ticket_code`),
+  ADD KEY `complaint_reports_status_submitted_at_index` (`status`,`submitted_at`),  ADD KEY `complaint_reports_nik_index` (`nik`),
+  ADD KEY `complaint_reports_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
+-- Indexes for table `galleries`
+--
+ALTER TABLE `galleries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `galleries_activity_date_idx` (`activity_date`),
+  ADD KEY `galleries_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `households`
+--
+ALTER TABLE `households`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `households_no_kk_unique` (`no_kk`);
+
+--
+-- Indexes for table `household_members`
+--
+ALTER TABLE `household_members`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `household_members_household_id_is_current_index` (`household_id`,`is_current`),
+  ADD KEY `household_members_resident_id_is_current_index` (`resident_id`,`is_current`),
+  ADD KEY `household_members_household_id_resident_id_index` (`household_id`,`resident_id`);
+
+--
+-- Indexes for table `jobs`
+--
+ALTER TABLE `jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `jobs_queue_index` (`queue`);
+
+--
+-- Indexes for table `job_batches`
+--
+ALTER TABLE `job_batches`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `land_records`
+--
+ALTER TABLE `land_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `land_records_hamlet_idx` (`hamlet`),
+  ADD KEY `land_records_category_idx` (`category`),
+  ADD KEY `land_records_status_idx` (`status`),
+  ADD KEY `land_records_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `land_transactions`
+--
+ALTER TABLE `land_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `land_transactions_transaction_number_unique` (`transaction_number`),
+  ADD KEY `land_transactions_created_by_foreign` (`created_by`),
+  ADD KEY `land_transactions_transaction_date_index` (`transaction_date`),
+  ADD KEY `land_transactions_transaction_type_index` (`transaction_type`),
+  ADD KEY `land_transactions_party_a_page_index` (`party_a_page`),
+  ADD KEY `land_transactions_party_b_page_index` (`party_b_page`),
+  ADD KEY `land_transactions_party_a_name_index` (`party_a_name`),
+  ADD KEY `land_transactions_party_b_name_index` (`party_b_name`);
+
+--
+-- Indexes for table `land_transaction_files`
+--
+ALTER TABLE `land_transaction_files`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `land_transaction_files_land_transaction_id_foreign` (`land_transaction_id`),
+  ADD KEY `land_transaction_files_uploaded_by_foreign` (`uploaded_by`),
+  ADD KEY `land_transaction_files_mime_type_index` (`mime_type`),
+  ADD KEY `land_transaction_files_created_at_index` (`created_at`);
+
+--
+-- Indexes for table `letter_number_counters`
+--
+ALTER TABLE `letter_number_counters`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `letter_number_counters_year_letter_code_unique` (`year`,`letter_code`);
+
+--
+-- Indexes for table `letter_service_requests`
+--
+ALTER TABLE `letter_service_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `letter_service_requests_ticket_number_unique` (`ticket_number`),  ADD UNIQUE KEY `letter_service_requests_official_number_unique` (`official_number`),
+  ADD KEY `letter_service_requests_status_requested_at_index` (`status`,`requested_at`),
+  ADD KEY `letter_service_requests_letter_code_letter_sequence_index` (`letter_code`,`letter_sequence`),
+  ADD KEY `letter_service_requests_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `news`
+--
+ALTER TABLE `news`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `news_slug_unique` (`slug`),
+  ADD KEY `news_published_at_idx` (`is_published`,`published_at`),
+  ADD KEY `news_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`email`);
+
+--
+-- Indexes for table `pbb_payment_requests`
+--
+ALTER TABLE `pbb_payment_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `pbb_payment_requests_ticket_code_unique` (`ticket_code`),
+  ADD KEY `pbb_payment_requests_status_submitted_at_index` (`status`,`submitted_at`),
+  ADD KEY `pbb_payment_requests_tax_year_nop_index` (`tax_year`,`nop`),
+  ADD KEY `pbb_payment_requests_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `pbb_tax_objects`
+--
+ALTER TABLE `pbb_tax_objects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `pbb_tax_objects_nop_year_unique` (`nop`,`tax_year`),
+  ADD KEY `pbb_tax_objects_nop_index` (`nop`);
+
+--
+-- Indexes for table `population_records`
+--
+ALTER TABLE `population_records`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `population_records_nik_unique` (`nik`),
+  ADD KEY `population_records_no_kk_idx` (`no_kk`),
+  ADD KEY `population_records_nkk_idx` (`nkk`),
+  ADD KEY `population_records_dusun_idx` (`dusun`),
+  ADD KEY `population_records_hamlet_idx` (`hamlet`),
+  ADD KEY `population_records_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sessions_user_id_index` (`user_id`),
+  ADD KEY `sessions_last_activity_index` (`last_activity`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `users_email_unique` (`email`);
+
+--
+-- Indexes for table `village_activities`
+--
+ALTER TABLE `village_activities`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `village_activities_slug_unique` (`slug`),
+  ADD KEY `village_activities_activity_date_category_index` (`activity_date`,`category`),
+  ADD KEY `village_activities_status_idx` (`status`),
+  ADD KEY `village_activities_created_at_idx` (`created_at`);
+
+--
+-- Indexes for table `village_staff`
+--
+ALTER TABLE `village_staff`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `village_staff_is_active_sort_order_index` (`is_active`,`sort_order`);
+
+--
+-- Indexes for table `website_settings`
+--
+ALTER TABLE `website_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `website_settings_key_unique` (`key`),
+  ADD KEY `website_settings_updated_by_foreign` (`updated_by`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `ai_generations`
+--
+ALTER TABLE `ai_generations`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `announcements`
+--
+ALTER TABLE `announcements`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `complaint_reports`
+--
+ALTER TABLE `complaint_reports`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `galleries`
+--
+ALTER TABLE `galleries`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `households`
+--
+ALTER TABLE `households`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `household_members`
+--
+ALTER TABLE `household_members`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `jobs`
+--
+ALTER TABLE `jobs`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `land_records`
+--
+ALTER TABLE `land_records`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `land_transactions`
+--
+ALTER TABLE `land_transactions`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `land_transaction_files`
+--
+ALTER TABLE `land_transaction_files`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `letter_number_counters`
+--
+ALTER TABLE `letter_number_counters`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `letter_service_requests`
+--
+ALTER TABLE `letter_service_requests`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT for table `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT for table `news`
+--
+ALTER TABLE `news`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `pbb_payment_requests`
+--
+ALTER TABLE `pbb_payment_requests`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `pbb_tax_objects`
+--
+ALTER TABLE `pbb_tax_objects`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3053;
+
+--
+-- AUTO_INCREMENT for table `population_records`
+--
+ALTER TABLE `population_records`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `village_activities`
+--
+ALTER TABLE `village_activities`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `village_staff`
+--
+ALTER TABLE `village_staff`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `website_settings`
+--
+ALTER TABLE `website_settings`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `ai_generations`
+--
+ALTER TABLE `ai_generations`
+  ADD CONSTRAINT `ai_generations_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `household_members`
+--
+ALTER TABLE `household_members`
+  ADD CONSTRAINT `household_members_household_id_foreign` FOREIGN KEY (`household_id`) REFERENCES `households` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `household_members_resident_id_foreign` FOREIGN KEY (`resident_id`) REFERENCES `population_records` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `land_transactions`
+--
+ALTER TABLE `land_transactions`
+  ADD CONSTRAINT `land_transactions_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `land_transaction_files`
+--
+ALTER TABLE `land_transaction_files`
+  ADD CONSTRAINT `land_transaction_files_land_transaction_id_foreign` FOREIGN KEY (`land_transaction_id`) REFERENCES `land_transactions` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `land_transaction_files_uploaded_by_foreign` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `website_settings`
+--
+ALTER TABLE `website_settings`
+  ADD CONSTRAINT `website_settings_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+).

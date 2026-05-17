@@ -104,6 +104,15 @@
                             <a class="{{ request()->routeIs('gallery.index') ? 'active' : '' }}" href="{{ route('gallery.index') }}">Galeri</a>
                         </div>
                     </li>
+
+                    <li class="has-dropdown" data-dropdown>
+                        <button type="button">Lembaga</button>
+                        <div class="dropdown">
+                            <a href="http://bpd.desalambanggelun.web.id" target="_blank" rel="noopener">BPD</a>
+                            <a href="http://bumdes.desalambanggelun.web.id" target="_blank" rel="noopener">BUMDes</a>
+                            <a href="http://karangtaruna.desalambanggelun.web.id" target="_blank" rel="noopener">Karangtaruna</a>
+                        </div>
+                    </li>
                 </ul>
             </nav>
 

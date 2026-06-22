@@ -47,9 +47,24 @@ fun SIDAppNavigation() {
         }
         composable("home") {
             HomeScreen(
-                onNavigateToSurat = { /* TODO */ },
-                onNavigateToPbb = { /* TODO */ },
-                onNavigateToPengaduan = { /* TODO */ }
+                onNavigateToSurat = { navController.navigate("surat") },
+                onNavigateToPbb = { navController.navigate("pbb") },
+                onNavigateToPengaduan = { navController.navigate("pengaduan") }
+            )
+        }
+        composable("surat") {
+            com.desa.lambanggelun.sid.ui.surat.SuratScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("pbb") {
+            com.desa.lambanggelun.sid.ui.pbb.PbbScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("pengaduan") {
+            com.desa.lambanggelun.sid.ui.pengaduan.PengaduanScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

@@ -27,10 +27,11 @@ jobs:
 
     - name: Build with Gradle
       working-directory: mobile
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: sid-mobile-debug-apk
-        path: mobile/app/build/outputs/apk/debug/app-debug.apk
+        name: sid-mobile-release-apk
+        path: mobile/app/build/outputs/apk/release/app-release.apk
+        retention-days: 3

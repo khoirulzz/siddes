@@ -1,6 +1,5 @@
 plugins {
   alias(libs.plugins.android.application)
-  alias(libs.plugins.kotlin.android)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
 }
@@ -50,9 +49,6 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(17)
-}
 
 dependencies {
   val composeBom = platform(libs.androidx.compose.bom)

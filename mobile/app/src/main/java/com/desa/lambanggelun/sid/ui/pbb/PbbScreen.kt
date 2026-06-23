@@ -22,6 +22,8 @@ fun PbbScreen(onNavigateBack: () -> Unit) {
     var taxName by remember { mutableStateOf("") }
     var amountDue by remember { mutableStateOf("") }
     var isNopFound by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -56,8 +58,6 @@ fun PbbScreen(onNavigateBack: () -> Unit) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Cari Data Objek Pajak", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(8.dp))
-                    val coroutineScope = rememberCoroutineScope()
-                    var isLoading by remember { mutableStateOf(false) }
 
                     OutlinedTextField(
                         value = nop,

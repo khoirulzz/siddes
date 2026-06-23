@@ -1,19 +1,27 @@
 package com.desa.lambanggelun.sid.ui.main
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,10 +42,15 @@ import com.desa.lambanggelun.sid.ui.news.NewsScreen
 import com.desa.lambanggelun.sid.ui.ai.AiAssistantScreen
 import com.desa.lambanggelun.sid.ui.settings.SettingsScreen
 
-sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
-    object Layanan : BottomNavItem("layanan", "Layanan", Icons.Default.Home)
-    object Pengumuman : BottomNavItem("pengumuman", "Pengumuman", Icons.Default.Info)
-    object BantuanAi : BottomNavItem("bantuan_ai", "Bantuan AI", Icons.Default.SmartToy)
+sealed class BottomNavItem(
+    val route: String,
+    val title: String,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector
+) {
+    object Layanan : BottomNavItem("layanan", "Layanan", Icons.Filled.Home, Icons.Outlined.Home)
+    object Pengumuman : BottomNavItem("pengumuman", "Pengumuman", Icons.Filled.Info, Icons.Outlined.Info)
+    object BantuanAi : BottomNavItem("bantuan_ai", "Bantuan AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,73 +70,67 @@ fun MainLayout() {
     Scaffold(
         topBar = {
             if (isMainScreen) {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Image(
-                                painter = painterResource(id = R.drawable.loog_pekalongan),
-                                contentDescription = "Logo Pekalongan",
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Logo
+                        Image(
+                            painter = painterResource(id = R.drawable.loog_pekalongan),
+                            contentDescription = "Logo Pekalongan",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        // Title + Subtitle
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "SID Mobile",
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = 18.sp
                             )
+                            Text(
+                                text = "Desa Lambanggelun",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
                         }
-                    },
-                    actions = {
+                        // Settings icon
                         IconButton(onClick = { navController.navigate("settings") }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Pengaturan",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    )
-                )
+                    }
+                }
             }
         },
         bottomBar = {
             if (isMainScreen) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp
-                ) {
-                    val items = listOf(
-                        BottomNavItem.Layanan,
-                        BottomNavItem.Pengumuman,
-                        BottomNavItem.BantuanAi
-                    )
-                    items.forEach { item ->
-                        NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title) },
-                            label = { Text(item.title, fontWeight = FontWeight.Medium) },
-                            selected = currentRoute == item.route,
-                            onClick = {
-                                navController.navigate(item.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            )
-                        )
+                SidBottomNavigationBar(
+                    currentRoute = currentRoute,
+                    onItemClick = { item ->
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
+                )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -167,6 +174,80 @@ fun MainLayout() {
             }
             composable("settings") {
                 SettingsScreen(onNavigateBack = { navController.popBackStack() })
+            }
+        }
+    }
+}
+
+@Composable
+fun SidBottomNavigationBar(
+    currentRoute: String?,
+    onItemClick: (BottomNavItem) -> Unit
+) {
+    val items = listOf(
+        BottomNavItem.Layanan,
+        BottomNavItem.Pengumuman,
+        BottomNavItem.BantuanAi
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 16.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEach { item ->
+                val isSelected = currentRoute == item.route
+                val iconColor by animateColorAsState(
+                    if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                    label = "iconColor"
+                )
+                val textColor by animateColorAsState(
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    label = "textColor"
+                )
+
+                Column(
+                    modifier = Modifier
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onItemClick(item) }
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(if (isSelected) 48.dp else 40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else Color.Transparent
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.title,
+                            tint = iconColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = item.title,
+                        fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        color = textColor
+                    )
+                }
             }
         }
     }

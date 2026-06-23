@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = SidDarkPrimary,
-    onPrimary = SidDarkSurface,
+    onPrimary = SidDarkInk,
     primaryContainer = SidDarkPrimaryStrong,
     onPrimaryContainer = SidDarkInk,
     secondary = SidDarkAccent,
@@ -21,10 +21,11 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = SidDarkInk,
     surface = SidDarkSurface,
     onSurface = SidDarkInk,
-    surfaceVariant = SidDarkLine,
+    surfaceVariant = SidDarkSurfaceVariant,
     onSurfaceVariant = SidDarkMuted,
     error = SidDarkDanger,
-    onError = SidDarkSurface
+    onError = SidDarkSurface,
+    outline = SidDarkLine
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -46,7 +47,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun SIDMobileTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Force dark theme to match mockup design
+    darkTheme: Boolean = true,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // Disabled dynamic color to strictly match web brand
     content: @Composable () -> Unit,

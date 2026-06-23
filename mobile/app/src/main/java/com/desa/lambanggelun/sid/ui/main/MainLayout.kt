@@ -114,9 +114,9 @@ fun MainLayout() {
                             },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.muted,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                unselectedTextColor = MaterialTheme.colorScheme.muted,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                             )
                         )

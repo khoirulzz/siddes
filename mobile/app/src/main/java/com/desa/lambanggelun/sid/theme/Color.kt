@@ -3,25 +3,25 @@ package com.desa.lambanggelun.sid.theme
 import androidx.compose.ui.graphics.Color
 
 // Light Theme Colors
-val SidBackground = Color(0xFFF4F7FB)
+val SidBackground = Color(0xFFF8FAFC) // Slate 50
 val SidSurface = Color(0xFFFFFFFF)
-val SidInk = Color(0xFF12263A)
-val SidMuted = Color(0xFF4F5D75)
-val SidPrimary = Color(0xFF0F4C81)
-val SidPrimaryStrong = Color(0xFF0A365D)
-val SidAccent = Color(0xFF1F8A70)
-val SidLine = Color(0xFFD9E2EC)
-val SidDanger = Color(0xFFB42318)
-val SidWarning = Color(0xFFF59E0B)
+val SidInk = Color(0xFF0F172A) // Slate 900
+val SidMuted = Color(0xFF64748B) // Slate 500
+val SidPrimary = Color(0xFF3B82F6) // Blue 500
+val SidPrimaryStrong = Color(0xFF2563EB) // Blue 600
+val SidAccent = Color(0xFF10B981) // Emerald 500
+val SidLine = Color(0xFFE2E8F0) // Slate 200
+val SidDanger = Color(0xFFEF4444) // Red 500
+val SidWarning = Color(0xFFF59E0B) // Amber 500
 
 // Dark Theme Colors
-val SidDarkBackground = Color(0xFF081220)
-val SidDarkSurface = Color(0xFF0E1D2F)
-val SidDarkInk = Color(0xFFE2ECF8)
-val SidDarkMuted = Color(0xFFA6B8CE)
-val SidDarkPrimary = Color(0xFF79AEF0)
-val SidDarkPrimaryStrong = Color(0xFF4C89D1)
-val SidDarkAccent = Color(0xFF58C3A6)
-val SidDarkLine = Color(0xFF2C425A)
-val SidDarkDanger = Color(0xFFEF4444)
-val SidDarkWarning = Color(0xFFFBBF24)
+val SidDarkBackground = Color(0xFF0F172A) // Slate 900
+val SidDarkSurface = Color(0xFF1E293B) // Slate 800
+val SidDarkInk = Color(0xFFF8FAFC) // Slate 50
+val SidDarkMuted = Color(0xFF94A3B8) // Slate 400
+val SidDarkPrimary = Color(0xFF60A5FA) // Blue 400
+val SidDarkPrimaryStrong = Color(0xFF3B82F6) // Blue 500
+val SidDarkAccent = Color(0xFF34D399) // Emerald 400
+val SidDarkLine = Color(0xFF334155) // Slate 700
+val SidDarkDanger = Color(0xFFF87171) // Red 400
+val SidDarkWarning = Color(0xFFFBBF24) // Amber 400

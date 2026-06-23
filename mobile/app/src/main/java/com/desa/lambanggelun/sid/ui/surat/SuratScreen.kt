@@ -73,17 +73,35 @@ fun SuratScreen(onNavigateBack: () -> Unit) {
                         }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    val coroutineScope = rememberCoroutineScope()
+                    var isLoading by remember { mutableStateOf(false) }
+                    
                     Button(
                         onClick = { 
-                            // Simulate API Check
-                            if (nik.length == 16) {
-                                isNikVerified = true
-                                fullName = "Budi Santoso"
+                            if (nik.length >= 16) {
+                                isLoading = true
+                                coroutineScope.launch {
+                                    try {
+                                        val response = com.desa.lambanggelun.sid.data.api.ApiClient.service.checkNik(nik)
+                                        if (response.success) {
+                                            isNikVerified = true
+                                            fullName = response.full_name ?: "Pemohon"
+                                        } else {
+                                            isNikVerified = false
+                                            // Show error (using a simple toast or snackbar in reality, but just resetting for now)
+                                        }
+                                    } catch (e: Exception) {
+                                        isNikVerified = false
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading
                     ) {
-                        Text("Cek NIK")
+                        Text(if (isLoading) "Memeriksa..." else "Cek NIK")
                     }
                 }
             }

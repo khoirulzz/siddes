@@ -24,48 +24,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SIDAppNavigation()
+                    com.desa.lambanggelun.sid.ui.main.MainLayout()
                 }
             }
         }
     }
 }
 
-@Composable
-fun SIDAppNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = "splash") {
-        composable("splash") {
-            SplashScreen(
-                onSplashFinished = {
-                    navController.navigate("home") {
-                        popUpTo("splash") { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable("home") {
-            HomeScreen(
-                onNavigateToSurat = { navController.navigate("surat") },
-                onNavigateToPbb = { navController.navigate("pbb") },
-                onNavigateToPengaduan = { navController.navigate("pengaduan") }
-            )
-        }
-        composable("surat") {
-            com.desa.lambanggelun.sid.ui.surat.SuratScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("pbb") {
-            com.desa.lambanggelun.sid.ui.pbb.PbbScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("pengaduan") {
-            com.desa.lambanggelun.sid.ui.pengaduan.PengaduanScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-    }
-}

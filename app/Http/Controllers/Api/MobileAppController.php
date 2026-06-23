@@ -17,6 +17,7 @@ use App\Support\LetterSchema;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\News;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
@@ -28,6 +29,24 @@ class MobileAppController extends Controller
     public function __construct(PublicServiceController $publicServiceController)
     {
         $this->publicServiceController = $publicServiceController;
+    }
+
+    public function getNews(Request $request): JsonResponse
+    {
+        $limit = $request->query('limit', 10);
+        $news = News::published()->orderBy('published_at', 'desc')->paginate($limit);
+        
+        // Transform the data to clean up HTML tags for the mobile app
+        $news->getCollection()->transform(function ($item) {
+            $item->clean_content = trim(strip_tags($item->content));
+            $item->thumbnail = $item->thumbnail_url;
+            return $item;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $news
+        ]);
     }
 
     public function villageInfo(): JsonResponse

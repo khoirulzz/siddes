@@ -55,6 +55,9 @@ fun PbbScreen(onNavigateBack: () -> Unit) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Cari Data Objek Pajak", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(8.dp))
+                    val coroutineScope = rememberCoroutineScope()
+                    var isLoading by remember { mutableStateOf(false) }
+
                     OutlinedTextField(
                         value = nop,
                         onValueChange = { nop = it },
@@ -62,19 +65,39 @@ fun PbbScreen(onNavigateBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         trailingIcon = {
-                            IconButton(onClick = {
-                                // Simulate Search
-                                if (nop.isNotEmpty()) {
-                                    isNopFound = true
-                                    taxName = "Wajib Pajak A"
-                                    amountDue = "Rp 150.000"
-                                }
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    if (nop.isNotEmpty()) {
+                                        isLoading = true
+                                        coroutineScope.launch {
+                                            try {
+                                                val response = com.desa.lambanggelun.sid.data.api.ApiClient.service.searchNop(nop)
+                                                if (response.success && response.data != null) {
+                                                    isNopFound = true
+                                                    taxName = response.data.tax_name
+                                                    amountDue = "Rp " + response.data.amount_due.toLong()
+                                                } else {
+                                                    isNopFound = false
+                                                }
+                                            } catch (e: Exception) {
+                                                isNopFound = false
+                                            } finally {
+                                                isLoading = false
+                                            }
+                                        }
+                                    }
+                                },
+                                enabled = !isLoading
+                            ) {
                                 Icon(Icons.Default.Search, contentDescription = "Cari")
                             }
                         }
                     )
                 }
+            }
+
+            if (isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
             if (isNopFound) {

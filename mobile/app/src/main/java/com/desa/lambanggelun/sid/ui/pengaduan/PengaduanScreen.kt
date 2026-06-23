@@ -70,13 +70,20 @@ fun PengaduanScreen(onNavigateBack: () -> Unit) {
                         maxLines = 5
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+                    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+                    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+                        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+                    ) { uri: android.net.Uri? ->
+                        selectedImageUri = uri
+                    }
+
                     OutlinedButton(
-                        onClick = { /* Launch File Picker */ },
+                        onClick = { launcher.launch("image/*") },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.UploadFile, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Upload Lampiran / Foto")
+                        Text(if (selectedImageUri != null) "Gambar Dipilih" else "Upload Lampiran / Foto (Opsional)")
                     }
                 }
             }

@@ -30,6 +30,22 @@ data class TaxObject(
     val amount_due: Double
 )
 
+data class NewsItem(
+    val id: Int,
+    val title: String,
+    val slug: String,
+    val excerpt: String?,
+    val thumbnail: String?,
+    val clean_content: String?,
+    val published_at: String?
+)
+
+data class PaginatedData<T>(
+    val current_page: Int,
+    val data: List<T>,
+    val total: Int
+)
+
 data class LetterSubmitRequest(
     val nik: String,
     val phone: String,
@@ -58,6 +74,18 @@ interface SidApiService {
 
     @GET("api/v1/search-nop")
     suspend fun searchNop(@Query("nop") nop: String, @Query("tax_year") taxYear: Int? = null): BaseResponse<TaxObject>
+
+    @GET("api/v1/news")
+    suspend fun getNews(@Query("limit") limit: Int = 10): BaseResponse<PaginatedData<NewsItem>>
+
+    @GET("api/v1/letters/search")
+    suspend fun searchLetterByTicket(@Query("ticket_number") ticket: String): BaseResponse<Map<String, Any>>
+
+    @GET("api/v1/pbb/search")
+    suspend fun searchPbbByTicket(@Query("ticket_code") ticket: String): BaseResponse<Map<String, Any>>
+
+    @GET("api/v1/complaints/search")
+    suspend fun searchComplaintByTicket(@Query("ticket_code") ticket: String): BaseResponse<Map<String, Any>>
 
     @POST("api/v1/letters")
     suspend fun submitLetter(@Body request: LetterSubmitRequest): BaseResponse<Any>

@@ -7,6 +7,7 @@ Route::prefix('v1')->group(function () {
     // Village Info & Setup
     Route::get('/village-info', [MobileAppController::class, 'villageInfo']);
     Route::get('/letter-types', [MobileAppController::class, 'letterTypes']);
+    Route::get('/news', [MobileAppController::class, 'getNews']);
     
     // NIK & NOP Verification
     Route::get('/check-nik', [MobileAppController::class, 'checkNik']);

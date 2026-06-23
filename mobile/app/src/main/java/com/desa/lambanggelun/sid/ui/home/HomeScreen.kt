@@ -1,5 +1,6 @@
 package com.desa.lambanggelun.sid.ui.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,71 +14,66 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.desa.lambanggelun.sid.R
 import com.desa.lambanggelun.sid.theme.SidAccent
 import com.desa.lambanggelun.sid.theme.SidDanger
 import com.desa.lambanggelun.sid.theme.SidPrimary
+import com.desa.lambanggelun.sid.theme.SidWarning
 
 @Composable
 fun HomeScreen(
     onNavigateToSurat: () -> Unit,
     onNavigateToPbb: () -> Unit,
-    onNavigateToPengaduan: () -> Unit
+    onNavigateToPengaduan: () -> Unit,
+    onNavigateToTracking: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Hero Header
+        // Hero Header with Image Banner
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ),
-                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-                )
-                .padding(24.dp)
-                .padding(top = 32.dp)
+                .height(200.dp)
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
         ) {
-            Column {
+            Image(
+                painter = painterResource(id = R.drawable.image_dashboard),
+                contentDescription = "Dashboard Banner",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            // Dark overlay for text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(24.dp)
+            ) {
                 Text(
                     text = "Selamat Datang,",
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                    fontSize = 14.sp
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "Warga Desa Lambanggelun",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Quick Search Bar
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    placeholder = { Text("Cari Nomor Tiket...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(12.dp)
                 )
             }
         }
@@ -86,14 +82,14 @@ fun HomeScreen(
         Text(
             text = "Layanan Digital Desa",
             fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 16.dp)
         )
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.weight(1f)
@@ -108,7 +104,7 @@ fun HomeScreen(
             }
             item {
                 ServiceCard(
-                    title = "PBB",
+                    title = "Bayar PBB",
                     icon = Icons.Default.Home,
                     color = SidAccent,
                     onClick = onNavigateToPbb
@@ -120,6 +116,14 @@ fun HomeScreen(
                     icon = Icons.Default.Notifications,
                     color = SidDanger,
                     onClick = onNavigateToPengaduan
+                )
+            }
+            item {
+                ServiceCard(
+                    title = "Lacak Tiket",
+                    icon = Icons.Default.Search,
+                    color = SidWarning,
+                    onClick = onNavigateToTracking
                 )
             }
         }
@@ -138,9 +142,9 @@ fun ServiceCard(
             .fillMaxWidth()
             .aspectRatio(1f)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -151,8 +155,8 @@ fun ServiceCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(color.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -160,14 +164,14 @@ fun ServiceCard(
                     imageVector = icon,
                     contentDescription = title,
                     tint = color,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(36.dp)
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }

@@ -40,13 +40,11 @@ RUN apk add --no-cache nodejs npm \
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Cache configurations for production performance
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Cache configurations should run at runtime, not build time
+# to ensure it picks up the correct Render environment variables
 
 # Expose the web server port
 EXPOSE 10000
 
-# Run migrations and start FrankenPHP (handles HTTPS proxy and serving Laravel)
-CMD sh -c "php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --listen :\$PORT --public-dir public"
+# Run optimizations, migrations and start FrankenPHP (handles HTTPS proxy and serving Laravel)
+CMD sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --listen :\$PORT --public-dir public"

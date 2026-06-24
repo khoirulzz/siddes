@@ -22,6 +22,11 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicServiceController;
 use Illuminate\Support\Facades\Route;
 
+// Endpoint sangat ringan untuk UptimeRobot / cron job
+Route::get('/health', function () {
+    return response('OK', 200)->header('Content-Type', 'text/plain');
+});
+
 $adminLoginPath = trim((string) config('security.admin_login_path', 'masuk-admin'), '/');
 $adminLoginPath = $adminLoginPath !== '' ? $adminLoginPath : 'masuk-admin';
 

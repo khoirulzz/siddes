@@ -51,5 +51,5 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 # Expose the web server port
 EXPOSE 10000
 
-# Run optimizations, migrations and start FrankenPHP (handles HTTPS proxy and serving Laravel)
-CMD sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --listen :\$PORT --public-dir public"
+# Run optimizations, migrations and start PHP built-in server
+CMD sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec php artisan serve --host=0.0.0.0 --port=\$PORT"

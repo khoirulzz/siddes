@@ -100,7 +100,17 @@ data class SearchNopResponse(
     val tax_year: Int? = null,
     val amount_due: Double? = null,
     val status: String? = null
-)
+) {
+    fun toTaxObject(): TaxObject {
+        return TaxObject(
+            nop = nop ?: "",
+            tax_name = tax_name ?: "Objek Pajak",
+            address = address ?: "",
+            tax_year = tax_year ?: 2026,
+            amount_due = amount_due ?: 0.0
+        )
+    }
+}
 
 // ─── Tracking Result Models ───────────────────────────────────────────────────
 

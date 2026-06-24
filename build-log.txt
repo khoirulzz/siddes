@@ -1,0 +1,121 @@
+2026-06-24T06:51:43.599495931Z ==> It looks like we don't have access to your repo, but we'll try to clone it anyway.
+2026-06-24T06:51:43.599767237Z ==> Cloning from https://github.com/khoirulzz/siddes
+2026-06-24T06:51:45.041145402Z ==> Checking out commit 708cbb28abc0a0a9ac0d21353b0448e3816e7415 in branch master
+2026-06-24T06:51:47.944170709Z #1 [internal] load build definition from Dockerfile
+2026-06-24T06:51:47.94419137Z #1 transferring dockerfile: 1.76kB done
+2026-06-24T06:51:47.94419599Z #1 DONE 0.0s
+2026-06-24T06:51:47.94420005Z 
+2026-06-24T06:51:47.94420518Z #2 [internal] load metadata for docker.io/dunglas/frankenphp:1.2-php8.3-alpine
+2026-06-24T06:51:49.093006869Z #2 ...
+2026-06-24T06:51:49.09303034Z 
+2026-06-24T06:51:49.09303588Z #3 [auth] dunglas/frankenphp:pull render-prod/docker-mirror-repository/dunglas/frankenphp:pull token for us-west1-docker.pkg.dev
+2026-06-24T06:51:49.09304176Z #3 DONE 0.0s
+2026-06-24T06:51:49.09304559Z 
+2026-06-24T06:51:49.09305038Z #4 [auth] library/composer:pull render-prod/docker-mirror-repository/library/composer:pull token for us-west1-docker.pkg.dev
+2026-06-24T06:51:49.09305497Z #4 DONE 0.0s
+2026-06-24T06:51:49.242231402Z 
+2026-06-24T06:51:49.242258882Z #5 [internal] load metadata for docker.io/library/composer:2.8
+2026-06-24T06:51:53.788515767Z #5 DONE 6.0s
+2026-06-24T06:51:53.788534377Z 
+2026-06-24T06:51:53.788542848Z #2 [internal] load metadata for docker.io/dunglas/frankenphp:1.2-php8.3-alpine
+2026-06-24T06:51:55.649521591Z #2 DONE 7.9s
+2026-06-24T06:51:55.829105614Z 
+2026-06-24T06:51:55.829132404Z #6 [internal] load .dockerignore
+2026-06-24T06:51:55.829136324Z #6 transferring context: 2B done
+2026-06-24T06:51:55.829139574Z #6 DONE 0.0s
+2026-06-24T06:51:55.829142704Z 
+2026-06-24T06:51:55.829145804Z #7 [internal] load build context
+2026-06-24T06:51:55.829148844Z #7 DONE 0.0s
+2026-06-24T06:51:55.829151784Z 
+2026-06-24T06:51:55.829155964Z #8 [stage-0  1/10] FROM docker.io/dunglas/frankenphp:1.2-php8.3-alpine@sha256:9f1290e44314183d7e45849c0ca872702f180a55d210ab6ab368332c57433149
+2026-06-24T06:51:55.829159165Z #8 resolve docker.io/dunglas/frankenphp:1.2-php8.3-alpine@sha256:9f1290e44314183d7e45849c0ca872702f180a55d210ab6ab368332c57433149 0.0s done
+2026-06-24T06:51:55.829162305Z #8 DONE 0.0s
+2026-06-24T06:51:55.829165205Z 
+2026-06-24T06:51:55.829168565Z #9 FROM docker.io/library/composer:2.8@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c
+2026-06-24T06:51:55.829172555Z #9 resolve docker.io/library/composer:2.8@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c 0.0s done
+2026-06-24T06:51:55.829175595Z #9 DONE 0.0s
+2026-06-24T06:51:55.829178535Z 
+2026-06-24T06:51:55.829190025Z #10 importing cache manifest
+2026-06-24T06:51:55.829194396Z #10 inferred cache manifest type: application/vnd.oci.image.manifest.v1+json done
+2026-06-24T06:51:55.829197525Z #10 DONE 0.1s
+2026-06-24T06:51:55.95991439Z 
+2026-06-24T06:51:55.95995037Z #7 [internal] load build context
+2026-06-24T06:51:56.127787354Z #7 transferring context: 17.22MB 0.1s done
+2026-06-24T06:51:56.325157929Z #7 DONE 0.5s
+2026-06-24T06:51:56.434176454Z 
+2026-06-24T06:51:56.449213326Z #11 [stage-0  6/10] WORKDIR /app
+2026-06-24T06:51:56.449226657Z #11 CACHED
+2026-06-24T06:51:56.449231357Z 
+2026-06-24T06:51:56.449236287Z #12 [stage-0  8/10] RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+2026-06-24T06:51:56.449240557Z #12 CACHED
+2026-06-24T06:51:56.449244287Z 
+2026-06-24T06:51:56.449251847Z #13 [stage-0  9/10] RUN apk add --no-cache nodejs npm     && npm install     && npm run build     && apk del nodejs npm
+2026-06-24T06:51:56.449256207Z #13 CACHED
+2026-06-24T06:51:56.449259907Z 
+2026-06-24T06:51:56.449263887Z #14 [stage-0  2/10] RUN apk add --no-cache     nss-tools     git     unzip     ca-certificates     && update-ca-certificates
+2026-06-24T06:51:56.449284658Z #14 CACHED
+2026-06-24T06:51:56.449287348Z 
+2026-06-24T06:51:56.449290718Z #15 [stage-0  3/10] COPY ca.pem /etc/ssl/certs/aiven-ca.pem
+2026-06-24T06:51:56.449293568Z #15 CACHED
+2026-06-24T06:51:56.449295988Z 
+2026-06-24T06:51:56.449298658Z #16 [stage-0  4/10] RUN install-php-extensions     pdo_mysql     gd     zip     opcache     bcmath
+2026-06-24T06:51:56.449301328Z #16 CACHED
+2026-06-24T06:51:56.449303768Z 
+2026-06-24T06:51:56.449306388Z #17 [stage-0  7/10] COPY . /app
+2026-06-24T06:51:56.449308968Z #17 CACHED
+2026-06-24T06:51:56.449311439Z 
+2026-06-24T06:51:56.449314688Z #18 [stage-0  5/10] COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
+2026-06-24T06:51:56.449317328Z #18 CACHED
+2026-06-24T06:51:56.449319739Z 
+2026-06-24T06:51:56.449324229Z #19 [stage-0 10/10] RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache     && chmod -R 775 /app/storage /app/bootstrap/cache
+2026-06-24T06:51:58.586105237Z #19 CACHED
+2026-06-24T06:51:58.785885616Z 
+2026-06-24T06:51:58.785901516Z #20 exporting to image
+2026-06-24T06:51:58.785905726Z #20 exporting layers done
+2026-06-24T06:51:58.785909276Z #20 pushing layers
+2026-06-24T06:51:58.915749311Z #20 pushing layers 0.3s done
+2026-06-24T06:51:59.131794908Z #20 DONE 0.4s
+2026-06-24T06:51:59.131816709Z 
+2026-06-24T06:51:59.131822979Z #21 exporting cache to registry
+2026-06-24T06:51:59.131829279Z #21 preparing build cache for export
+2026-06-24T06:51:59.412708607Z #21 sending cache export
+2026-06-24T06:51:59.89915944Z #21 sending cache export 0.5s done
+2026-06-24T06:51:59.899184501Z #21 DONE 1.3s
+2026-06-24T06:52:04.772760966Z ==> Deploying...
+2026-06-24T06:52:05.021058171Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-06-24T06:52:15.047725879Z 
+2026-06-24T06:52:15.047771429Z    INFO  Configuration cached successfully.  
+2026-06-24T06:52:15.04777604Z 
+2026-06-24T06:52:17.161197728Z 
+2026-06-24T06:52:17.161213158Z    INFO  Routes cached successfully.  
+2026-06-24T06:52:17.161215608Z 
+2026-06-24T06:52:19.457014535Z 
+2026-06-24T06:52:19.457680978Z 
+2026-06-24T06:52:19.457690448Z    INFO  Blade templates cached successfully.  
+2026-06-24T06:52:19.457693298Z 
+2026-06-24T06:52:21.070990406Z 
+2026-06-24T06:52:21.071023256Z    INFO  The [public/storage] link has been connected to [storagepublic].  
+2026-06-24T06:52:21.071028357Z 
+2026-06-24T06:52:23.414383115Z 
+2026-06-24T06:52:23.414417516Z    INFO  Nothing to migrate.  
+2026-06-24T06:52:23.414423986Z 
+2026-06-24T06:52:23.460954579Z sh: exec: line 0: frankenphp: Operation not permitted
+2026-06-24T06:52:25.498624875Z ==> Exited with status 126
+2026-06-24T06:52:25.501206777Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-06-24T06:52:27.342242717Z 
+2026-06-24T06:52:27.342283518Z    INFO  Configuration cached successfully.  
+2026-06-24T06:52:27.342290808Z 
+2026-06-24T06:52:29.520582538Z 
+2026-06-24T06:52:29.520621489Z    INFO  Routes cached successfully.  
+2026-06-24T06:52:29.520624969Z 
+2026-06-24T06:52:31.816296102Z 
+2026-06-24T06:52:31.816820393Z 
+2026-06-24T06:52:31.816836133Z    INFO  Blade templates cached successfully.  
+2026-06-24T06:52:31.816840893Z 
+2026-06-24T06:52:33.617122408Z 
+2026-06-24T06:52:33.617161458Z    INFO  The [public/storage] link has been connected to [storagepublic].  
+2026-06-24T06:52:33.617168469Z 
+2026-06-24T06:52:35.563984008Z 
+2026-06-24T06:52:35.564016549Z    INFO  Nothing to migrate.  
+2026-06-24T06:52:35.564020829Z 
+2026-06-24T06:52:35.616764624Z sh: exec: line 0: frankenphp: Operation not permitted

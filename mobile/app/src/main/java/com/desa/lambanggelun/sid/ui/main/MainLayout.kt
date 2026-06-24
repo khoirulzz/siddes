@@ -27,7 +27,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -48,19 +47,21 @@ sealed class BottomNavItem(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    object Layanan : BottomNavItem("layanan", "Layanan", Icons.Filled.Home, Icons.Outlined.Home)
-    object Pengumuman : BottomNavItem("pengumuman", "Pengumuman", Icons.Filled.Info, Icons.Outlined.Info)
-    object BantuanAi : BottomNavItem("bantuan_ai", "Bantuan AI", Icons.Filled.SmartToy, Icons.Outlined.SmartToy)
+    object Layanan    : BottomNavItem("layanan",     "Layanan",     Icons.Filled.Home,     Icons.Outlined.Home)
+    object Pengumuman : BottomNavItem("pengumuman",  "Pengumuman",  Icons.Filled.Info,     Icons.Outlined.Info)
+    object BantuanAi  : BottomNavItem("bantuan_ai",  "Bantuan AI",  Icons.Filled.SmartToy, Icons.Outlined.SmartToy)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainLayout() {
+fun MainLayout(
+    isDarkTheme: Boolean = true,
+    onToggleTheme: (Boolean) -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Define routes where bottom bar and top bar should be visible
     val isMainScreen = currentRoute in listOf(
         BottomNavItem.Layanan.route,
         BottomNavItem.Pengumuman.route,
@@ -81,7 +82,6 @@ fun MainLayout() {
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Logo
                         Image(
                             painter = painterResource(id = R.drawable.loog_pekalongan),
                             contentDescription = "Logo Pekalongan",
@@ -90,7 +90,6 @@ fun MainLayout() {
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        // Title + Subtitle
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "SID Mobile",
@@ -104,7 +103,6 @@ fun MainLayout() {
                                 fontSize = 12.sp
                             )
                         }
-                        // Settings icon
                         IconButton(onClick = { navController.navigate("settings") }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
@@ -148,32 +146,24 @@ fun MainLayout() {
             }
             composable(BottomNavItem.Layanan.route) {
                 HomeScreen(
-                    onNavigateToSurat = { navController.navigate("surat") },
-                    onNavigateToPbb = { navController.navigate("pbb") },
+                    onNavigateToSurat    = { navController.navigate("surat") },
+                    onNavigateToPbb      = { navController.navigate("pbb") },
                     onNavigateToPengaduan = { navController.navigate("pengaduan") },
-                    onNavigateToTracking = { navController.navigate("tracking") }
+                    onNavigateToTracking  = { navController.navigate("tracking") }
                 )
             }
-            composable(BottomNavItem.Pengumuman.route) {
-                NewsScreen()
-            }
-            composable(BottomNavItem.BantuanAi.route) {
-                AiAssistantScreen()
-            }
-            composable("surat") {
-                SuratScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable("pbb") {
-                PbbScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable("pengaduan") {
-                PengaduanScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable("tracking") {
-                TrackingScreen(onNavigateBack = { navController.popBackStack() })
-            }
+            composable(BottomNavItem.Pengumuman.route) { NewsScreen() }
+            composable(BottomNavItem.BantuanAi.route)  { AiAssistantScreen() }
+            composable("surat")    { SuratScreen(onNavigateBack = { navController.popBackStack() }) }
+            composable("pbb")      { PbbScreen(onNavigateBack = { navController.popBackStack() }) }
+            composable("pengaduan"){ PengaduanScreen(onNavigateBack = { navController.popBackStack() }) }
+            composable("tracking") { TrackingScreen(onNavigateBack = { navController.popBackStack() }) }
             composable("settings") {
-                SettingsScreen(onNavigateBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    isDarkTheme    = isDarkTheme,
+                    onToggleTheme  = onToggleTheme
+                )
             }
         }
     }
@@ -213,7 +203,6 @@ fun SidBottomNavigationBar(
                     if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     label = "textColor"
                 )
-
                 Column(
                     modifier = Modifier
                         .clickable(

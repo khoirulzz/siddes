@@ -4,7 +4,11 @@ FROM dunglas/frankenphp:1.2-php8.3-alpine
 RUN apk add --no-cache \
     nss-tools \
     git \
-    unzip
+    unzip \
+    ca-certificates \
+    curl \
+    && update-ca-certificates \
+    && curl -so /etc/ssl/certs/aiven-ca.pem https://letsencrypt.org/certs/isrgrootx1.pem
 
 RUN install-php-extensions \
     pdo_mysql \

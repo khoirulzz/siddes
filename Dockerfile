@@ -6,9 +6,10 @@ RUN apk add --no-cache \
     git \
     unzip \
     ca-certificates \
-    curl \
-    && update-ca-certificates \
-    && curl -so /etc/ssl/certs/aiven-ca.pem https://letsencrypt.org/certs/isrgrootx1.pem
+    && update-ca-certificates
+
+# Copy Aiven MySQL CA certificate for SSL connection
+COPY ca.pem /etc/ssl/certs/aiven-ca.pem
 
 RUN install-php-extensions \
     pdo_mysql \

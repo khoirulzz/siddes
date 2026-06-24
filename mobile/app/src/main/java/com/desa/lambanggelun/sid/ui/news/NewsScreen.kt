@@ -94,10 +94,15 @@ fun NewsScreen() {
                 }
             }
             else -> {
-                // For now, all API news show in "Berita" tab; "Pengumuman" shows filtered if category field exists
+                // Fallback: If API doesn't provide category, try matching title for 'pengumuman'
+                val isPengumuman = { news: ApiNewsItem ->
+                    news.category?.equals("Pengumuman", ignoreCase = true) == true ||
+                    (news.category == null && news.title.contains("pengumuman", ignoreCase = true))
+                }
+
                 val filtered = when (selectedTab) {
-                    0 -> newsList.filter { it.category?.lowercase() != "pengumuman" }
-                    1 -> newsList.filter { it.category?.lowercase() == "pengumuman" }
+                    0 -> newsList.filter { !isPengumuman(it) }
+                    1 -> newsList.filter { isPengumuman(it) }
                     else -> newsList
                 }
 

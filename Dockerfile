@@ -32,7 +32,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 # Install Node, build assets, then remove Node to reduce image size
 RUN apk add --no-cache nodejs npm \
-    && npm ci \
+    && npm install \
     && npm run build \
     && apk del nodejs npm
 

@@ -50,4 +50,3 @@ EXPOSE 10000
 
 # Run migrations and start FrankenPHP (handles HTTPS proxy and serving Laravel)
 CMD sh -c "php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --listen :\$PORT --public-dir public"
-```

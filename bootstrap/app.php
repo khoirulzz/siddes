@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $trustedProxies = env('RAILWAY_ENVIRONMENT')
+        $trustedProxies = (env('RAILWAY_ENVIRONMENT') || env('RENDER'))
             ? '*'
             : env('TRUSTED_PROXIES');
 

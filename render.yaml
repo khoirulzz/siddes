@@ -1,0 +1,104 @@
+# =============================================================
+# render.yaml — Render.com Infrastructure as Code
+# Proyek: SIDDes (Sistem Informasi Desa Digital)
+# Stack:  Laravel 12 + PHP 8.3 + Aiven MySQL
+# =============================================================
+
+services:
+  - type: web
+    name: siddes
+    runtime: image
+    # Gunakan Nixpacks untuk build otomatis dari source code
+    # Render akan detect nixpacks.toml secara otomatis
+    runtime: nix
+    plan: free
+    region: singapore  # Paling dekat ke Indonesia
+    branch: main
+
+    # Build command (dijalankan saat deploy)
+    buildCommand: sh scripts/render-build.sh
+
+    # Start command (dijalankan setelah build)
+    startCommand: sh scripts/render-start.sh
+
+    # Health check endpoint (Laravel default dari /up)
+    healthCheckPath: /up
+
+    # Variabel environment — isi nilai sensitif langsung di Render Dashboard
+    # JANGAN tulis secret/password di sini!
+    envVars:
+      - key: APP_NAME
+        value: "Desa Lambanggelun"
+
+      - key: APP_ENV
+        value: production
+
+      - key: APP_DEBUG
+        value: "false"
+
+      # APP_KEY dan APP_URL akan di-set manual di Render Dashboard
+      - key: APP_KEY
+        generateValue: true   # Render akan generate otomatis
+
+      - key: APP_URL
+        value: https://siddes.onrender.com  # Ganti setelah deploy pertama
+
+      # === DATABASE AIVEN MYSQL ===
+      - key: DB_CONNECTION
+        value: mysql
+
+      - key: DB_HOST
+        value: mysql-1c2a2b28-uniquefactuhl-7887.h.aivencloud.com
+
+      - key: DB_PORT
+        value: "23466"
+
+      - key: DB_DATABASE
+        value: defaultdb
+
+      - key: DB_USERNAME
+        value: avnadmin
+
+      # DB_PASSWORD di-set manual di Render Dashboard (sensitive)
+      - key: DB_PASSWORD
+        sync: false   # Tandai sebagai secret — harus diisi manual
+
+      # SSL untuk Aiven (wajib!)
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+
+      # === SESSION & CACHE ===
+      - key: SESSION_DRIVER
+        value: database
+
+      - key: CACHE_STORE
+        value: database
+
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # === LOGGING ===
+      - key: LOG_CHANNEL
+        value: stderr
+
+      - key: LOG_LEVEL
+        value: error
+
+      # === RENDER FLAGS ===
+      - key: RENDER
+        value: "true"
+
+      - key: RUN_MIGRATIONS
+        value: "true"
+
+      # === FILESYSTEM ===
+      - key: FILESYSTEM_DISK
+        value: local
+
+      # === BCRYPT ===
+      - key: BCRYPT_ROUNDS
+        value: "12"
+
+      # Admin path (ubah sesuai kebutuhan keamanan)
+      - key: ADMIN_LOGIN_PATH
+        value: masuk-admin

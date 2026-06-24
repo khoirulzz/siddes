@@ -23,7 +23,9 @@ data class BaseResponse<T>(
     val address_detail: String? = null,
     // Fields returned by letter submit
     val ticket_number: String? = null,
-    val ticket_code: String? = null
+    val ticket_code: String? = null,
+    val download_url: String? = null,
+    val download_docx_url: String? = null
 )
 
 // ─── Domain Models ────────────────────────────────────────────────────────────
@@ -89,33 +91,50 @@ data class PbbSubmitRequest(
     val nops: List<String>
 )
 
+data class SearchNopResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val nop: String? = null,
+    val tax_name: String? = null,
+    val address: String? = null,
+    val tax_year: Int? = null,
+    val amount_due: Double? = null,
+    val status: String? = null
+)
+
 // ─── Tracking Result Models ───────────────────────────────────────────────────
 
-data class LetterTrackResult(
-    @Json(name = "ticket_number") val ticketNumber: String?,
-    @Json(name = "letter_number") val letterNumber: String?,
-    @Json(name = "letter_type") val letterType: String?,
-    val status: String?,
-    @Json(name = "created_at") val createdAt: String?,
-    @Json(name = "requester_name") val requesterName: String?,
-    @Json(name = "download_url") val downloadUrl: String?
+data class LetterTrackResultResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val ticket_number: String? = null,
+    val official_number: String? = null,
+    val letter_type: String? = null,
+    val status: String? = null,
+    val submitted_at: String? = null,
+    val download_url: String? = null
 )
 
-data class PbbTrackResult(
-    @Json(name = "ticket_code") val ticketCode: String?,
-    @Json(name = "applicant_name") val applicantName: String?,
-    val status: String?,
-    @Json(name = "created_at") val createdAt: String?,
-    @Json(name = "total_amount") val totalAmount: Double?
+data class PbbTrackResultResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val ticket_code: String? = null,
+    val applicant_name: String? = null,
+    val status: String? = null,
+    val submitted_at: String? = null,
+    val total_amount: Double? = null
 )
 
-data class ComplaintTrackResult(
-    @Json(name = "ticket_code") val ticketCode: String?,
-    val subject: String?,
-    val status: String?,
-    val category: String?,
-    @Json(name = "created_at") val createdAt: String?,
-    @Json(name = "reporter_name") val reporterName: String?
+data class ComplaintTrackResultResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val ticket_code: String? = null,
+    val subject: String? = null,
+    val status: String? = null,
+    val category: String? = null,
+    val submitted_at: String? = null,
+    val reporter_name: String? = null,
+    val evidence_url: String? = null
 )
 
 // ─── API Service Interface ────────────────────────────────────────────────────
@@ -136,7 +155,7 @@ interface SidApiService {
     suspend fun searchNop(
         @Query("nop") nop: String,
         @Query("tax_year") taxYear: Int? = null
-    ): BaseResponse<TaxObject>
+    ): SearchNopResponse
 
     @GET("api/v1/news")
     suspend fun getNews(@Query("limit") limit: Int = 20): BaseResponse<PaginatedData<ApiNewsItem>>
@@ -144,17 +163,17 @@ interface SidApiService {
     @GET("api/v1/letters/search")
     suspend fun searchLetterByTicket(
         @Query("ticket_number") ticket: String
-    ): BaseResponse<LetterTrackResult>
+    ): LetterTrackResultResponse
 
     @GET("api/v1/pbb/search")
     suspend fun searchPbbByTicket(
         @Query("ticket_code") ticket: String
-    ): BaseResponse<PbbTrackResult>
+    ): PbbTrackResultResponse
 
     @GET("api/v1/complaints/search")
     suspend fun searchComplaintByTicket(
         @Query("ticket_code") ticket: String
-    ): BaseResponse<ComplaintTrackResult>
+    ): ComplaintTrackResultResponse
 
     @POST("api/v1/letters")
     suspend fun submitLetter(@Body request: LetterSubmitRequest): BaseResponse<Any>
@@ -192,6 +211,12 @@ object ApiClient {
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("Accept", "application/json")
+                .build()
+            chain.proceed(request)
+        }
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })

@@ -50,35 +50,35 @@ fun TrackingScreen(onNavigateBack: () -> Unit) {
                 when (selectedCategory) {
                     TrackCategory.Surat -> {
                         val r = ApiClient.service.searchLetterByTicket(ticketNumber)
-                        if (r.success && r.data != null) {
+                        if (r.success) {
                             result = TrackResult(
-                                ticketCode = r.data.ticketNumber ?: ticketNumber,
-                                status     = r.data.status ?: "-",
-                                label1 = "Jenis Surat", value1 = r.data.letterType ?: "-",
-                                label2 = "No. Surat",   value2 = r.data.letterNumber ?: "-",
-                                downloadUrl = r.data.downloadUrl
+                                ticketCode = r.ticket_number ?: ticketNumber,
+                                status     = r.status ?: "-",
+                                label1 = "Jenis Surat", value1 = r.letter_type ?: "-",
+                                label2 = "No. Surat",   value2 = r.official_number ?: "-",
+                                downloadUrl = r.download_url
                             )
                         } else errorMsg = r.message ?: "Tiket tidak ditemukan"
                     }
                     TrackCategory.PBB -> {
                         val r = ApiClient.service.searchPbbByTicket(ticketNumber)
-                        if (r.success && r.data != null) {
+                        if (r.success) {
                             result = TrackResult(
-                                ticketCode = r.data.ticketCode ?: ticketNumber,
-                                status     = r.data.status ?: "-",
-                                label1 = "Pemohon",    value1 = r.data.applicantName ?: "-",
-                                label2 = "Total",      value2 = r.data.totalAmount?.let { "Rp ${it.toLong()}" } ?: "-"
+                                ticketCode = r.ticket_code ?: ticketNumber,
+                                status     = r.status ?: "-",
+                                label1 = "Pemohon",    value1 = r.applicant_name ?: "-",
+                                label2 = "Total",      value2 = r.total_amount?.let { "Rp ${it.toLong()}" } ?: "-"
                             )
                         } else errorMsg = r.message ?: "Tiket tidak ditemukan"
                     }
                     TrackCategory.Pengaduan -> {
                         val r = ApiClient.service.searchComplaintByTicket(ticketNumber)
-                        if (r.success && r.data != null) {
+                        if (r.success) {
                             result = TrackResult(
-                                ticketCode = r.data.ticketCode ?: ticketNumber,
-                                status     = r.data.status ?: "-",
-                                label1 = "Judul",    value1 = r.data.subject ?: "-",
-                                label2 = "Kategori", value2 = r.data.category ?: "-"
+                                ticketCode = r.ticket_code ?: ticketNumber,
+                                status     = r.status ?: "-",
+                                label1 = "Judul",    value1 = r.subject ?: "-",
+                                label2 = "Kategori", value2 = r.category ?: "-"
                             )
                         } else errorMsg = r.message ?: "Tiket tidak ditemukan"
                     }
@@ -94,7 +94,20 @@ fun TrackingScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Lacak Tiket") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(id = com.desa.lambanggelun.sid.R.drawable.loog_pekalongan),
+                            contentDescription = "Logo",
+                            modifier = Modifier.size(32.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Lacak Tiket", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("SID Mobile Desa", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                },
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,

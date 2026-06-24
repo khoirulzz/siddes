@@ -13,7 +13,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 val COMPLAINT_CATEGORIES = listOf(
     "Infrastruktur",
     "Pelayanan Publik",
-    "Lingkungan",
+    "Keamanan",
     "Sosial",
     "Lainnya"
 )
@@ -102,7 +102,17 @@ class PengaduanViewModel : ViewModel() {
                     _state.value = _state.value.copy(isSubmitting = false, errorMessage = response.message ?: "Gagal mengirim laporan")
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isSubmitting = false, errorMessage = "Gagal terhubung ke server: ${e.message}")
+                var errorMsg = "Gagal terhubung ke server"
+                if (e is retrofit2.HttpException) {
+                    try {
+                        val body = e.response()?.errorBody()?.string()
+                        if (body?.contains("message") == true) {
+                            val json = org.json.JSONObject(body)
+                            if (json.has("message")) errorMsg = json.getString("message")
+                        }
+                    } catch (ex: Exception) { /* ignore */ }
+                }
+                _state.value = _state.value.copy(isSubmitting = false, errorMessage = errorMsg)
             }
         }
     }

@@ -2,6 +2,9 @@ package com.desa.lambanggelun.sid.ui.surat
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,7 +53,20 @@ fun SuratScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Surat Online") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(id = com.desa.lambanggelun.sid.R.drawable.loog_pekalongan),
+                            contentDescription = "Logo",
+                            modifier = Modifier.size(32.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Surat Online", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("SID Mobile Desa", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -78,6 +94,8 @@ fun SuratScreen(
             if (state.submitSuccess) {
                 SuccessCard(
                     ticketNumber = state.ticketNumber,
+                    downloadUrl = state.downloadUrl,
+                    downloadDocxUrl = state.downloadDocxUrl,
                     onCopy = { clipboard.setText(AnnotatedString(state.ticketNumber)) },
                     onReset = { vm.resetForm() }
                 )
@@ -318,7 +336,14 @@ fun DynamicFieldInput(field: LetterField, value: String, onValueChange: (String)
 }
 
 @Composable
-fun SuccessCard(ticketNumber: String, onCopy: () -> Unit, onReset: () -> Unit) {
+fun SuccessCard(
+    ticketNumber: String,
+    downloadUrl: String?,
+    downloadDocxUrl: String?,
+    onCopy: () -> Unit,
+    onReset: () -> Unit
+) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -351,6 +376,54 @@ fun SuccessCard(ticketNumber: String, onCopy: () -> Unit, onReset: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text("Ketuk untuk menyalin nomor tiket", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            if (!downloadUrl.isNullOrBlank() || !downloadDocxUrl.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Unduh Dokumen Surat:", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (!downloadUrl.isNullOrBlank()) {
+                        Button(
+                            onClick = {
+                                try {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl)))
+                                } catch (e: Exception) {
+                                    // Handle error
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("PDF", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    if (!downloadDocxUrl.isNullOrBlank()) {
+                        Button(
+                            onClick = {
+                                try {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(downloadDocxUrl)))
+                                } catch (e: Exception) {
+                                    // Handle error
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Word", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 "Surat akan dikirim dalam 1-3 hari kerja. Gunakan nomor tiket di atas untuk melacak status di menu Lacak Tiket.",

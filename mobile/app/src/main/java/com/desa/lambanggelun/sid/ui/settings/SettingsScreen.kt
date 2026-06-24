@@ -106,9 +106,9 @@ fun SettingsScreen(
                 icon = Icons.Default.Web,
                 iconColor = Color(0xFF3B82F6),
                 title = "Portal Layanan Online",
-                subtitle = "siddes.onrender.com",
+                subtitle = "desalambanggelun.web.id/layanan/surat-online",
                 onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://siddes.onrender.com")))
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://desalambanggelun.web.id/layanan/surat-online")))
                 }
             )
 

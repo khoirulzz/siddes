@@ -36,6 +36,7 @@ fun NewsScreen() {
     var isLoading by remember { mutableStateOf(true) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     fun loadNews() {
         scope.launch {
@@ -115,7 +116,10 @@ fun NewsScreen() {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(filtered) { news ->
-                            ApiNewsCard(news = news, isAnnouncement = selectedTab == 1)
+                            ApiNewsCard(news = news, isAnnouncement = selectedTab == 1) {
+                                val url = if (selectedTab == 1) "https://desalambanggelun.web.id/pengumuman/${news.slug}" else "https://desalambanggelun.web.id/berita/${news.slug}"
+                                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                            }
                         }
                         item { Spacer(Modifier.height(8.dp)) }
                     }
@@ -154,10 +158,10 @@ fun TabButton(
 }
 
 @Composable
-fun ApiNewsCard(news: ApiNewsItem, isAnnouncement: Boolean) {
+fun ApiNewsCard(news: ApiNewsItem, isAnnouncement: Boolean, onClick: () -> Unit) {
     val baseUrl = "https://siddes.onrender.com"
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

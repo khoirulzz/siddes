@@ -39,22 +39,35 @@ class PbbViewModel : ViewModel() {
             _state.value = _state.value.copy(isSearchingNop = true, nopError = null)
             try {
                 val response = ApiClient.service.searchNop(nop)
-                if (response.success && response.data != null) {
-                    val existing = _state.value.nopList.any { it.nop == response.data.nop }
+                if (response.success) {
+                    val taxObj = response.toTaxObject()
+                    val existing = _state.value.nopList.any { it.nop == taxObj.nop }
                     if (existing) {
                         _state.value = _state.value.copy(isSearchingNop = false, nopError = "NOP sudah ditambahkan")
                     } else {
                         _state.value = _state.value.copy(
                             isSearchingNop = false,
-                            nopList = _state.value.nopList + response.data,
+                            nopList = _state.value.nopList + taxObj,
                             nopInput = ""
                         )
                     }
                 } else {
-                    _state.value = _state.value.copy(isSearchingNop = false, nopError = "NOP tidak ditemukan")
+                    _state.value = _state.value.copy(isSearchingNop = false, nopError = response.message ?: "NOP tidak ditemukan")
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(isSearchingNop = false, nopError = "Gagal terhubung ke server")
+                var errorMsg = "Gagal terhubung ke server"
+                if (e is retrofit2.HttpException) {
+                    try {
+                        val body = e.response()?.errorBody()?.string()
+                        if (body?.contains("message") == true) {
+                            val json = org.json.JSONObject(body)
+                            if (json.has("message")) errorMsg = json.getString("message")
+                        } else {
+                            errorMsg = "NOP tidak ditemukan"
+                        }
+                    } catch (ex: Exception) { errorMsg = "NOP tidak ditemukan" }
+                }
+                _state.value = _state.value.copy(isSearchingNop = false, nopError = errorMsg)
             }
         }
     }

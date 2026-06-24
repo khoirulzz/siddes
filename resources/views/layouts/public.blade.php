@@ -4,6 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', config('village.name'))</title>
+    <meta name="description" content="@yield('meta_description', 'Portal Informasi dan Layanan Online Resmi Pemerintah Desa ' . config('village.name') . ', ' . config('village.district') . '. Akses mandiri untuk surat online, PBB, pengaduan warga, dan berita desa terbaru.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'desa, ' . config('village.name') . ', ' . config('village.district') . ', portal desa, layanan online, surat online, pbb desa, pengaduan warga, berita desa')">
+    <meta name="author" content="{{ config('village.developed_by', 'Pemerintah Desa ' . config('village.name')) }}">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request()->url() }}">
+    <meta property="og:title" content="@yield('title', config('village.name'))">
+    <meta property="og:description" content="@yield('meta_description', 'Portal Informasi dan Layanan Online Resmi Pemerintah Desa ' . config('village.name') . ', ' . config('village.district') . '.')">
+    <meta property="og:image" content="@yield('og_image', asset('assets/images/loog_pekalongan.png'))">
+    <meta property="og:site_name" content="SID {{ config('village.name') }}">
+    <meta property="og:locale" content="id_ID">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request()->url() }}">
+    <meta property="twitter:title" content="@yield('title', config('village.name'))">
+    <meta property="twitter:description" content="@yield('meta_description', 'Portal Informasi dan Layanan Online Resmi Pemerintah Desa ' . config('village.name') . ', ' . config('village.district') . '.')">
+    <meta property="twitter:image" content="@yield('og_image', asset('assets/images/loog_pekalongan.png'))">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request()->url() }}">
+
+    <!-- JSON-LD Structured Data for GovernmentOrganization & WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "GovernmentOrganization",
+      "name": "Pemerintah Desa {{ config('village.name') }}",
+      "alternateName": "Pemdes {{ config('village.name') }}",
+      "url": "{{ url('/') }}",
+      "logo": "{{ asset('assets/images/loog_pekalongan.png') }}",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "{{ config('village.address') }}",
+        "addressLocality": "{{ config('village.district') }}",
+        "addressCountry": "ID"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "{{ config('village.phone') }}",
+        "contactType": "customer service",
+        "email": "{{ config('village.email') }}"
+      },
+      "sameAs": [
+        "{{ config('village.instagram_url') }}",
+        "{{ config('village.facebook_url') }}"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SID {{ config('village.name') }}",
+      "url": "{{ url('/') }}",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ url('/berita') }}?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
     <link rel="icon" type="image/png" href="{{ asset('favicon/favicon-96x96.png') }}" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon/favicon.svg') }}" />
     <link rel="shortcut icon" href="{{ asset('favicon/favicon.ico') }}" />

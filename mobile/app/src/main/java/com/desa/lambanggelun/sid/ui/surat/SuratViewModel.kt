@@ -30,6 +30,8 @@ data class SuratUiState(
     val isSubmitting: Boolean = false,
     val submitSuccess: Boolean = false,
     val ticketNumber: String = "",
+    val downloadUrl: String? = null,
+    val downloadDocxUrl: String? = null,
     val errorMessage: String? = null
 )
 
@@ -67,9 +69,21 @@ class SuratViewModel : ViewModel() {
                     )
                 }
             } catch (e: Exception) {
+                var errorMsg = "Gagal terhubung ke server. Periksa koneksi internet."
+                if (e is retrofit2.HttpException) {
+                    try {
+                        val body = e.response()?.errorBody()?.string()
+                        if (body?.contains("message") == true) {
+                            val json = org.json.JSONObject(body)
+                            if (json.has("message")) errorMsg = json.getString("message")
+                        } else {
+                            errorMsg = "NIK tidak ditemukan atau tidak sesuai format"
+                        }
+                    } catch (ex: Exception) { errorMsg = "NIK tidak ditemukan atau tidak sesuai format" }
+                }
                 _state.value = _state.value.copy(
                     isNikVerified = false,
-                    nikError = "Gagal terhubung ke server. Periksa koneksi internet.",
+                    nikError = errorMsg,
                     isNikLoading = false
                 )
             }
@@ -136,7 +150,9 @@ class SuratViewModel : ViewModel() {
                     _state.value = _state.value.copy(
                         isSubmitting = false,
                         submitSuccess = true,
-                        ticketNumber = ticket
+                        ticketNumber = ticket,
+                        downloadUrl = response.download_url,
+                        downloadDocxUrl = response.download_docx_url
                     )
                 } else {
                     _state.value = _state.value.copy(

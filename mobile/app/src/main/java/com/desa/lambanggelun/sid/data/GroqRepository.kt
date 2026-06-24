@@ -54,7 +54,7 @@ Website: https://desalambanggelun.web.id
    e. Isi form sesuai jenis surat
    f. Klik "Ajukan Surat"
    g. Simpan nomor tiket yang diberikan
-   h. Surat bisa didownload setelah diproses (biasanya 1-3 hari kerja)
+   h. Surat bisa langsung didownload dalam bentuk pdf/word (validasi ttd dan stempel tetap perlu ke balai desa)
 
    Syarat: NIK harus terdaftar di data kependudukan desa.
 
@@ -80,7 +80,7 @@ Sabtu–Minggu & Hari Libur: Tutup
 - Berikan jawaban yang singkat dan langsung ke poin
 - Jika pertanyaan di luar informasi desa, arahkan ke kantor desa
 - Jangan mengarang informasi yang tidak ada
-- Jika tidak tahu, katakan "Untuk informasi lebih lanjut, silakan hubungi kantor desa di (0285) 000-000"
+- Jika tidak tahu, katakan "Untuk informasi lebih lanjut, silakan hubungi atau datang ke kantor desa", atau kunjungi web desa, link ada di halaman pengaturan"
 """.trimIndent()
 
     /**

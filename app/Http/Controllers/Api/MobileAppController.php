@@ -33,19 +33,43 @@ class MobileAppController extends Controller
 
     public function getNews(Request $request): JsonResponse
     {
-        $limit = $request->query('limit', 10);
-        $news = News::published()->orderBy('published_at', 'desc')->paginate($limit);
+        $limit = (int) $request->query('limit', 20);
         
-        // Transform the data to clean up HTML tags for the mobile app
-        $news->getCollection()->transform(function ($item) {
-            $item->clean_content = trim(strip_tags($item->content));
-            $item->thumbnail = $item->thumbnail_url;
-            return $item;
+        $news = News::published()->orderBy('published_at', 'desc')->get()->map(function($item) {
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'slug' => $item->slug,
+                'excerpt' => $item->excerpt,
+                'thumbnail' => $item->thumbnail_url,
+                'clean_content' => trim(strip_tags($item->content)),
+                'published_at' => $item->published_at,
+                'category' => 'Berita',
+            ];
         });
+
+        $announcements = \App\Models\Announcement::active()->orderBy('created_at', 'desc')->get()->map(function($item) {
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'slug' => (string)$item->id,
+                'excerpt' => \Illuminate\Support\Str::limit(trim(strip_tags($item->content)), 100),
+                'thumbnail' => $item->thumbnail_url,
+                'clean_content' => trim(strip_tags($item->content)),
+                'published_at' => $item->start_date ?? $item->created_at,
+                'category' => 'Pengumuman',
+            ];
+        });
+
+        $merged = $news->concat($announcements)->sortByDesc('published_at')->values()->take($limit);
 
         return response()->json([
             'success' => true,
-            'data' => $news
+            'data' => [
+                'data' => $merged,
+                'current_page' => 1,
+                'total' => $merged->count()
+            ]
         ]);
     }
 
@@ -143,7 +167,9 @@ class MobileAppController extends Controller
                 'success' => true,
                 'message' => 'Pengajuan surat berhasil dikirim.',
                 'ticket_number' => $ticket,
-                'official_number' => $numbering['official_number']
+                'official_number' => $numbering['official_number'],
+                'download_url' => route('services.letter.download', ['ticket' => $ticket, 'format' => 'pdf']),
+                'download_docx_url' => route('services.letter.download', ['ticket' => $ticket, 'format' => 'docx'])
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([

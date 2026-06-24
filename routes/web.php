@@ -22,9 +22,15 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicServiceController;
 use Illuminate\Support\Facades\Route;
 
-// Endpoint sangat ringan untuk UptimeRobot / cron job
+// Endpoint sangat ringan untuk UptimeRobot / cron job (Ping Web + Database)
 Route::get('/health', function () {
-    return response('OK', 200)->header('Content-Type', 'text/plain');
+    try {
+        // Melakukan query super ringan untuk memastikan koneksi ke Aiven ikut "dibangunkan"
+        \Illuminate\Support\Facades\DB::select('SELECT 1');
+        return response('OK', 200)->header('Content-Type', 'text/plain');
+    } catch (\Exception $e) {
+        return response('Database Error', 500)->header('Content-Type', 'text/plain');
+    }
 });
 
 $adminLoginPath = trim((string) config('security.admin_login_path', 'masuk-admin'), '/');

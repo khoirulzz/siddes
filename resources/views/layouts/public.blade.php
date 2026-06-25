@@ -31,20 +31,20 @@
     <!-- JSON-LD Structured Data for GovernmentOrganization & WebSite -->
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "GovernmentOrganization",
+      "@@context": "https://schema.org",
+      "@@type": "GovernmentOrganization",
       "name": "Pemerintah Desa {{ config('village.name') }}",
       "alternateName": "Pemdes {{ config('village.name') }}",
       "url": "{{ url('/') }}",
       "logo": "{{ asset('assets/images/loog_pekalongan.png') }}",
       "address": {
-        "@type": "PostalAddress",
+        "@@type": "PostalAddress",
         "streetAddress": "{{ config('village.address') }}",
         "addressLocality": "{{ config('village.district') }}",
         "addressCountry": "ID"
       },
       "contactPoint": {
-        "@type": "ContactPoint",
+        "@@type": "ContactPoint",
         "telephone": "{{ config('village.phone') }}",
         "contactType": "customer service",
         "email": "{{ config('village.email') }}"
@@ -57,12 +57,12 @@
     </script>
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
+      "@@context": "https://schema.org",
+      "@@type": "WebSite",
       "name": "SID {{ config('village.name') }}",
       "url": "{{ url('/') }}",
       "potentialAction": {
-        "@type": "SearchAction",
+        "@@type": "SearchAction",
         "target": "{{ url('/berita') }}?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }

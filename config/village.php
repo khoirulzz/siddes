@@ -7,7 +7,7 @@ return [
     'hero_image_url' => 'https://lh3.googleusercontent.com/pw/AP1GczP_zcOCqkbmPK9-ni6MoR02R8TXFqaVHMRxWbVXlpCERulMVJPcfjLb9iZtmQmcozXXKkouRdva4eRgk4VsywbiJotaCCbVASUY8LaC6KpHYhXHUAVbO8qO1nnPy3hAMD9LOi1yhdPkl-ViIKaIHks0=w973-h651-s-no-gm?authuser=0',
     'profile_hero_image_url' => 'https://i.ibb.co.com/BKT8Sk3x/146108-picsay.webp',
     'organization_chart_url' => 'https://res.cloudinary.com/dzrca841f/image/upload/v1775197584/1775197478071_nrvbxk.webp',
-    'welcome_banner_url' => 'https://res.cloudinary.com/dcf6mkq3q/image/upload/v1774987274/171785-picsay_1_bd8cd1.webp',
+    'welcome_banner_url' => 'https://res.cloudinary.com/dzrca841f/image/upload/v1782540973/welcome_epvmbq.webp',
     'welcome_banner_alt' => 'Banner selamat datang Desa Lambanggelun',
     'welcome_banner_cooldown_hours' => 24,
     'head_name' => env('VILLAGE_HEAD_NAME', 'ABDUL HADI'),

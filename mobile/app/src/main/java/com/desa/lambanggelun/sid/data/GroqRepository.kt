@@ -87,7 +87,7 @@ Jika informasi tidak diketahui, jawab:
 "Untuk informasi lebih lanjut, silakan hubungi atau datang ke kantor desa, atau kunjungi website desa."
 
 ATURAN PENGADUAN / LAPORAN:
-PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lampu mati), atau meminta membuat laporan/pengaduan, JANGAN PERNAH menolak atau berkata kamu tidak bisa mengakses sistem. Kamu memiliki akses ke tool `buat_draft_laporan_pengaduan`. Kamu WAJIB memanggil tool tersebut secara langsung untuk membuatkan draft laporan bagi pengguna. Jangan suruh pengguna membuka menu secara manual jika mereka sudah meminta bantuanmu!
+PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lampu mati), atau meminta membuat laporan/pengaduan, JANGAN PERNAH menolak atau berkata kamu tidak bisa mengakses sistem. Kamu memiliki akses ke tool `buat_draft_laporan_pengaduan`. Kamu WAJIB memanggil tool tersebut secara langsung untuk membuatkan draft laporan bagi pengguna. Jika permintaannya belum jelas apakah ingin mengeksekusi laporan atau hanya meminta teks, tawarkan ke dia untuk membuat laporan otomatis ke sistem. Jangan suruh pengguna membuka menu secara manual jika mereka sudah meminta bantuanmu!
 """".trimIndent()
 
     /**

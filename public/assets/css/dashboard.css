@@ -1077,3 +1077,31 @@ textarea {
         flex-wrap: wrap;
     }
 }
+
+/* Table Optimizations for Admin Dashboard */
+.table-wrap table, table {
+    font-size: 0.82rem;
+}
+.table-wrap table th, .table-wrap table td,
+table th, table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+}
+td .actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+}
+td .actions form {
+    margin: 0;
+    padding: 0;
+}
+td .btn, td .actions .btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    height: auto;
+}

@@ -307,6 +307,7 @@ class AiWriterService
                 ],
                 'temperature' => $provider['temperature'],
                 'max_tokens' => $provider['max_tokens'],
+                'response_format' => ['type' => 'json_object'],
             ]);
     }
 

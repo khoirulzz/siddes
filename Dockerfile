@@ -18,6 +18,9 @@ RUN install-php-extensions \
     opcache \
     bcmath
 
+# Remove file capabilities from frankenphp so it can run as non-root on Render
+RUN apk add --no-cache libcap && setcap -r /usr/local/bin/frankenphp
+
 # Copy Composer from official image
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 

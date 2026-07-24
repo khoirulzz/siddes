@@ -143,13 +143,13 @@ fun SplashScreen(
                     )
                 }
 
-                // Logo — uses the new PNG with ContentScale.Fit (no stretch)
+                // Logo — uses original loog_pekalongan at larger size (160dp)
                 Image(
-                    painter = painterResource(id = R.drawable.logo_sid),
+                    painter = painterResource(id = R.drawable.loog_pekalongan),
                     contentDescription = "Logo Kabupaten Pekalongan",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(130.dp)
+                        .size(160.dp)
                         .scale(logoScale)
                         .alpha(logoAlpha)
                 )

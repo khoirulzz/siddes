@@ -53,6 +53,17 @@ class PengaduanViewModel : ViewModel() {
     fun clearError() { _state.value = _state.value.copy(errorMessage = null) }
     fun reset() { _state.value = PengaduanUiState() }
 
+    fun initDraft(draft: com.desa.lambanggelun.sid.ui.ai.PengaduanDraftData) {
+        // Ensure category matches one of the predefined categories, otherwise default to first
+        val cat = if (COMPLAINT_CATEGORIES.contains(draft.category)) draft.category else COMPLAINT_CATEGORIES[0]
+        _state.value = _state.value.copy(
+            subject = draft.subject,
+            category = cat,
+            location = draft.location ?: "",
+            description = draft.description
+        )
+    }
+
     fun submit(contentResolver: android.content.ContentResolver) {
         val s = _state.value
         if (s.nik.isBlank() || s.reporterName.isBlank() || s.phone.isBlank()) {

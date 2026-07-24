@@ -14,14 +14,30 @@ import java.util.concurrent.TimeUnit
 
 // ─── Groq Request / Response Models ──────────────────────────────────────────
 
+data class GroqToolCallFunction(
+    val name: String,
+    val arguments: String
+)
+
+data class GroqToolCall(
+    val id: String,
+    val type: String = "function",
+    val function: GroqToolCallFunction
+)
+
 data class GroqMessage(
-    val role: String,      // "system" | "user" | "assistant"
-    val content: String
+    val role: String,      // "system" | "user" | "assistant" | "tool"
+    val content: String?,  // content can be null if tool_calls is present
+    val tool_calls: List<GroqToolCall>? = null,
+    val tool_call_id: String? = null,
+    val name: String? = null
 )
 
 data class GroqRequest(
     val model: String,
     val messages: List<GroqMessage>,
+    val tools: List<GroqTool>? = null,
+    val tool_choice: String? = null,
     @Json(name = "max_tokens") val maxTokens: Int = 1024,
     val temperature: Double = 0.7,
     val stream: Boolean = false
@@ -31,6 +47,29 @@ data class GroqChoice(
     val index: Int,
     val message: GroqMessage,
     @Json(name = "finish_reason") val finishReason: String?
+)
+
+data class GroqTool(
+    val type: String = "function",
+    val function: GroqFunction
+)
+
+data class GroqFunction(
+    val name: String,
+    val description: String,
+    val parameters: GroqFunctionParameters
+)
+
+data class GroqFunctionParameters(
+    val type: String = "object",
+    val properties: Map<String, GroqFunctionProperty>,
+    val required: List<String>
+)
+
+data class GroqFunctionProperty(
+    val type: String,
+    val description: String,
+    val enum: List<String>? = null
 )
 
 data class GroqUsage(
@@ -65,8 +104,8 @@ object GroqApiClient {
     private const val BASE_URL = "https://api.groq.com/openai/v1/"
 
     // Model rotation: primary → fallback
-    const val MODEL_PRIMARY  = "llama-3.3-70b-versatile"
-    const val MODEL_FALLBACK = "qwen-qwq-32b"
+    const val MODEL_PRIMARY  = "openai/gpt-oss-120b"
+    const val MODEL_FALLBACK = "openai/gpt-oss-20b"
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())

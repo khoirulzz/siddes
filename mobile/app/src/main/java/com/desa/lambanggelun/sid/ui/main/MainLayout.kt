@@ -153,10 +153,32 @@ fun MainLayout(
                 )
             }
             composable(BottomNavItem.Pengumuman.route) { NewsScreen() }
-            composable(BottomNavItem.BantuanAi.route)  { AiAssistantScreen() }
+            composable(BottomNavItem.BantuanAi.route)  {
+                AiAssistantScreen(
+                    onNavigateToPengaduan = { draft ->
+                        navController.currentBackStackEntry?.savedStateHandle?.set("draft", draft)
+                        navController.navigate("pengaduan")
+                    }
+                )
+            }
             composable("surat")    { SuratScreen(onNavigateBack = { navController.popBackStack() }) }
             composable("pbb")      { PbbScreen(onNavigateBack = { navController.popBackStack() }) }
-            composable("pengaduan"){ PengaduanScreen(onNavigateBack = { navController.popBackStack() }) }
+            composable("pengaduan"){
+                val draft = navController.previousBackStackEntry?.savedStateHandle?.get<com.desa.lambanggelun.sid.ui.ai.PengaduanDraftData>("draft")
+                val vm: com.desa.lambanggelun.sid.ui.pengaduan.PengaduanViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                
+                LaunchedEffect(draft) {
+                    draft?.let { 
+                        vm.initDraft(it)
+                        navController.previousBackStackEntry?.savedStateHandle?.remove<com.desa.lambanggelun.sid.ui.ai.PengaduanDraftData>("draft")
+                    }
+                }
+                
+                PengaduanScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    vm = vm
+                )
+            }
             composable("tracking") { TrackingScreen(onNavigateBack = { navController.popBackStack() }) }
             composable("settings") {
                 SettingsScreen(

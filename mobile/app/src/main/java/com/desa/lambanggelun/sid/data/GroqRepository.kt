@@ -3,6 +3,13 @@ package com.desa.lambanggelun.sid.data
 import com.desa.lambanggelun.sid.data.api.GroqApiClient
 import com.desa.lambanggelun.sid.data.api.GroqMessage
 import com.desa.lambanggelun.sid.data.api.GroqRequest
+import com.desa.lambanggelun.sid.data.api.GroqTool
+import com.desa.lambanggelun.sid.data.api.GroqFunction
+import com.desa.lambanggelun.sid.data.api.GroqFunctionParameters
+import com.desa.lambanggelun.sid.data.api.GroqFunctionProperty
+import com.desa.lambanggelun.sid.ui.ai.PengaduanDraftData
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 /**
  * Repository for Groq AI interactions.
@@ -87,15 +94,57 @@ Jika informasi tidak diketahui, jawab:
      * @param question User's question
      * @param conversationHistory Previous messages for context (last 6 messages max)
      */
+    data class AiResponse(
+        val text: String?,
+        val draftData: PengaduanDraftData? = null
+    )
+
+    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    private fun getTools(): List<GroqTool> {
+        return listOf(
+            GroqTool(
+                type = "function",
+                function = GroqFunction(
+                    name = "buat_draft_laporan_pengaduan",
+                    description = "Gunakan fungsi ini jika pengguna secara jelas meminta untuk membuat, melaporkan, atau mengajukan aduan/laporan (misalnya jalan rusak, lampu mati).",
+                    parameters = GroqFunctionParameters(
+                        type = "object",
+                        properties = mapOf(
+                            "subject" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Judul singkat laporan pengaduan"
+                            ),
+                            "category" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Kategori pengaduan",
+                                enum = listOf("Infrastruktur", "Pelayanan Publik", "Keamanan", "Sosial", "Lainnya")
+                            ),
+                            "location" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Lokasi kejadian jika disebutkan, atau biarkan kosong"
+                            ),
+                            "description" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Deskripsi lengkap terkait pengaduan berdasarkan informasi pengguna"
+                            )
+                        ),
+                        required = listOf("subject", "category", "description")
+                    )
+                )
+            )
+        )
+    }
+
     suspend fun ask(
         question: String,
         conversationHistory: List<GroqMessage> = emptyList()
-    ): Result<String> {
+    ): Result<AiResponse> {
         val key = cacheKey(question)
 
         // Return from cache if available (only for standalone questions without history)
         if (conversationHistory.isEmpty() && cache.containsKey(key)) {
-            return Result.success(cache[key]!!)
+            return Result.success(AiResponse(text = cache[key]!!))
         }
 
         // Build message list
@@ -114,20 +163,20 @@ Jika informasi tidak diketahui, jawab:
         messages: List<GroqMessage>,
         cacheKey: String,
         shouldCache: Boolean
-    ): Result<String> {
+    ): Result<AiResponse> {
         // Try primary model first
         runCatching {
             callGroq(GroqApiClient.MODEL_PRIMARY, messages)
-        }.onSuccess { answer ->
-            if (shouldCache) cache[cacheKey] = answer
-            return Result.success(answer)
+        }.onSuccess { response ->
+            if (shouldCache && response.draftData == null && response.text != null) cache[cacheKey] = response.text
+            return Result.success(response)
         }.onFailure { primaryError ->
             // Fallback to secondary model
             runCatching {
                 callGroq(GroqApiClient.MODEL_FALLBACK, messages)
-            }.onSuccess { answer ->
-                if (shouldCache) cache[cacheKey] = answer
-                return Result.success(answer)
+            }.onSuccess { response ->
+                if (shouldCache && response.draftData == null && response.text != null) cache[cacheKey] = response.text
+                return Result.success(response)
             }.onFailure { fallbackError ->
                 return Result.failure(fallbackError)
             }
@@ -135,18 +184,37 @@ Jika informasi tidak diketahui, jawab:
         return Result.failure(Exception("Unexpected error"))
     }
 
-    private suspend fun callGroq(model: String, messages: List<GroqMessage>): String {
+    private suspend fun callGroq(model: String, messages: List<GroqMessage>): AiResponse {
+        val request = GroqRequest(
+            model = model,
+            messages = messages,
+            tools = getTools(),
+            tool_choice = "auto",
+            maxTokens = 1024,
+            temperature = 0.7
+        )
+
         val response = GroqApiClient.service.chatCompletion(
             authorization = "Bearer ${GroqApiClient.API_KEY}",
-            request = GroqRequest(
-                model = model,
-                messages = messages,
-                maxTokens = 1024,
-                temperature = 0.7
-            )
+            request = request
         )
-        return response.choices.firstOrNull()?.message?.content
+
+        val choice = response.choices.firstOrNull()?.message
             ?: throw Exception("Empty response from AI")
+
+        if (!choice.tool_calls.isNullOrEmpty()) {
+            val toolCall = choice.tool_calls.first()
+            if (toolCall.function.name == "buat_draft_laporan_pengaduan") {
+                val adapter = moshi.adapter(PengaduanDraftData::class.java)
+                val draft = adapter.fromJson(toolCall.function.arguments)
+                return AiResponse(
+                    text = "Baik, saya telah menyiapkan draf laporan untuk Anda. Silakan ketuk tombol di bawah ini untuk melengkapi dan mengirim laporan Anda.",
+                    draftData = draft
+                )
+            }
+        }
+
+        return AiResponse(text = choice.content ?: "")
     }
 
     fun clearCache() {

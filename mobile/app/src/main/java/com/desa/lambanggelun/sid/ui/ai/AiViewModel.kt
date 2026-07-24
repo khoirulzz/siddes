@@ -8,11 +8,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+data class PengaduanDraftData(
+    val subject: String,
+    val category: String,
+    val location: String?,
+    val description: String
+) : Parcelable
+
 data class ChatMessage(
     val id: Long = System.currentTimeMillis(),
     val role: String,  // "user" | "assistant" | "error"
     val content: String,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val draftData: PengaduanDraftData? = null
 )
 
 data class AiUiState(
@@ -54,8 +66,8 @@ class AiViewModel : ViewModel() {
             msgs.removeLastOrNull() // remove loading
 
             result.fold(
-                onSuccess = { answer ->
-                    msgs.add(ChatMessage(role = "assistant", content = answer))
+                onSuccess = { response ->
+                    msgs.add(ChatMessage(role = "assistant", content = response.text ?: "", draftData = response.draftData))
                 },
                 onFailure = { err ->
                     msgs.add(ChatMessage(role = "error", content = "Maaf, terjadi kesalahan: ${err.message ?: "Coba lagi."}"))

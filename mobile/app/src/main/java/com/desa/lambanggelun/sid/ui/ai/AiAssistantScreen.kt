@@ -34,7 +34,10 @@ private val POPULAR_QUESTIONS = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AiAssistantScreen(vm: AiViewModel = viewModel()) {
+fun AiAssistantScreen(
+    onNavigateToPengaduan: (PengaduanDraftData) -> Unit = {},
+    vm: AiViewModel = viewModel()
+) {
     val state by vm.state.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -144,7 +147,7 @@ fun AiAssistantScreen(vm: AiViewModel = viewModel()) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(state.messages) { msg ->
-                    ChatBubble(msg)
+                    ChatBubble(msg, onNavigateToPengaduan)
                 }
             }
         }
@@ -185,7 +188,7 @@ fun AiAssistantScreen(vm: AiViewModel = viewModel()) {
 }
 
 @Composable
-fun ChatBubble(msg: ChatMessage) {
+fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> Unit = {}) {
     val isUser = msg.role == "user"
     val isError = msg.role == "error"
 
@@ -236,6 +239,19 @@ fun ChatBubble(msg: ChatMessage) {
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )
+                if (msg.draftData != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { onNavigateToPengaduan(msg.draftData) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Icon(Icons.Default.EditDocument, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Buat Laporan", color = MaterialTheme.colorScheme.onPrimaryContainer, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
         }
     }

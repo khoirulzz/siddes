@@ -22,7 +22,8 @@ data class ChatMessage(
     val role: String,  // "user" | "assistant" | "error"
     val content: String,
     val isLoading: Boolean = false,
-    val draftData: PengaduanDraftData? = null
+    val draftData: PengaduanDraftData? = null,
+    val trackResult: com.desa.lambanggelun.sid.ui.tracking.TrackResult? = null
 )
 
 data class AiUiState(
@@ -65,7 +66,7 @@ class AiViewModel : ViewModel() {
 
             result.fold(
                 onSuccess = { response ->
-                    msgs.add(ChatMessage(role = "assistant", content = response.text ?: "", draftData = response.draftData))
+                    msgs.add(ChatMessage(role = "assistant", content = response.text ?: "", draftData = response.draftData, trackResult = response.trackResult))
                 },
                 onFailure = { err ->
                     msgs.add(ChatMessage(role = "error", content = "Maaf, terjadi kesalahan: ${err.message ?: "Coba lagi."}"))

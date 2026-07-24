@@ -8,8 +8,15 @@ import com.desa.lambanggelun.sid.data.api.GroqFunction
 import com.desa.lambanggelun.sid.data.api.GroqFunctionParameters
 import com.desa.lambanggelun.sid.data.api.GroqFunctionProperty
 import com.desa.lambanggelun.sid.ui.ai.PengaduanDraftData
+import com.desa.lambanggelun.sid.ui.tracking.TrackResult
+import com.desa.lambanggelun.sid.data.api.ApiClient
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+
+data class CheckTicketArgs(
+    val kategori: String,
+    val nomor_tiket: String
+)
 
 /**
  * Repository for Groq AI interactions.
@@ -88,6 +95,9 @@ Jika informasi tidak diketahui, jawab:
 
 ATURAN PENGADUAN / LAPORAN:
 PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lampu mati), atau meminta membuat laporan/pengaduan, JANGAN PERNAH menolak atau berkata kamu tidak bisa mengakses sistem. Kamu memiliki akses ke tool `buat_draft_laporan_pengaduan`. Kamu WAJIB memanggil tool tersebut secara langsung untuk membuatkan draft laporan bagi pengguna. Jika permintaannya belum jelas apakah ingin mengeksekusi laporan atau hanya meminta teks, tawarkan ke dia untuk membuat laporan otomatis ke sistem. Jangan suruh pengguna membuka menu secara manual jika mereka sudah meminta bantuanmu!
+
+ATURAN LACAK TIKET:
+PENTING: Jika pengguna menanyakan status tiket, melacak surat, atau memberikan format nomor tiket (misal SRT-2026-..., PBB-2026-..., ADU-2026-...), gunakan tool `cek_status_tiket`. Tentukan kategorinya berdasarkan prefix (SRT=Surat, PBB=PBB, ADU=Pengaduan) atau konteks pengguna.
 """".trimIndent()
 
     /**
@@ -99,7 +109,8 @@ PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lam
      */
     data class AiResponse(
         val text: String?,
-        val draftData: PengaduanDraftData? = null
+        val draftData: PengaduanDraftData? = null,
+        val trackResult: TrackResult? = null
     )
 
     private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -133,6 +144,28 @@ PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lam
                             )
                         ),
                         required = listOf("subject", "category", "description")
+                    )
+                )
+            ),
+            GroqTool(
+                type = "function",
+                function = GroqFunction(
+                    name = "cek_status_tiket",
+                    description = "Gunakan fungsi ini untuk mengecek status tiket pengajuan surat, pembayaran PBB, atau laporan pengaduan.",
+                    parameters = GroqFunctionParameters(
+                        type = "object",
+                        properties = mapOf(
+                            "kategori" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Kategori tiket",
+                                enum = listOf("Surat", "PBB", "Pengaduan")
+                            ),
+                            "nomor_tiket" to GroqFunctionProperty(
+                                type = "string",
+                                description = "Nomor tiket yang akan dilacak (contoh: SRT-2026-1234)"
+                            )
+                        ),
+                        required = listOf("kategori", "nomor_tiket")
                     )
                 )
             )
@@ -214,6 +247,53 @@ PENTING: Jika pengguna menceritakan keluhan, kerusakan (seperti jalan rusak, lam
                     text = "Baik, saya telah menyiapkan draf laporan untuk Anda. Silakan ketuk tombol di bawah ini untuk melengkapi dan mengirim laporan Anda.",
                     draftData = draft
                 )
+            } else if (toolCall.function.name == "cek_status_tiket") {
+                val adapter = moshi.adapter(CheckTicketArgs::class.java)
+                val args = adapter.fromJson(toolCall.function.arguments)
+                if (args != null) {
+                    try {
+                        val result = when (args.kategori.lowercase()) {
+                            "surat" -> {
+                                val r = ApiClient.service.searchLetterByTicket(args.nomor_tiket)
+                                if (r.success) TrackResult(
+                                    ticketCode = r.ticket_number ?: args.nomor_tiket,
+                                    status = r.status ?: "-",
+                                    label1 = "Jenis Surat", value1 = r.letter_type ?: "-",
+                                    label2 = "No. Surat", value2 = r.official_number ?: "-",
+                                    downloadUrl = r.download_url
+                                ) else null
+                            }
+                            "pbb" -> {
+                                val r = ApiClient.service.searchPbbByTicket(args.nomor_tiket)
+                                if (r.success) TrackResult(
+                                    ticketCode = r.ticket_code ?: args.nomor_tiket,
+                                    status = r.status ?: "-",
+                                    label1 = "Pemohon", value1 = r.applicant_name ?: "-",
+                                    label2 = "Total", value2 = r.total_amount?.let { "Rp ${it.toLong()}" } ?: "-"
+                                ) else null
+                            }
+                            else -> {
+                                val r = ApiClient.service.searchComplaintByTicket(args.nomor_tiket)
+                                if (r.success) TrackResult(
+                                    ticketCode = r.ticket_code ?: args.nomor_tiket,
+                                    status = r.status ?: "-",
+                                    label1 = "Judul", value1 = r.subject ?: "-",
+                                    label2 = "Kategori", value2 = r.category ?: "-"
+                                ) else null
+                            }
+                        }
+                        if (result != null) {
+                            return AiResponse(
+                                text = "Berikut adalah hasil pencarian untuk tiket ${args.nomor_tiket}:",
+                                trackResult = result
+                            )
+                        } else {
+                            return AiResponse(text = "Maaf, tiket dengan nomor ${args.nomor_tiket} tidak ditemukan pada kategori ${args.kategori}.")
+                        }
+                    } catch (e: Exception) {
+                        return AiResponse(text = "Maaf, terjadi kesalahan saat menghubungi server untuk melacak tiket Anda.")
+                    }
+                }
             }
         }
 

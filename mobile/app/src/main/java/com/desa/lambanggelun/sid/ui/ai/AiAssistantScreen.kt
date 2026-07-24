@@ -22,6 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.desa.lambanggelun.sid.theme.AiPurple
+import com.desa.lambanggelun.sid.ui.tracking.TrackRow
+import com.desa.lambanggelun.sid.ui.tracking.statusColor
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 
 private val POPULAR_QUESTIONS = listOf(
@@ -191,6 +196,7 @@ fun AiAssistantScreen(
 fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> Unit = {}) {
     val isUser = msg.role == "user"
     val isError = msg.role == "error"
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -250,6 +256,32 @@ fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> 
                         Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Buat Laporan", color = MaterialTheme.colorScheme.onPrimaryContainer, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                
+                if (msg.trackResult != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            TrackRow("Nomor Tiket", msg.trackResult.ticketCode)
+                            TrackRow("Status", msg.trackResult.status, statusColor(msg.trackResult.status))
+                            TrackRow(msg.trackResult.label1, msg.trackResult.value1)
+                            msg.trackResult.label2?.let { TrackRow(it, msg.trackResult.value2 ?: "-") }
+                            
+                            if (msg.trackResult.downloadUrl != null) {
+                                Spacer(Modifier.height(12.dp))
+                                Button(onClick = {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(msg.trackResult.downloadUrl)))
+                                }, modifier = Modifier.fillMaxWidth(),
+                                   shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Download Surat", fontSize = 13.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

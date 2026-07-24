@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/logo_pekalongan"
-    android:inset="32dp" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Centered logo with generous padding to fit within adaptive icon safe zone (66%) -->
+    <item
+        android:drawable="@drawable/logo_pekalongan"
+        android:gravity="center"
+        android:width="44dp"
+        android:height="44dp" />
+</layer-list>

@@ -8,16 +8,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
-@Parcelize
 data class PengaduanDraftData(
     val subject: String,
     val category: String,
     val location: String?,
     val description: String
-) : Parcelable
+) : Serializable
 
 data class ChatMessage(
     val id: Long = System.currentTimeMillis(),

@@ -98,7 +98,7 @@ fun TrackingScreen(onNavigateBack: () -> Unit) {
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.foundation.Image(
-                            painter = androidx.compose.ui.res.painterResource(id = com.desa.lambanggelun.sid.R.drawable.loog_pekalongan),
+                            painter = androidx.compose.ui.res.painterResource(id = com.desa.lambanggelun.sid.R.drawable.logo_sid),
                             contentDescription = "Logo",
                             modifier = Modifier.size(32.dp).clip(androidx.compose.foundation.shape.CircleShape)
                         )

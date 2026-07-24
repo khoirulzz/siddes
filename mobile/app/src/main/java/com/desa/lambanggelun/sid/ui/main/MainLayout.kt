@@ -83,7 +83,7 @@ fun MainLayout(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.loog_pekalongan),
+                            painter = painterResource(id = R.drawable.logo_sid),
                             contentDescription = "Logo Pekalongan",
                             modifier = Modifier
                                 .size(40.dp)

@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -13,18 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.svg.SvgDecoder
 import com.desa.lambanggelun.sid.R
 import kotlinx.coroutines.delay
 
@@ -34,72 +31,57 @@ fun SplashScreen(
 ) {
     // ─── Phase states ──────────────────────────────────────────────────
     var phase by remember { mutableIntStateOf(0) }
-    // phase 0 = initial (nothing visible)
-    // phase 1 = logo appears (scale + fade)
-    // phase 2 = text appears (slide up + fade)
-    // phase 3 = glow ring pulse
 
-    // ─── Logo animation ────────────────────────────────────────────────
+    // ─── Logo: gentle scale-in ─────────────────────────────────────────
     val logoScale by animateFloatAsState(
-        targetValue = when (phase) {
-            0 -> 0.3f
-            else -> 1f
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        targetValue = if (phase >= 1) 1f else 0.6f,
+        animationSpec = tween(700, easing = FastOutSlowInEasing),
         label = "logoScale"
     )
-
     val logoAlpha by animateFloatAsState(
         targetValue = if (phase >= 1) 1f else 0f,
-        animationSpec = tween(600),
+        animationSpec = tween(500),
         label = "logoAlpha"
     )
 
-    // ─── Text animation ────────────────────────────────────────────────
-    val textAlpha by animateFloatAsState(
+    // ─── Title: slide up ───────────────────────────────────────────────
+    val titleAlpha by animateFloatAsState(
         targetValue = if (phase >= 2) 1f else 0f,
-        animationSpec = tween(500),
-        label = "textAlpha"
+        animationSpec = tween(450),
+        label = "titleAlpha"
+    )
+    val titleOffset by animateFloatAsState(
+        targetValue = if (phase >= 2) 0f else 24f,
+        animationSpec = tween(450, easing = FastOutSlowInEasing),
+        label = "titleOffset"
     )
 
-    val textOffset by animateFloatAsState(
-        targetValue = if (phase >= 2) 0f else 30f,
-        animationSpec = tween(500, easing = FastOutSlowInEasing),
-        label = "textOffset"
-    )
-
-    // ─── Subtitle animation ────────────────────────────────────────────
+    // ─── Subtitle: staggered slide up ──────────────────────────────────
     val subtitleAlpha by animateFloatAsState(
         targetValue = if (phase >= 2) 1f else 0f,
-        animationSpec = tween(500, delayMillis = 200),
+        animationSpec = tween(450, delayMillis = 150),
         label = "subtitleAlpha"
     )
-
     val subtitleOffset by animateFloatAsState(
-        targetValue = if (phase >= 2) 0f else 20f,
-        animationSpec = tween(500, delayMillis = 200, easing = FastOutSlowInEasing),
+        targetValue = if (phase >= 2) 0f else 16f,
+        animationSpec = tween(450, delayMillis = 150, easing = FastOutSlowInEasing),
         label = "subtitleOffset"
     )
 
-    // ─── Glow ring pulsation ───────────────────────────────────────────
-    val infiniteTransition = rememberInfiniteTransition(label = "glow")
-    val glowScale by infiniteTransition.animateFloat(
-        initialValue = 0.85f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowScale"
+    // ─── Decorative line: width expand ─────────────────────────────────
+    val lineWidth by animateFloatAsState(
+        targetValue = if (phase >= 2) 1f else 0f,
+        animationSpec = tween(600, delayMillis = 300, easing = FastOutSlowInEasing),
+        label = "lineWidth"
     )
+
+    // ─── Subtle glow behind logo ───────────────────────────────────────
+    val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.08f,
+        initialValue = 0.12f,
+        targetValue = 0.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(2000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glowAlpha"
@@ -107,20 +89,18 @@ fun SplashScreen(
 
     // ─── Footer ────────────────────────────────────────────────────────
     val footerAlpha by animateFloatAsState(
-        targetValue = if (phase >= 2) 0.6f else 0f,
-        animationSpec = tween(600, delayMillis = 400),
+        targetValue = if (phase >= 2) 0.5f else 0f,
+        animationSpec = tween(500, delayMillis = 500),
         label = "footerAlpha"
     )
 
     // ─── Timeline ──────────────────────────────────────────────────────
     LaunchedEffect(Unit) {
-        delay(150)
-        phase = 1          // logo appears
+        delay(200)
+        phase = 1     // logo fades in
         delay(600)
-        phase = 2          // text + subtitle
-        delay(400)
-        phase = 3          // glow starts (already running via infinite)
-        delay(1500)
+        phase = 2     // text appears
+        delay(1800)
         onSplashFinished()
     }
 
@@ -132,7 +112,7 @@ fun SplashScreen(
                 Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
                         MaterialTheme.colorScheme.background
                     )
                 )
@@ -140,22 +120,22 @@ fun SplashScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            // ── Glow ring behind logo ──────────────────────────────────
+            // ── Glow + Logo ────────────────────────────────────────────
             Box(contentAlignment = Alignment.Center) {
-                // Pulsating glow circle
+                // Soft glow circle
                 if (phase >= 1) {
                     Box(
                         modifier = Modifier
-                            .size(160.dp)
-                            .scale(glowScale)
+                            .size(180.dp)
                             .alpha(glowAlpha)
                             .clip(CircleShape)
                             .background(
                                 Brush.radialGradient(
                                     colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                                         Color.Transparent
                                     )
                                 )
@@ -163,16 +143,13 @@ fun SplashScreen(
                     )
                 }
 
-                // Logo
-                val context = LocalContext.current
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data("android.resource://${context.packageName}/${R.raw.logo_pekalongan}")
-                        .decoderFactory(SvgDecoder.Factory())
-                        .build(),
+                // Logo — uses the new PNG with ContentScale.Fit (no stretch)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_sid),
                     contentDescription = "Logo Kabupaten Pekalongan",
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(130.dp)
                         .scale(logoScale)
                         .alpha(logoAlpha)
                 )
@@ -183,22 +160,41 @@ fun SplashScreen(
             // ── Title ──────────────────────────────────────────────────
             Text(
                 text = "SID Mobile",
-                fontSize = 30.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 2.sp,
+                letterSpacing = 1.5.sp,
                 modifier = Modifier
-                    .alpha(textAlpha)
-                    .graphicsLayer { translationY = textOffset }
+                    .alpha(titleAlpha)
+                    .graphicsLayer { translationY = titleOffset }
             )
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // ── Decorative line ────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .width((60 * lineWidth).dp)
+                    .height(2.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // ── Subtitle ───────────────────────────────────────────────
             Text(
                 text = "Desa Lambanggelun",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 0.5.sp,
                 modifier = Modifier

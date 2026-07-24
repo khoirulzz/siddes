@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Centered logo with generous padding to fit within adaptive icon safe zone (66%) -->
+    <!-- Logo already has ~20% internal margin, so a small inset is sufficient -->
     <item
-        android:drawable="@drawable/logo_pekalongan"
+        android:drawable="@drawable/logo_sid"
         android:gravity="center"
-        android:width="44dp"
-        android:height="44dp" />
+        android:width="56dp"
+        android:height="56dp" />
 </layer-list>

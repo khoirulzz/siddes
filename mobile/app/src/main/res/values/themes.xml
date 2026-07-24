@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.SIDMobile" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.SIDMobile" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <!-- Splash theme: shows the logo centered without stretching on cold start -->
+    <style name="Theme.SIDMobile.Splash" parent="Theme.SIDMobile">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
 </resources>

@@ -43,7 +43,7 @@ fi
 echo "==> [render-start] Launching Web Server..."
 if command -v frankenphp >/dev/null 2>&1; then
     echo "==> [render-start] Detected FrankenPHP. Launching..."
-    exec frankenphp php-server --listen :${PORT}
+    exec frankenphp php-server --root public/ --listen :${PORT}
 elif [ -f /assets/nginx.conf ] && [ -f /assets/php-fpm.conf ]; then
     echo "==> [render-start] Detected Nixpacks Nginx. Launching..."
     php-fpm -y /assets/php-fpm.conf &

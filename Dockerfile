@@ -55,4 +55,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 EXPOSE 10000
 
 # Run optimizations, migrations and start FrankenPHP
-CMD sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --listen :\$PORT"
+CMD sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan storage:link --force && if [ \"\$RUN_MIGRATIONS\" = \"true\" ]; then php artisan migrate --force --no-interaction; fi && exec frankenphp php-server --root public/ --listen :\$PORT"

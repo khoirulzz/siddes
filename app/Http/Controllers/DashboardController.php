@@ -342,6 +342,7 @@ class DashboardController extends Controller
             'surat_total' => $letterTotalAll,
             'surat_masuk' => $letterIncoming,
         ]];
+        });
     }
 
     public function placeholder(string $module)

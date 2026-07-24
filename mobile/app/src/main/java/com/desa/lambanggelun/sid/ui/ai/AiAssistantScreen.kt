@@ -212,7 +212,7 @@ fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> 
             Spacer(Modifier.width(6.dp))
         }
 
-        Box(
+        Column(
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .clip(RoundedCornerShape(

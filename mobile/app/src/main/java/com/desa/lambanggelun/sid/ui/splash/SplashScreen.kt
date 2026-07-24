@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -92,6 +93,17 @@ fun SplashScreen(
         label = "glowAlpha"
     )
 
+    // ─── Light Sweep / Shimmer Glare Animation ────────────────────────
+    val shimmerTranslateAnim by infiniteTransition.animateFloat(
+        initialValue = -200f,
+        targetValue = 800f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2200, easing = LinearEasing, delayMillis = 500),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmerTranslate"
+    )
+
     // ─── Footer Animation ──────────────────────────────────────────────
     val footerAlpha by animateFloatAsState(
         targetValue = if (phase >= 2) 0.6f else 0f,
@@ -131,7 +143,7 @@ fun SplashScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
         ) {
-            // ── Glow + Silhouette Image ───────────────────────────────
+            // ── Glow + Silhouette Image + Light Glare ──────────────────
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -166,6 +178,31 @@ fun SplashScreen(
                         .alpha(imageAlpha)
                         .graphicsLayer { translationY = imageOffset }
                 )
+
+                // Light Sweep / Shimmer Glare (Silauan Cahaya)
+                if (phase >= 1) {
+                    Box(
+                        modifier = Modifier
+                            .height(300.dp)
+                            .width(220.dp)
+                            .scale(imageScale)
+                            .alpha(imageAlpha * 0.7f)
+                            .graphicsLayer { translationY = imageOffset }
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.White.copy(alpha = 0.05f),
+                                        Color.White.copy(alpha = 0.35f),
+                                        Color.White.copy(alpha = 0.05f),
+                                        Color.Transparent
+                                    ),
+                                    start = Offset(shimmerTranslateAnim - 150f, shimmerTranslateAnim - 150f),
+                                    end = Offset(shimmerTranslateAnim + 150f, shimmerTranslateAnim + 150f)
+                                )
+                            )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -239,4 +276,5 @@ fun SplashScreen(
         }
     }
 }
+
 

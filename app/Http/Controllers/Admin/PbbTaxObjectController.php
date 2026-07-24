@@ -27,7 +27,7 @@ class PbbTaxObjectController extends Controller
                         ->orWhere('jalan_wp_sppt', 'like', '%' . $keyword . '%')
                         ->orWhere('jalan_op_sppt', 'like', '%' . $keyword . '%')
                         ->orWhere('desa_wp_sppt', 'like', '%' . $keyword . '%')
-                        ->orWhereRaw('REPLACE(REPLACE(REPLACE(REPLACE(nop, ".", ""), "-", ""), " ", ""), "/", "") LIKE ?', ['%' . $digits . '%']);
+                        ->orWhere('nop_normalized', 'like', '%' . $digits . '%');
                 });
             })
             ->when($year, fn ($query) => $query->where('tax_year', $year))
@@ -252,8 +252,12 @@ class PbbTaxObjectController extends Controller
         $validated['rt_op_sppt'] = $this->normalizeCode($validated['rt_op_sppt'] ?? null);
         $validated['rw_op_sppt'] = $this->normalizeCode($validated['rw_op_sppt'] ?? null);
 
+        $nopRaw = trim((string) $validated['nop']);
+        $nopNormalized = preg_replace('/\D+/', '', $nopRaw) ?: '';
+
         return [
-            'nop' => trim((string) $validated['nop']),
+            'nop' => $nopRaw,
+            'nop_normalized' => $nopNormalized,
             'tax_year' => (int) $validated['tax_year'],
             'nama_wp_sppt' => trim((string) $validated['nama_wp_sppt']),
             'jalan_wp_sppt' => trim((string) $validated['jalan_wp_sppt']),

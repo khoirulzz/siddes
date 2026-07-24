@@ -2,5 +2,5 @@
 <resources>
     <!-- Background putih bersih untuk ikon launcher -->
     <color name="ic_launcher_background">#FFFFFF</color>
-    <color name="splash_background">#FFFFFF</color>
+    <color name="splash_background">#071426</color>
 </resources>

@@ -3,9 +3,13 @@
 
     <style name="Theme.SIDMobile" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
-    <!-- Splash theme: shows the logo centered without stretching on cold start -->
+    <!-- Splash theme: native cold start visually continues into the Compose animation. -->
     <style name="Theme.SIDMobile.Splash" parent="Theme.SIDMobile">
         <item name="android:windowBackground">@drawable/splash_background</item>
     </style>

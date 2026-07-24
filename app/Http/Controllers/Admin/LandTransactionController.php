@@ -49,6 +49,10 @@ class LandTransactionController extends Controller
             ->selectRaw('COUNT(*) as total_rows, COALESCE(SUM(area_m2), 0) as total_area')
             ->first();
 
+        $totalFiles = LandTransactionFile::query()
+            ->whereIn('land_transaction_id', (clone $baseQuery)->select('id'))
+            ->count();
+
         return view('dashboard.land-transactions.index', [
             'items' => $items,
             'filters' => $filters,
@@ -56,7 +60,7 @@ class LandTransactionController extends Controller
             'stats' => [
                 'total_rows' => (int) ($summary?->total_rows ?? 0),
                 'total_area' => (float) ($summary?->total_area ?? 0),
-                'total_files' => LandTransactionFile::query()->count(),
+                'total_files' => $totalFiles,
             ],
         ]);
     }
@@ -385,11 +389,7 @@ class LandTransactionController extends Controller
 
     private function generateTransactionNumber(): string
     {
-        do {
-            $number = 'TNH-' . now()->format('ymd') . '-' . strtoupper(Str::random(4));
-        } while (LandTransaction::query()->where('transaction_number', $number)->exists());
-
-        return $number;
+        return 'TNH-' . now()->format('ymd') . '-' . strtoupper(substr((string) Str::ulid(), -6));
     }
 
     private function storeFiles(Request $request, LandTransaction $transaction): void

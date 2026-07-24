@@ -5,6 +5,29 @@
 
 @section('content')
     <style>
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+            }
+            .dashboard-period-form {
+                width: 100%;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                gap: 0.5rem;
+            }
+            .dashboard-period-form .field {
+                flex: 1;
+                min-width: 0;
+                margin-bottom: 0 !important;
+            }
+            .dashboard-period-form select {
+                width: 100%;
+            }
+        }
+
         .monitor-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

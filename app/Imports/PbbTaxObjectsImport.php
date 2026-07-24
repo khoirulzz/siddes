@@ -53,8 +53,12 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsv
                     continue;
                 }
 
+                $nopRaw = $payload['nop'];
+                $nopNormalized = preg_replace('/\D+/', '', $nopRaw) ?: '';
+
                 $upsertData[] = [
-                    'nop' => $payload['nop'],
+                    'nop' => $nopRaw,
+                    'nop_normalized' => $nopNormalized,
                     'tax_year' => $payload['tax_year'],
                     'nama_wp_sppt' => $payload['nama_wp_sppt'],
                     'jalan_wp_sppt' => $payload['jalan_wp_sppt'],
@@ -90,7 +94,7 @@ class PbbTaxObjectsImport implements ToCollection, WithHeadingRow, WithCustomCsv
     {
         $uniqueKeys = ['nop', 'tax_year'];
         $updateKeys = [
-            'nama_wp_sppt', 'jalan_wp_sppt', 'rt_wp_sppt', 'rw_wp_sppt', 'desa_wp_sppt',
+            'nop_normalized', 'nama_wp_sppt', 'jalan_wp_sppt', 'rt_wp_sppt', 'rw_wp_sppt', 'desa_wp_sppt',
             'jalan_op_sppt', 'rt_op_sppt', 'rw_op_sppt', 'luas_tanah_sppt', 'luas_bangunan_sppt',
             'pbb_terhutang', 'tanggal_pembayaran', 'tax_name', 'owner_name', 'location',
             'tax_address', 'land_area', 'building_area', 'amount_due', 'status', 'notes',

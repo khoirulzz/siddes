@@ -3,31 +3,19 @@
 return [
     'writer' => [
         'enabled' => (bool) env('AI_WRITER_ENABLED', true),
-        'providers' => ['gemini', 'openrouter'],
+        'providers' => ['groq'],
     ],
 
     'providers' => [
-        'gemini' => [
-            'enabled' => (bool) env('GEMINI', true),
-            'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
-            'api_key' => env('GEMINI_API_KEY'),
-            'primary_model' => env('GEMINI_MODEL', 'gemini-3-flash-lite'),
-            'fallback_model' => env('GEMINI_MODEL_FALLBACK', ''),
-            'timeout_seconds' => (int) env('GEMINI_TIMEOUT_SECONDS', 25),
-            'temperature' => (float) env('GEMINI_TEMPERATURE', 1.0),
-            'max_tokens' => (int) env('GEMINI_MAX_OUTPUT_TOKENS', 1400),
-        ],
-        'openrouter' => [
-            'enabled' => (bool) env('OPENROUTER_ENABLED', true),
-            'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
-            'api_key' => env('OPENROUTER_API_KEY'),
-            'primary_model' => env('OPENROUTER_MODEL_PRIMARY', 'meta-llama/llama-3.1-8b-instruct:free'),
-            'fallback_model' => env('OPENROUTER_MODEL_FALLBACK', 'google/gemma-2-9b-it:free'),
-            'timeout_seconds' => (int) env('OPENROUTER_TIMEOUT_SECONDS', 25),
-            'temperature' => (float) env('OPENROUTER_TEMPERATURE', 0.65),
-            'max_tokens' => (int) env('OPENROUTER_MAX_TOKENS', 1400),
-            'http_referer' => env('OPENROUTER_HTTP_REFERER', env('APP_URL', 'http://localhost')),
-            'x_title' => env('OPENROUTER_X_TITLE', env('APP_NAME', 'WebDes')),
+        'groq' => [
+            'enabled' => true,
+            'base_url' => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+            'api_key' => env('GROQ_API_KEY'),
+            'primary_model' => env('GROQ_MODEL_PRIMARY', 'openai/gpt-oss-120b'),
+            'fallback_model' => env('GROQ_MODEL_FALLBACK', 'openai/gpt-oss-20b'),
+            'timeout_seconds' => 30,
+            'temperature' => 0.7,
+            'max_tokens' => 1024,
         ],
     ],
 

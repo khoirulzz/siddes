@@ -40,5 +40,15 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
   done
 fi
 
-echo "==> [render-start] Launching PHP server..."
-exec php artisan serve --host=0.0.0.0 --port="${PORT}"
+echo "==> [render-start] Launching Web Server..."
+if command -v frankenphp >/dev/null 2>&1; then
+    echo "==> [render-start] Detected FrankenPHP. Launching..."
+    exec frankenphp php-server --listen :${PORT}
+elif [ -f /assets/nginx.conf ] && [ -f /assets/php-fpm.conf ]; then
+    echo "==> [render-start] Detected Nixpacks Nginx. Launching..."
+    php-fpm -y /assets/php-fpm.conf &
+    exec nginx -c /assets/nginx.conf
+else
+    echo "==> [render-start] Warning: Using php artisan serve fallback."
+    exec php artisan serve --host=0.0.0.0 --port="${PORT}"
+fi

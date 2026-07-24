@@ -580,10 +580,7 @@ class PublicServiceController extends Controller
                 $builder->where('nop', $cleanNop);
 
                 if ($normalizedNop !== '') {
-                    $builder->orWhereRaw(
-                        'REPLACE(REPLACE(REPLACE(REPLACE(nop, ".", ""), "-", ""), " ", ""), "/", "") = ?',
-                        [$normalizedNop]
-                    );
+                    $builder->orWhere('nop_normalized', $normalizedNop);
                 }
             });
 
@@ -641,15 +638,7 @@ class PublicServiceController extends Controller
 
     private function generatePbbTicket(): string
     {
-        do {
-            $ticket = 'PBB-' . date('ymd') . '-' . strtoupper(Str::random(4));
-
-            if (! $this->hasPbbTicketCodeColumn()) {
-                break;
-            }
-        } while (PbbPaymentRequest::query()->where('ticket_code', $ticket)->exists());
-
-        return $ticket;
+        return 'PBB-' . date('ymd') . '-' . strtoupper(substr((string) Str::ulid(), -6));
     }
 
     private function extractTicketFromNotes(?string $notes): ?string

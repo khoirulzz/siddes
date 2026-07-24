@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- White background -->
+    <!-- Match the Compose splash palette to avoid a bright flash on cold start. -->
     <item android:drawable="@color/splash_background" />
-    <!-- Centered logo, not stretched -->
+    <!-- Compact official crest shown while the app process is starting. -->
     <item
         android:gravity="center"
-        android:width="160dp"
-        android:height="160dp"
-        android:drawable="@drawable/loog_pekalongan" />
+        android:width="92dp"
+        android:height="92dp"
+        android:drawable="@drawable/logo_sid" />
 </layer-list>

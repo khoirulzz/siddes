@@ -35,7 +35,7 @@ class MobileAppController extends Controller
     {
         $limit = (int) $request->query('limit', 20);
         
-        $news = News::published()->orderBy('published_at', 'desc')->get()->map(function($item) {
+        $news = News::published()->orderBy('published_at', 'desc')->take($limit)->get()->map(function($item) {
             return [
                 'id' => $item->id,
                 'title' => $item->title,
@@ -48,7 +48,7 @@ class MobileAppController extends Controller
             ];
         });
 
-        $announcements = \App\Models\Announcement::active()->orderBy('created_at', 'desc')->get()->map(function($item) {
+        $announcements = \App\Models\Announcement::active()->orderBy('created_at', 'desc')->take($limit)->get()->map(function($item) {
             return [
                 'id' => $item->id,
                 'title' => $item->title,

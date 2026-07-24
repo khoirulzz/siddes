@@ -13,6 +13,7 @@ use App\Models\PopulationRecord;
 use App\Models\VillageActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -22,17 +23,31 @@ class DashboardController extends Controller
             (string) $request->query('period', 'today')
         );
 
-        [$monitorCards, $stats] = $this->buildMonitoringCards($periodStart, $periodEnd);
+        [$monitorCards, $stats] = $this->buildMonitoringCards($periodStart, $periodEnd, $selectedPeriod);
 
-        $populationSummary = PopulationRecord::query()
-            ->selectRaw('hamlet, COUNT(*) as total')
-            ->groupBy('hamlet')
-            ->orderBy('hamlet')
-            ->get();
+        $populationSummary = Cache::remember('dashboard_population_summary', 300, function () {
+            return PopulationRecord::query()
+                ->selectRaw('hamlet, COUNT(*) as total')
+                ->groupBy('hamlet')
+                ->orderBy('hamlet')
+                ->get();
+        });
 
-        $activitiesSummary = VillageActivity::query()
-            ->orderBy('activity_date')
-            ->get();
+        $activitiesChartQuery = Cache::remember('dashboard_activities_chart', 300, function () {
+            return VillageActivity::query()
+                ->selectRaw('category, COUNT(*) as total')
+                ->groupBy('category')
+                ->get();
+        });
+
+        $budgetChartQuery = Cache::remember('dashboard_budget_chart', 300, function () {
+            return VillageActivity::query()
+                ->selectRaw('YEAR(activity_date) as year, SUM(budget) as total_budget')
+                ->whereNotNull('activity_date')
+                ->groupByRaw('YEAR(activity_date)')
+                ->orderByRaw('YEAR(activity_date)')
+                ->get();
+        });
 
         return view('dashboard.index', [
             'monitorCards' => $monitorCards,
@@ -51,26 +66,12 @@ class DashboardController extends Controller
                 'data' => $populationSummary->pluck('total'),
             ],
             'activitiesChart' => [
-                'labels' => $activitiesSummary
-                    ->groupBy('category')
-                    ->keys()
-                    ->values(),
-                'data' => $activitiesSummary
-                    ->groupBy('category')
-                    ->map->count()
-                    ->values(),
+                'labels' => $activitiesChartQuery->pluck('category'),
+                'data' => $activitiesChartQuery->pluck('total'),
             ],
             'budgetChart' => [
-                'labels' => $activitiesSummary
-                    ->groupBy(fn (VillageActivity $activity) => (string) $activity->activity_date?->format('Y'))
-                    ->sortKeys()
-                    ->keys()
-                    ->values(),
-                'data' => $activitiesSummary
-                    ->groupBy(fn (VillageActivity $activity) => (string) $activity->activity_date?->format('Y'))
-                    ->sortKeys()
-                    ->map(fn ($group) => (float) $group->sum('budget'))
-                    ->values(),
+                'labels' => $budgetChartQuery->pluck('year'),
+                'data' => $budgetChartQuery->pluck('total_budget'),
             ],
         ]);
     }
@@ -81,7 +82,7 @@ class DashboardController extends Controller
             (string) $request->query('period', 'today')
         );
 
-        [$monitorCards] = $this->buildMonitoringCards($periodStart, $periodEnd);
+        [$monitorCards] = $this->buildMonitoringCards($periodStart, $periodEnd, $selectedPeriod);
 
         return response()->json([
             'period' => [
@@ -138,8 +139,9 @@ class DashboardController extends Controller
     /**
      * @return array{0:array<int,array<string,mixed>>,1:array<string,int>}
      */
-    private function buildMonitoringCards($periodStart, $periodEnd): array
+    private function buildMonitoringCards($periodStart, $periodEnd, string $periodKey): array
     {
+        return Cache::remember("dashboard_stats_{$periodKey}", 300, function () use ($periodStart, $periodEnd) {
         $letterStats = LetterServiceRequest::query()
             ->selectRaw(
                 'COUNT(*) as total_all,

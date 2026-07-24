@@ -13,6 +13,11 @@ class SecurityHeadersMiddleware
         /** @var Response $response */
         $response = $next($request);
 
+        $contentType = $response->headers->get('Content-Type') ?? '';
+        if (! str_contains($contentType, 'text/html') && ! str_contains($contentType, 'application/json')) {
+            return $response;
+        }
+
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');

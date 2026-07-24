@@ -62,11 +62,7 @@ class LetterDocumentService
 
     public function generateTicketNumber(): string
     {
-        do {
-            $ticket = sprintf('SRT-%s-%s', now()->format('ymd'), Str::upper(Str::random(4)));
-        } while (LetterServiceRequest::where('ticket_number', $ticket)->exists());
-
-        return $ticket;
+        return sprintf('SRT-%s-%s', now()->format('ymd'), Str::upper(substr((string) Str::ulid(), -6)));
     }
 
     /**

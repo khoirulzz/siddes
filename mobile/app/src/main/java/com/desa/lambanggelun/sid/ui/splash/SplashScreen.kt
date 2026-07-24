@@ -32,75 +32,80 @@ fun SplashScreen(
     // ─── Phase states ──────────────────────────────────────────────────
     var phase by remember { mutableIntStateOf(0) }
 
-    // ─── Logo: gentle scale-in ─────────────────────────────────────────
-    val logoScale by animateFloatAsState(
-        targetValue = if (phase >= 1) 1f else 0.6f,
-        animationSpec = tween(700, easing = FastOutSlowInEasing),
-        label = "logoScale"
+    // ─── Silhouette Image Animation (Scale + Fade + Slide) ────────────
+    val imageScale by animateFloatAsState(
+        targetValue = if (phase >= 1) 1f else 0.85f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "imageScale"
     )
-    val logoAlpha by animateFloatAsState(
+    val imageAlpha by animateFloatAsState(
         targetValue = if (phase >= 1) 1f else 0f,
+        animationSpec = tween(600),
+        label = "imageAlpha"
+    )
+    val imageOffset by animateFloatAsState(
+        targetValue = if (phase >= 1) 0f else 30f,
+        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        label = "imageOffset"
+    )
+
+    // ─── Title & Subtitle Animation ───────────────────────────────────
+    val textAlpha by animateFloatAsState(
+        targetValue = if (phase >= 2) 1f else 0f,
         animationSpec = tween(500),
-        label = "logoAlpha"
+        label = "textAlpha"
+    )
+    val textOffset by animateFloatAsState(
+        targetValue = if (phase >= 2) 0f else 20f,
+        animationSpec = tween(500, easing = FastOutSlowInEasing),
+        label = "textOffset"
     )
 
-    // ─── Title: slide up ───────────────────────────────────────────────
-    val titleAlpha by animateFloatAsState(
-        targetValue = if (phase >= 2) 1f else 0f,
-        animationSpec = tween(450),
-        label = "titleAlpha"
-    )
-    val titleOffset by animateFloatAsState(
-        targetValue = if (phase >= 2) 0f else 24f,
-        animationSpec = tween(450, easing = FastOutSlowInEasing),
-        label = "titleOffset"
-    )
-
-    // ─── Subtitle: staggered slide up ──────────────────────────────────
-    val subtitleAlpha by animateFloatAsState(
-        targetValue = if (phase >= 2) 1f else 0f,
-        animationSpec = tween(450, delayMillis = 150),
-        label = "subtitleAlpha"
-    )
-    val subtitleOffset by animateFloatAsState(
-        targetValue = if (phase >= 2) 0f else 16f,
-        animationSpec = tween(450, delayMillis = 150, easing = FastOutSlowInEasing),
-        label = "subtitleOffset"
-    )
-
-    // ─── Decorative line: width expand ─────────────────────────────────
+    // ─── Decorative Line Animation ─────────────────────────────────────
     val lineWidth by animateFloatAsState(
         targetValue = if (phase >= 2) 1f else 0f,
-        animationSpec = tween(600, delayMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = tween(600, delayMillis = 200, easing = FastOutSlowInEasing),
         label = "lineWidth"
     )
 
-    // ─── Subtle glow behind logo ───────────────────────────────────────
+    // ─── Radial Glow Pulsation ─────────────────────────────────────────
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.12f,
-        targetValue = 0.04f,
+    val glowScale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
+            animation = tween(1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowScale"
+    )
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glowAlpha"
     )
 
-    // ─── Footer ────────────────────────────────────────────────────────
+    // ─── Footer Animation ──────────────────────────────────────────────
     val footerAlpha by animateFloatAsState(
-        targetValue = if (phase >= 2) 0.5f else 0f,
-        animationSpec = tween(500, delayMillis = 500),
+        targetValue = if (phase >= 2) 0.6f else 0f,
+        animationSpec = tween(500, delayMillis = 400),
         label = "footerAlpha"
     )
 
     // ─── Timeline ──────────────────────────────────────────────────────
     LaunchedEffect(Unit) {
-        delay(200)
-        phase = 1     // logo fades in
-        delay(600)
-        phase = 2     // text appears
-        delay(1800)
+        delay(150)
+        phase = 1     // Silhouette image appears
+        delay(500)
+        phase = 2     // Caption text appears
+        delay(2200)
         onSplashFinished()
     }
 
@@ -112,7 +117,7 @@ fun SplashScreen(
                 Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
                         MaterialTheme.colorScheme.background
                     )
                 )
@@ -121,21 +126,28 @@ fun SplashScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
         ) {
-            // ── Glow + Logo ────────────────────────────────────────────
-            Box(contentAlignment = Alignment.Center) {
-                // Soft glow circle
+            // ── Glow + Silhouette Image ───────────────────────────────
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                // Background radial glow behind person
                 if (phase >= 1) {
                     Box(
                         modifier = Modifier
-                            .size(180.dp)
+                            .size(280.dp)
+                            .scale(glowScale)
                             .alpha(glowAlpha)
                             .clip(CircleShape)
                             .background(
                                 Brush.radialGradient(
                                     colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
                                         Color.Transparent
                                     )
                                 )
@@ -143,71 +155,80 @@ fun SplashScreen(
                     )
                 }
 
-                // Logo — uses original loog_pekalongan at larger size (160dp)
+                // Silhouette Illustration Image
                 Image(
-                    painter = painterResource(id = R.drawable.loog_pekalongan),
-                    contentDescription = "Logo Kabupaten Pekalongan",
+                    painter = painterResource(id = R.drawable.splash_siluet),
+                    contentDescription = "SID Mobile Persona",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(160.dp)
-                        .scale(logoScale)
-                        .alpha(logoAlpha)
+                        .height(300.dp)
+                        .scale(imageScale)
+                        .alpha(imageAlpha)
+                        .graphicsLayer { translationY = imageOffset }
                 )
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // ── Title ──────────────────────────────────────────────────
-            Text(
-                text = "SID Mobile",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.5.sp,
+            // ── Captions (SID Mobile & Desa Lambanggelun) ─────────────
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .alpha(titleAlpha)
-                    .graphicsLayer { translationY = titleOffset }
-            )
+                    .alpha(textAlpha)
+                    .graphicsLayer { translationY = textOffset }
+            ) {
+                Text(
+                    text = "SID Mobile",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.5.sp
+                )
 
-            Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            // ── Decorative line ────────────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .width((60 * lineWidth).dp)
-                    .height(2.dp)
-                    .clip(RoundedCornerShape(1.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                Color.Transparent
+                // Decorative Line Accent
+                Box(
+                    modifier = Modifier
+                        .width((80 * lineWidth).dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(1.5.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    MaterialTheme.colorScheme.primary,
+                                    Color.Transparent
+                                )
                             )
                         )
-                    )
-            )
+                )
 
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Subtitle ───────────────────────────────────────────────
-            Text(
-                text = "Desa Lambanggelun",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 0.5.sp,
-                modifier = Modifier
-                    .alpha(subtitleAlpha)
-                    .graphicsLayer { translationY = subtitleOffset }
-            )
+                Text(
+                    text = "Desa Lambanggelun",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 0.5.sp
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Layanan Digital Resmi Warga Desa",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
         }
 
-        // ── Footer version ─────────────────────────────────────────────
+        // ── Footer Version ─────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 36.dp),
+                .padding(bottom = 32.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             Text(
@@ -218,3 +239,4 @@ fun SplashScreen(
         }
     }
 }
+

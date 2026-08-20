@@ -203,7 +203,7 @@ class VillageActivityController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        return $request->validate([
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'activity_date' => ['required', 'date'],
@@ -215,20 +215,47 @@ class VillageActivityController extends Controller
             'description' => ['nullable', 'string'],
             'cover_image' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=7000,max_height=7000',
-                'max:4096',
+                'max:10240',
             ],
             'document' => [
                 'nullable',
                 'file',
                 'mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png',
                 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png',
-                'max:8192',
+                'max:10240',
             ],
-        ]);
+        ];
+
+        $messages = [
+            'cover_image.uploaded' => 'Gagal mengunggah gambar cover. Ukuran file mungkin melebihi batas server (maksimal 10MB) atau file rusak.',
+            'cover_image.image' => 'Cover harus berupa file gambar.',
+            'cover_image.mimes' => 'Format cover harus berupa JPG, JPEG, PNG, atau WebP.',
+            'cover_image.max' => 'Ukuran file cover maksimal 10MB.',
+            'document.uploaded' => 'Gagal mengunggah dokumen lampiran. Ukuran file melebihi batas maksimal 10MB.',
+            'document.max' => 'Ukuran file dokumen maksimal 10MB.',
+            'title.required' => 'Nama kegiatan wajib diisi.',
+            'category.required' => 'Kategori kegiatan wajib diisi.',
+            'activity_date.required' => 'Tanggal kegiatan wajib diisi.',
+            'location.required' => 'Lokasi kegiatan wajib diisi.',
+        ];
+
+        $attributes = [
+            'title' => 'Nama kegiatan',
+            'category' => 'Kategori',
+            'activity_date' => 'Tanggal kegiatan',
+            'location' => 'Lokasi',
+            'person_in_charge' => 'Penanggung jawab',
+            'status' => 'Status',
+            'budget' => 'Anggaran',
+            'summary' => 'Ringkasan',
+            'description' => 'Deskripsi',
+            'cover_image' => 'Gambar cover',
+            'document' => 'Dokumen lampiran',
+        ];
+
+        return $request->validate($rules, $messages, $attributes);
     }
 
     private function generateSlug(string $title, ?int $ignoreId = null): string

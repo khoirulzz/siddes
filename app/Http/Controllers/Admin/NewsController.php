@@ -116,22 +116,42 @@ class NewsController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        $data = $request->validate([
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string'],
             'content' => ['required', 'string'],
             'thumbnail' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=6000,max_height=6000',
-                'max:5120',
+                'max:10240',
             ],
             'author_name' => ['required', 'string', 'max:255'],
             'published_at' => ['nullable', 'date'],
             'is_published' => ['nullable', 'boolean'],
-        ]);
+        ];
+
+        $messages = [
+            'thumbnail.uploaded' => 'Gagal mengunggah thumbnail. Ukuran file mungkin melebihi batas server (maksimal 10MB) atau file rusak.',
+            'thumbnail.image' => 'File thumbnail harus berupa gambar.',
+            'thumbnail.mimes' => 'Format thumbnail harus berupa JPG, JPEG, PNG, atau WebP.',
+            'thumbnail.max' => 'Ukuran file thumbnail maksimal 10MB.',
+            'title.required' => 'Judul berita wajib diisi.',
+            'content.required' => 'Konten berita wajib diisi.',
+            'author_name.required' => 'Nama penulis berita wajib diisi.',
+        ];
+
+        $attributes = [
+            'title' => 'Judul berita',
+            'excerpt' => 'Ringkasan',
+            'content' => 'Konten berita',
+            'thumbnail' => 'Thumbnail berita',
+            'author_name' => 'Nama penulis',
+            'published_at' => 'Tanggal publish',
+            'is_published' => 'Status publish',
+        ];
+
+        $data = $request->validate($rules, $messages, $attributes);
 
         $data['is_published'] = $request->boolean('is_published');
         unset($data['thumbnail']);

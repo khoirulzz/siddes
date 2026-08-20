@@ -63,7 +63,7 @@
                 <div class="field full">
                     <label for="thumbnail">Thumbnail Berita</label>
                     <input id="thumbnail" type="file" name="thumbnail" accept=".jpg,.jpeg,.png,.webp">
-                    <small class="muted">Unggah gambar 16:9. File otomatis dikompres agar hemat penyimpanan.</small>
+                    <small class="muted">Unggah gambar rasio 16:9 (maksimal 10MB). File otomatis dikompres ke WebP agar hemat penyimpanan dan cepat dimuat.</small>
                     @if($item->thumbnail_url)
                         <small class="muted">Thumbnail saat ini: <a href="{{ $item->thumbnail_url }}" target="_blank">Lihat gambar</a></small>
                     @endif

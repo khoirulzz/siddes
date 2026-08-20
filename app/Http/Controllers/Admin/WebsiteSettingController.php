@@ -136,20 +136,21 @@ class WebsiteSettingController extends Controller
             'profile_gallery_images' => ['nullable', 'string'],
             'hero_image_file' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=7000,max_height=7000',
-                'max:5120',
+                'max:10240',
             ],
             'profile_hero_image_file' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=7000,max_height=7000',
-                'max:5120',
+                'max:10240',
             ],
+        ], [
+            'hero_image_file.uploaded' => 'Gagal mengunggah foto hero utama. Ukuran file maksimal 10MB.',
+            'profile_hero_image_file.uploaded' => 'Gagal mengunggah foto hero profil. Ukuran file maksimal 10MB.',
+            'hero_image_file.max' => 'Ukuran foto hero utama maksimal 10MB.',
+            'profile_hero_image_file.max' => 'Ukuran foto hero profil maksimal 10MB.',
         ]);
 
         $current = WebsiteSetting::query()
@@ -216,12 +217,13 @@ class WebsiteSettingController extends Controller
             'head_photo_url' => ['nullable', 'url', 'max:2048'],
             'head_photo_file' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=5000,max_height=5000',
-                'max:4096',
+                'max:10240',
             ],
+        ], [
+            'head_photo_file.uploaded' => 'Gagal mengunggah foto kepala desa. Ukuran file maksimal 10MB.',
+            'head_photo_file.max' => 'Ukuran foto kepala desa maksimal 10MB.',
         ]);
 
         $currentPhotoValue = (string) (WebsiteSetting::query()
@@ -329,12 +331,13 @@ class WebsiteSettingController extends Controller
             'photo_url' => ['nullable', 'url', 'max:2048'],
             'photo_file' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=5000,max_height=5000',
-                'max:4096',
+                'max:10240',
             ],
+        ], [
+            'photo_file.uploaded' => 'Gagal mengunggah foto perangkat desa. Ukuran file maksimal 10MB.',
+            'photo_file.max' => 'Ukuran foto perangkat desa maksimal 10MB.',
         ]);
     }
 

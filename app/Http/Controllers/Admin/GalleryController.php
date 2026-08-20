@@ -101,11 +101,9 @@ class GalleryController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'image' => [
                 'nullable',
-                'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                'mimetypes:image/jpeg,image/png,image/webp',
-                'dimensions:max_width=7000,max_height=7000',
-                'max:5120',
+                'max:10240',
             ],
             'description' => ['nullable', 'string'],
             'activity_date' => ['nullable', 'date'],
@@ -115,7 +113,23 @@ class GalleryController extends Controller
             $rules['image'][0] = 'required';
         }
 
-        $data = $request->validate($rules);
+        $messages = [
+            'image.required' => 'Gambar galeri wajib diunggah.',
+            'image.uploaded' => 'Gagal mengunggah gambar. Ukuran file mungkin melebihi batas server (maksimal 10MB) atau file rusak.',
+            'image.image' => 'File harus berupa gambar.',
+            'image.mimes' => 'Format gambar harus berupa JPG, JPEG, PNG, atau WebP.',
+            'image.max' => 'Ukuran file gambar maksimal 10MB.',
+            'title.required' => 'Judul galeri wajib diisi.',
+        ];
+
+        $attributes = [
+            'title' => 'Judul galeri',
+            'image' => 'Gambar galeri',
+            'description' => 'Deskripsi galeri',
+            'activity_date' => 'Tanggal kegiatan',
+        ];
+
+        $data = $request->validate($rules, $messages, $attributes);
         unset($data['image']);
 
         return $data;

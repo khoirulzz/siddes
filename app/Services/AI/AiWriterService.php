@@ -225,6 +225,7 @@ class AiWriterService
                 'max_tokens' => max(300, (int) ($providerConfig['max_tokens'] ?? 1400)),
                 'http_referer' => trim((string) ($providerConfig['http_referer'] ?? '')),
                 'x_title' => trim((string) ($providerConfig['x_title'] ?? '')),
+                'reasoning_effort' => ! empty($providerConfig['reasoning_effort']) ? (string) $providerConfig['reasoning_effort'] : null,
             ];
         }
 
@@ -232,7 +233,7 @@ class AiWriterService
     }
 
     /**
-     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string,reasoning_effort?:?string} $provider
      */
     private function performProviderRequest(
         array $provider,
@@ -248,7 +249,7 @@ class AiWriterService
     }
 
     /**
-     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string,reasoning_effort?:?string} $provider
      */
     private function requestGemini(
         array $provider,
@@ -284,7 +285,7 @@ class AiWriterService
     }
 
     /**
-     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string} $provider
+     * @param array{name:string,base_url:string,api_key:string,models:array<int,string>,primary_model:string,fallback_model:string,timeout_seconds:int,temperature:float,max_tokens:int,http_referer:string,x_title:string,reasoning_effort?:?string} $provider
      */
     private function requestOpenRouter(
         array $provider,
@@ -292,23 +293,37 @@ class AiWriterService
         string $systemPrompt,
         string $userPrompt
     ): Response {
-        return Http::acceptJson()
-            ->withToken($provider['api_key'])
-            ->withHeaders([
-                'HTTP-Referer' => $provider['http_referer'],
-                'X-Title' => $provider['x_title'],
-            ])
+        $headers = [];
+        if (! empty($provider['http_referer'])) {
+            $headers['HTTP-Referer'] = $provider['http_referer'];
+        }
+        if (! empty($provider['x_title'])) {
+            $headers['X-Title'] = $provider['x_title'];
+        }
+
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'temperature' => $provider['temperature'],
+            'max_tokens' => $provider['max_tokens'],
+            'response_format' => ['type' => 'json_object'],
+        ];
+
+        if (! empty($provider['reasoning_effort'])) {
+            $payload['reasoning_effort'] = $provider['reasoning_effort'];
+        }
+
+        $request = Http::acceptJson()->withToken($provider['api_key']);
+        if ($headers !== []) {
+            $request = $request->withHeaders($headers);
+        }
+
+        return $request
             ->timeout($provider['timeout_seconds'])
-            ->post("{$provider['base_url']}/chat/completions", [
-                'model' => $model,
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => $userPrompt],
-                ],
-                'temperature' => $provider['temperature'],
-                'max_tokens' => $provider['max_tokens'],
-                'response_format' => ['type' => 'json_object'],
-            ]);
+            ->post("{$provider['base_url']}/chat/completions", $payload);
     }
 
     /**
@@ -405,13 +420,21 @@ class AiWriterService
             return null;
         }
 
-        $decoded = json_decode($content, true);
+        // Strip thinking/reasoning tags if returned in content
+        $cleanContent = preg_replace('/<think>.*?<\/think>/s', '', $content);
+        $cleanContent = trim((string) $cleanContent);
+
+        $decoded = json_decode($cleanContent, true);
         if (! is_array($decoded)) {
-            if (! preg_match('/\{.*\}/s', $content, $matches)) {
-                return null;
+            // Extract from markdown code block like ```json { ... } ```
+            if (preg_match('/```(?:json)?\s*(\{.*?\})\s*```/s', $cleanContent, $matches)) {
+                $decoded = json_decode($matches[1], true);
             }
 
-            $decoded = json_decode((string) $matches[0], true);
+            if (! is_array($decoded) && preg_match('/\{.*\}/s', $cleanContent, $matches)) {
+                $decoded = json_decode((string) $matches[0], true);
+            }
+
             if (! is_array($decoded)) {
                 return null;
             }
@@ -445,8 +468,8 @@ class AiWriterService
     {
         $lower = Str::lower($error);
 
-        if ($status === 429) {
-            return 'Layanan AI sedang sibuk. Coba lagi beberapa saat atau lanjutkan mode manual.';
+        if ($status === 429 || Str::contains($lower, ['rate limit', 'too many requests', 'tpm', 'rpm'])) {
+            return 'Layanan AI sedang sibuk karena batas antrean. Silakan coba lagi beberapa saat atau lanjutkan mode manual.';
         }
 
         if ($status === 504 || Str::contains($lower, ['timed out', 'timeout', 'curl error 28'])) {

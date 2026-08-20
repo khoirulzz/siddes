@@ -20,7 +20,7 @@
                 <div class="field full">
                     <label for="image">Foto Galeri</label>
                     <input id="image" type="file" name="image" accept=".jpg,.jpeg,.png,.webp" {{ $method === 'POST' ? 'required' : '' }}>
-                    <small class="muted">Unggah foto. Sistem otomatis mengompres ukuran file agar lebih hemat penyimpanan.</small>
+                    <small class="muted">Unggah foto (maksimal 10MB). Sistem otomatis mengompres ukuran file ke format WebP agar lebih hemat penyimpanan dan cepat dimuat.</small>
                     @if($item->image_url)
                         <small class="muted">Foto saat ini: <a href="{{ $item->image_url }}" target="_blank">Lihat gambar</a></small>
                     @endif

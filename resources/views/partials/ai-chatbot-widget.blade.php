@@ -406,11 +406,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (welcome) welcome.style.display = 'none';
 
         appendBubble('user', text);
-        const loadingBubble = appendBubble('assistant', '', true);
         clearBtn.style.display = 'flex';
 
         history.push({ role: 'user', content: text });
         saveSession();
+
+        const aiBubble = appendBubble('assistant', '', true);
+        const bubbleInner = aiBubble.querySelector('.aichat-bubble-inner');
+
+        let fullReply = '';
+        let isFirstChunk = true;
 
         try {
             const res = await fetch('{{ route("ai.public.chat") }}', {
@@ -418,28 +423,81 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    'Accept': 'application/json',
+                    'Accept': 'text/event-stream',
                 },
                 body: JSON.stringify({ message: text, history: history.slice(-6) }),
             });
 
-            const data = await res.json();
-            loadingBubble.remove();
+            if (!res.ok || !res.body) {
+                try {
+                    const errData = await res.json();
+                    fullReply = errData.message || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+                } catch (e) {
+                    fullReply = 'Maaf, terjadi kesalahan layanan. Silakan coba lagi.';
+                }
+                bubbleInner.innerHTML = renderContent(fullReply);
+            } else {
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
 
-            const reply = data.ok
-                ? data.message
-                : (data.message || 'Maaf, terjadi kesalahan. Silakan coba lagi.');
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-            appendBubble('assistant', reply);
-            history.push({ role: 'assistant', content: reply });
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // keep last incomplete line
 
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed.startsWith('data: ')) continue;
+
+                        const dataStr = trimmed.substring(6).trim();
+                        if (dataStr === '[DONE]') break;
+
+                        try {
+                            const parsed = JSON.parse(dataStr);
+                            if (parsed.error) {
+                                fullReply = parsed.error;
+                                bubbleInner.innerHTML = renderContent(fullReply);
+                                break;
+                            }
+
+                            if (parsed.content) {
+                                if (isFirstChunk) {
+                                    bubbleInner.innerHTML = '';
+                                    isFirstChunk = false;
+                                }
+                                fullReply += parsed.content;
+                                bubbleInner.innerHTML = renderContent(fullReply);
+                                scrollBottom();
+                            }
+                        } catch (e) {
+                            // ignore parse errors for incomplete JSON
+                        }
+                    }
+                }
+            }
+
+            if (!fullReply) {
+                fullReply = 'Maaf, terjadi kesalahan saat memproses jawaban.';
+                bubbleInner.innerHTML = renderContent(fullReply);
+            }
+
+            history.push({ role: 'assistant', content: fullReply });
             if (history.length > 30) history = history.slice(-30);
             saveSession();
 
         } catch (err) {
-            loadingBubble.remove();
-            appendBubble('assistant', 'Maaf, koneksi bermasalah. Periksa internet Anda dan coba lagi.');
-            history.pop(); // remove user msg if failed
+            if (isFirstChunk) {
+                bubbleInner.innerHTML = renderContent('Maaf, koneksi bermasalah. Periksa internet Anda dan coba lagi.');
+            } else if (!fullReply) {
+                bubbleInner.innerHTML = renderContent('Koneksi terputus saat menerima jawaban.');
+            } else {
+                history.push({ role: 'assistant', content: fullReply });
+                saveSession();
+            }
         }
 
         isLoading = false;

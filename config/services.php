@@ -30,11 +30,12 @@ return [
 
 
     'groq' => [
-        'key'           => env('GROQ_API_KEY'),
-        'base_url'      => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
-        'model_primary'  => env('GROQ_MODEL_PRIMARY', 'openai/gpt-oss-120b'),
-        'model_secondary'=> env('GROQ_MODEL_SECONDARY', 'qwen/qwen3-27b'),
-        'model_fallback' => env('GROQ_MODEL_FALLBACK', 'openai/gpt-oss-20b'),
+        'key'            => env('GROQ_API_KEY'),
+        'base_url'       => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+        'model_primary'   => env('GROQ_MODEL_PRIMARY', 'openai/gpt-oss-120b'),
+        'model_secondary' => env('GROQ_MODEL_SECONDARY', 'qwen/qwen3-27b'),
+        'model_fallback'  => env('GROQ_MODEL_FALLBACK', 'openai/gpt-oss-20b'),
+        'max_tokens'      => (int) env('GROQ_CHAT_MAX_TOKENS', 2048),
     ],
 
     'slack' => [

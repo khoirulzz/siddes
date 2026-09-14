@@ -6,8 +6,8 @@ use App\Models\Announcement;
 use App\Models\News;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PublicAiChatController extends Controller
 {
@@ -36,7 +36,7 @@ class PublicAiChatController extends Controller
 
         return <<<CONTEXT
 Kamu adalah asisten AI resmi {$villageName}, {$district}.
-Jawab pertanyaan warga dengan ramah, informatif, dan singkat dalam Bahasa Indonesia.
+Jawab pertanyaan warga dengan ramah, informatif, dan jelas dalam Bahasa Indonesia.
 Jika ada link URL, sertakan lengkap agar bisa diklik pengguna.
 
 === DATA DESA ===
@@ -62,11 +62,11 @@ Website: {$website}
 === ATURAN ===
 - Jika tidak tahu, arahkan warga menghubungi kantor desa di {$phone} / {$email}.
 - Jangan mengarang data penduduk, nomor tiket, atau fakta yang tidak ada di konteks.
-- Jawaban singkat, jelas, pakai bullet jika perlu.
+- Jawaban jelas dan terstruktur, gunakan poin/bullet jika perlu.
 CONTEXT;
     }
 
-    public function sendMessage(Request $request): JsonResponse
+    public function sendMessage(Request $request): JsonResponse|StreamedResponse
     {
         $request->validate([
             'message'           => ['required', 'string', 'max:1000'],
@@ -78,12 +78,12 @@ CONTEXT;
         $userMessage = trim($request->string('message'));
         $history     = $request->input('history', []);
 
-        $apiKey   = config('services.groq.key');
-        $baseUrl  = config('services.groq.base_url', 'https://api.groq.com/openai/v1');
-        $model     = config('services.groq.model_primary', 'openai/gpt-oss-120b');
-        $secondary = config('services.groq.model_secondary', 'qwen/qwen3-27b');
+        $apiKey    = config('services.groq.key');
+        $baseUrl   = config('services.groq.base_url', 'https://api.groq.com/openai/v1');
+        $primary   = config('services.groq.model_primary', 'openai/gpt-oss-120b');
         $secondary = config('services.groq.model_secondary', 'qwen/qwen3-27b');
         $fallback  = config('services.groq.model_fallback', 'openai/gpt-oss-20b');
+        $maxTokens = (int) config('services.groq.max_tokens', 2048);
 
         if (empty($apiKey)) {
             return response()->json(['ok' => false, 'message' => 'Layanan AI belum dikonfigurasi.'], 503);
@@ -96,56 +96,131 @@ CONTEXT;
         }
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
-        $payload = [
-            'model'       => $model,
-            'messages'    => $messages,
-            'temperature' => 0.6,
-            'max_tokens'  => 512,
-        ];
+        $modelsToTry = array_values(array_unique(array_filter([$primary, $secondary, $fallback])));
 
-        $clean = function (string $text): string {
-            return trim((string) preg_replace('/<think>.*?<\/think>/s', '', $text));
-        };
+        return response()->stream(function () use ($apiKey, $baseUrl, $modelsToTry, $messages, $maxTokens) {
+            if (function_exists('apache_setenv')) {
+                @apache_setenv('no-gzip', '1');
+            }
+            @ini_set('zlib.output_compression', '0');
+            @ini_set('implicit_flush', '1');
 
-        try {
-            $response = Http::acceptJson()->withToken($apiKey)->timeout(30)
-                ->post("{$baseUrl}/chat/completions", $payload);
-
-            if ($response->successful()) {
-                return response()->json([
-                    'ok'      => true,
-                    'message' => $clean((string) data_get($response->json(), 'choices.0.message.content', '')),
-                ]);
+            while (ob_get_level() > 0) {
+                ob_end_clean();
             }
 
-            // Secondary model
-            $payload['model'] = $secondary;
-            $response = Http::acceptJson()->withToken($apiKey)->timeout(30)
-                ->post("{$baseUrl}/chat/completions", $payload);
+            $success = false;
 
-            if ($response->successful()) {
-                return response()->json([
-                    'ok'      => true,
-                    'message' => $clean((string) data_get($response->json(), 'choices.0.message.content', '')),
+            foreach ($modelsToTry as $currentModel) {
+                $payload = [
+                    'model'       => $currentModel,
+                    'messages'    => $messages,
+                    'temperature' => 0.6,
+                    'max_tokens'  => $maxTokens,
+                    'stream'      => true,
+                ];
+
+                $ch = curl_init("{$baseUrl}/chat/completions");
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $apiKey,
+                    'Content-Type: application/json',
+                    'Accept: text/event-stream',
                 ]);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+                $httpCode = 0;
+                $buffer = '';
+                $hasEmittedData = false;
+                $inThinkBlock = false;
+
+                curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $headerLine) use (&$httpCode) {
+                    if (preg_match('/^HTTP\/\d(?:\.\d)?\s+(\d+)/', $headerLine, $m)) {
+                        $httpCode = (int) $m[1];
+                    }
+                    return strlen($headerLine);
+                });
+
+                curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $chunk) use (&$buffer, &$hasEmittedData, &$inThinkBlock, &$httpCode) {
+                    if ($httpCode !== 0 && $httpCode !== 200) {
+                        $buffer .= $chunk;
+                        return strlen($chunk);
+                    }
+
+                    $buffer .= $chunk;
+
+                    while (($pos = strpos($buffer, "\n")) !== false) {
+                        $line = trim(substr($buffer, 0, $pos));
+                        $buffer = substr($buffer, $pos + 1);
+
+                        if (str_starts_with($line, 'data: ')) {
+                            $jsonStr = trim(substr($line, 6));
+
+                            if ($jsonStr === '[DONE]') {
+                                echo "data: [DONE]\n\n";
+                                if (ob_get_level() > 0) ob_flush();
+                                flush();
+                                $hasEmittedData = true;
+                                break;
+                            }
+
+                            $decoded = json_decode($jsonStr, true);
+                            $delta = (string) data_get($decoded, 'choices.0.delta.content', '');
+
+                            if ($delta !== '') {
+                                if (str_contains($delta, '<think>')) {
+                                    $inThinkBlock = true;
+                                    $parts = explode('<think>', $delta, 2);
+                                    $delta = $parts[0];
+                                }
+
+                                if ($inThinkBlock) {
+                                    if (str_contains($delta, '</think>')) {
+                                        $inThinkBlock = false;
+                                        $parts = explode('</think>', $delta, 2);
+                                        $delta = $parts[1];
+                                    } else {
+                                        $delta = '';
+                                    }
+                                }
+
+                                if ($delta !== '') {
+                                    $hasEmittedData = true;
+                                    echo "data: " . json_encode(['content' => $delta], JSON_UNESCAPED_UNICODE) . "\n\n";
+                                    if (ob_get_level() > 0) ob_flush();
+                                    flush();
+                                }
+                            }
+                        }
+                    }
+
+                    return strlen($chunk);
+                });
+
+                curl_exec($ch);
+                curl_close($ch);
+
+                if ($hasEmittedData) {
+                    $success = true;
+                    break;
+                }
             }
 
-            // Fallback model (third tier)
-            $payload['model'] = $fallback;
-            $response = Http::acceptJson()->withToken($apiKey)->timeout(30)
-                ->post("{$baseUrl}/chat/completions", $payload);
-
-            if ($response->successful()) {
-                return response()->json([
-                    'ok'      => true,
-                    'message' => $clean((string) data_get($response->json(), 'choices.0.message.content', '')),
-                ]);
+            if (! $success) {
+                echo "data: " . json_encode(['error' => 'Layanan AI sedang sibuk. Silakan coba lagi.'], JSON_UNESCAPED_UNICODE) . "\n\n";
+                echo "data: [DONE]\n\n";
+                if (ob_get_level() > 0) ob_flush();
+                flush();
             }
 
-            return response()->json(['ok' => false, 'message' => 'Layanan AI sedang sibuk. Coba lagi sesaat.'], 503);
-
-        } catch (\Throwable $e) {
-            return response()->json(['ok' => false, 'message' => 'Terjadi kesalahan layanan AI.'], 500);
-        }
+        }, 200, [
+            'Content-Type'      => 'text/event-stream',
+            'Cache-Control'     => 'no-cache, no-store, must-revalidate',
+            'Connection'        => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
+}
 }

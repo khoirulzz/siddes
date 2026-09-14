@@ -103,7 +103,7 @@
                 <div class="table-wrap import-preview__table">
                     <table>
                         <thead>
-                            <tr class="clickable-row" data-row-link="{{ route('dashboard.population-households.show', $household) }}" tabindex="0">
+                            <tr>
                                 <th>Baris</th>
                                 <th>Nama / NIK</th>
                                 <th>No. KK</th>
@@ -200,7 +200,7 @@
                     </thead>
                     <tbody>
                         @forelse($households as $household)
-                            <tr>
+                            <tr class="clickable-row" data-row-link="{{ route('dashboard.population-households.show', $household) }}" tabindex="0">
                                 <td data-label="No. KK"><strong class="identifier">{{ $household->no_kk }}</strong></td>
                                 <td data-label="Kepala Keluarga">{{ $household->nama_kepala_keluarga ?: 'Belum ditetapkan' }}</td>
                                 <td data-label="Wilayah"><strong>{{ $household->dusun ?: '-' }}</strong><small class="table-subtext">RT {{ $household->rt ?: '-' }} / RW {{ $household->rw ?: '-' }}</small></td>

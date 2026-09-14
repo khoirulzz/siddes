@@ -38,6 +38,37 @@ class PopulationAdminUiTest extends TestCase
             ->assertSee('3326010101010001');
     }
 
+    public function test_population_index_links_each_household_row_to_its_own_detail(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $first = Household::query()->create([
+            'no_kk' => '3326010101010001', 'nama_kepala_keluarga' => 'Budi Santoso',
+            'dusun' => 'Bojongireng',
+        ]);
+        $second = Household::query()->create([
+            'no_kk' => '3326010101010002', 'nama_kepala_keluarga' => 'Siti Aminah',
+            'dusun' => 'Bojongireng',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard.population-records.index'))
+            ->assertOk()
+            ->assertSee('data-row-link="'.route('dashboard.population-households.show', $first).'"', false)
+            ->assertSee('data-row-link="'.route('dashboard.population-households.show', $second).'"', false);
+    }
+
+    public function test_individual_tab_renders_without_a_household_loop_variable(): void
+    {
+        $user = User::factory()->create(['role' => 'operator']);
+
+        $this->actingAs($user)
+            ->get(route('dashboard.population-records.index', ['view' => 'individual']))
+            ->assertOk()
+            ->assertSee('Daftar Penduduk')
+            ->assertSee('Import Excel atau CSV')
+            ->assertDontSee('data-row-link="', false);
+    }
+
     public function test_statistics_are_served_from_the_lazy_endpoint(): void
     {
         $user = User::factory()->create(['role' => 'admin']);

@@ -298,12 +298,42 @@
             const reportButton = document.querySelector('[data-download-report]');
             let previewToken = null;
             let previewData = null;
+            let importBusy = false;
 
             const actionLabels = { new: 'Penduduk baru', update: 'Perbarui', unchanged: 'Tidak berubah', move: 'Pindah KK', invalid: 'Dilewati' };
             const escapeHtml = (value) => String(value ?? '-').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
-            const setBusy = (button, busy, busyLabel, normalLabel) => {
-                button.disabled = busy;
-                button.textContent = busy ? busyLabel : normalLabel;
+            const startProgress = (saving) => {
+                importBusy = true;
+                const started = Date.now();
+                const controls = [...form.querySelectorAll('input, select, button'), commitButton, reportButton];
+                const previous = controls.map((control) => [control, control.disabled]);
+                controls.forEach((control) => { control.disabled = true; });
+                form.setAttribute('aria-busy', 'true');
+                const button = saving ? commitButton : previewButton;
+                const label = button.textContent;
+                button.textContent = saving ? 'Sedang menyimpan…' : 'Sedang memeriksa…';
+                feedback.hidden = false;
+                feedback.className = 'import-feedback import-feedback--processing';
+                feedback.innerHTML = `<div class="import-progress"><span class="import-progress__spinner" aria-hidden="true"></span><div><strong>${saving ? 'Mengunggah dan menyimpan data' : 'Mengunggah dan memeriksa file'}</strong><p data-progress-message>Mohon tunggu. Jangan tutup atau muat ulang halaman ini.</p></div><span class="import-progress__time" data-progress-time aria-hidden="true">0:00</span></div><div class="import-progress__track" aria-hidden="true"><span></span></div>`;
+                let slowMessageShown = false;
+                const timer = window.setInterval(() => {
+                    const seconds = Math.floor((Date.now() - started) / 1000);
+                    const clock = feedback.querySelector('[data-progress-time]');
+                    if (clock) clock.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+                    if (seconds >= 60 && !slowMessageShown) {
+                        const message = feedback.querySelector('[data-progress-message]');
+                        if (message) message.textContent = 'Masih menunggu jawaban server. File besar atau koneksi database yang lambat dapat memerlukan beberapa menit. Jangan kirim ulang.';
+                        slowMessageShown = true;
+                    }
+                }, 1000);
+                return () => {
+                    window.clearInterval(timer);
+                    importBusy = false;
+                    form.removeAttribute('aria-busy');
+                    previous.forEach(([control, disabled]) => { control.disabled = disabled; });
+                    button.textContent = label;
+                    commitButton.disabled = !previewToken || !previewData || previewData.summary.valid < 1;
+                };
             };
             const showFeedback = (message, type = 'info') => {
                 feedback.hidden = false;
@@ -312,7 +342,12 @@
             };
             const responseMessage = async (response) => {
                 const data = await response.json().catch(() => ({}));
-                return { data, message: data.message || Object.values(data.errors || {}).flat()[0] || 'Permintaan gagal diproses.' };
+                let fallback = 'Permintaan gagal diproses. Periksa kembali file lalu coba lagi.';
+                if ([408, 504, 524].includes(response.status)) fallback = 'Waktu tunggu server habis. Server belum mengirimkan hasil proses.';
+                else if (response.status >= 500) fallback = 'Server mengalami kendala saat memproses data. Jika berulang, hubungi administrator untuk memeriksa koneksi database dan log server.';
+                else if ([401, 419].includes(response.status)) fallback = 'Sesi telah berakhir. Muat ulang halaman atau masuk kembali sebelum melanjutkan.';
+                else if (response.status === 413) fallback = 'File melebihi batas unggahan server. Gunakan file yang lebih kecil.';
+                return { data, message: response.status >= 500 ? fallback : data.message || Object.values(data.errors || {}).flat()[0] || fallback };
             };
 
             const renderPreview = (payload, token) => {
@@ -346,29 +381,31 @@
 
             form?.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                if (!form.reportValidity()) return;
-                setBusy(previewButton, true, 'Memeriksa…', 'Periksa File');
+                if (importBusy || !form.reportValidity()) return;
+                const body = new FormData(form);
+                previewToken = null;
+                previewData = null;
                 previewBox.hidden = true;
-                showFeedback('File sedang dibaca dan divalidasi. Jangan tutup halaman ini.');
+                const finishProgress = startProgress(false);
                 try {
-                    const response = await fetch(form.dataset.previewUrl, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+                    const response = await fetch(form.dataset.previewUrl, { method: 'POST', body, headers: { Accept: 'application/json' } });
                     const result = await responseMessage(response);
                     if (!response.ok) throw new Error(result.message);
+                    if (!result.data.preview || !result.data.token) throw new Error('Hasil pemeriksaan tidak dapat dibaca. Periksa file sekali lagi.');
                     renderPreview(result.data.preview, result.data.token);
                     showFeedback(result.message, result.data.preview.summary.invalid > 0 ? 'warning' : 'success');
                 } catch (error) {
-                    showFeedback(error.message, 'error');
+                    showFeedback(error instanceof TypeError ? 'Koneksi terputus saat memeriksa file. Pastikan internet tersambung, lalu periksa file kembali.' : error.message, 'error');
                 } finally {
-                    setBusy(previewButton, false, 'Memeriksa…', 'Periksa File');
+                    finishProgress();
                 }
             });
 
             commitButton?.addEventListener('click', async () => {
-                if (!previewToken || !previewData || previewData.summary.valid < 1) return;
-                setBusy(commitButton, true, 'Menyimpan…', 'Import Baris Valid');
-                showFeedback('Menyimpan data penduduk. Tunggu hingga proses selesai.');
+                if (importBusy || !previewToken || !previewData || previewData.summary.valid < 1) return;
                 const body = new FormData(form);
                 body.append('preview_token', previewToken);
+                const finishProgress = startProgress(true);
                 try {
                     const response = await fetch(form.dataset.commitUrl, { method: 'POST', body, headers: { Accept: 'application/json' } });
                     const result = await responseMessage(response);
@@ -378,13 +415,23 @@
                         return;
                     }
                     if (!response.ok) throw new Error(result.message);
+                    if (!result.data.result || !result.data.redirect) throw new Error('Jawaban server tidak lengkap. Status penyimpanan belum dapat dipastikan.');
+                    previewToken = null;
                     showFeedback(result.message, 'success');
-                    window.setTimeout(() => window.location.assign(result.data.redirect), 700);
+                    window.setTimeout(() => window.location.assign(result.data.redirect), 1800);
                 } catch (error) {
-                    showFeedback(error.message, 'error');
+                    previewToken = null;
+                    const message = error instanceof TypeError ? 'Koneksi terputus saat menunggu hasil penyimpanan.' : error.message;
+                    showFeedback(`${message} Jika proses sudah terkirim, data mungkin masih diproses atau sudah tersimpan. Periksa daftar penduduk sebelum mencoba lagi, lalu jalankan pemeriksaan file ulang.`, 'error');
                 } finally {
-                    setBusy(commitButton, false, 'Menyimpan…', 'Import Baris Valid');
+                    finishProgress();
                 }
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                if (!importBusy) return;
+                event.preventDefault();
+                event.returnValue = '';
             });
 
             resetButton?.addEventListener('click', () => {
@@ -451,7 +498,7 @@
                     new Chart(document.getElementById('populationEducationChart'), { type: 'bar', data: { labels: statistics.education.labels, datasets: [{ label: 'Penduduk', data: statistics.education.data, backgroundColor: '#d08b2e' }] }, options: { ...common, indexAxis: 'y' } });
                 } catch (error) {
                     chartsStarted = false;
-                    showFeedback(`${error.message} Data tabel tetap dapat digunakan.`, 'warning');
+                    if (!importBusy) showFeedback(`${error.message} Data tabel tetap dapat digunakan.`, 'warning');
                 }
             });
         })();

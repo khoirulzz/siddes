@@ -1329,6 +1329,24 @@ details[open] > summary .details-action::after {
 .import-feedback--warning { border-color: #ead0a0; background: #fff9ec; color: #835b14; }
 .import-feedback--error { border-color: #efb5ae; background: #fff3f1; color: #a83226; }
 
+.import-progress { display: flex; align-items: center; gap: 12px; }
+.import-progress > div { flex: 1; min-width: 0; }
+.import-progress p { margin: 4px 0 0; font-size: 0.8rem; line-height: 1.6; }
+.import-progress__time { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.import-progress__spinner {
+    width: 24px; height: 24px; flex: 0 0 24px;
+    border: 3px solid #c9dced; border-top-color: #0f4c81; border-radius: 50%;
+    animation: population-import-spin 0.9s linear infinite;
+}
+.import-progress__track { margin-top: 12px; height: 4px; border-radius: 4px; overflow: hidden; background: #dbe7f1; }
+.import-progress__track > span { display: block; width: 35%; height: 100%; background: #0f4c81; animation: population-import-slide 1.8s ease-in-out infinite; }
+.population-import button:disabled { opacity: 0.6; cursor: wait; }
+@keyframes population-import-spin { to { transform: rotate(360deg); } }
+@keyframes population-import-slide { from { transform: translateX(-100%); } to { transform: translateX(390%); } }
+@media (prefers-reduced-motion: reduce) {
+    .import-progress__spinner, .import-progress__track > span { animation: none; }
+}
+
 .import-preview {
     margin-top: 1rem;
     padding-top: 1rem;

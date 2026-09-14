@@ -11,15 +11,22 @@ use Illuminate\Support\Str;
 
 class PopulationHouseholdSyncService
 {
-    public function sync(PopulationRecord $resident, array $payload, ?Carbon $startedAt = null): Household
+    public function sync(
+        PopulationRecord $resident,
+        array $payload,
+        ?Carbon $startedAt = null,
+        ?Household $knownHousehold = null,
+    ): Household
     {
-        return DB::transaction(function () use ($resident, $payload, $startedAt): Household {
+        return DB::transaction(function () use ($resident, $payload, $startedAt, $knownHousehold): Household {
             $noKk = $this->digits($payload['no_kk'] ?? $resident->no_kk ?? $resident->nkk ?? null);
             if (! $noKk) {
                 throw new \InvalidArgumentException('Nomor KK wajib diisi untuk sinkronisasi data keluarga.');
             }
 
-            $household = Household::query()->firstOrNew(['no_kk' => $noKk]);
+            $household = $knownHousehold && $knownHousehold->no_kk === $noKk
+                ? $knownHousehold
+                : Household::query()->firstOrNew(['no_kk' => $noKk]);
             $household->fill([
                 'nama_kepala_keluarga' => $payload['nama_kepala_keluarga'] ?? $household->nama_kepala_keluarga,
                 'alamat' => $payload['alamat'] ?? $payload['address_detail'] ?? $household->alamat,
@@ -32,7 +39,30 @@ class PopulationHouseholdSyncService
                 'kabupaten' => $payload['kabupaten'] ?? $household->kabupaten ?? PopulationRecord::DEFAULT_REGENCY,
                 'provinsi' => $payload['provinsi'] ?? $household->provinsi ?? PopulationRecord::DEFAULT_PROVINCE,
             ]);
+            $sharedDataChanged = $household->isDirty([
+                'alamat', 'rt', 'rw', 'kode_pos', 'dusun', 'desa', 'kecamatan', 'kabupaten', 'provinsi',
+            ]);
             $household->save();
+
+            if ($sharedDataChanged && $household->wasRecentlyCreated === false) {
+                $residentIds = HouseholdMember::query()
+                    ->where('household_id', $household->id)
+                    ->where('is_current', true)
+                    ->pluck('resident_id');
+                PopulationRecord::query()->whereIn('id', $residentIds)->update([
+                    'rt' => $household->rt,
+                    'rw' => $household->rw,
+                    'kode_pos' => $household->kode_pos,
+                    'dusun' => $household->dusun,
+                    'hamlet' => $household->dusun,
+                    'desa' => $household->desa,
+                    'kecamatan' => $household->kecamatan,
+                    'kabupaten' => $household->kabupaten,
+                    'provinsi' => $household->provinsi,
+                    'address_detail' => $household->alamat,
+                    'updated_at' => now(),
+                ]);
+            }
 
             $statusHubungan = $this->normalizeStatusHubungan(
                 $payload['status_hubungan'] ?? $resident->status_hubungan ?? 'Kepala Keluarga'

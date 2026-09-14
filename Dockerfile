@@ -1,5 +1,7 @@
 FROM dunglas/frankenphp:1.2-php8.3-alpine
 
+COPY docker/php-upload.ini /usr/local/etc/php/conf.d/99-siddes-upload.ini
+
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \
     nss-tools \

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PopulationStatHelper
 {
@@ -33,8 +34,15 @@ class PopulationStatHelper
     /**
      * Build SQL CASE WHEN statement for age aggregation
      */
-    public static function buildAgeSqlCases(): string
+    public static function buildAgeSqlCases(?string $driver = null): string
     {
+        $driver ??= DB::connection()->getDriverName();
+        $dateColumn = 'COALESCE(tanggal_lahir, birth_date)';
+        $ageExpression = match ($driver) {
+            'sqlite' => "(CAST(strftime('%Y', 'now') AS INTEGER) - CAST(strftime('%Y', {$dateColumn}) AS INTEGER) - (strftime('%m-%d', 'now') < strftime('%m-%d', {$dateColumn})))",
+            'pgsql' => "EXTRACT(YEAR FROM age(CURRENT_DATE, {$dateColumn}))",
+            default => "TIMESTAMPDIFF(YEAR, {$dateColumn}, CURDATE())",
+        };
         $cases = [];
         foreach (self::AGE_BRACKETS as $index => $bracket) {
             $alias = 'age_' . $index;
@@ -42,9 +50,9 @@ class PopulationStatHelper
             $max = $bracket['max'];
 
             if ($max === null) {
-                $cases[] = "SUM(CASE WHEN TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) >= {$min} THEN 1 ELSE 0 END) as {$alias}";
+                $cases[] = "SUM(CASE WHEN {$ageExpression} >= {$min} THEN 1 ELSE 0 END) as {$alias}";
             } else {
-                $cases[] = "SUM(CASE WHEN TIMESTAMPDIFF(YEAR, COALESCE(tanggal_lahir, birth_date), CURDATE()) BETWEEN {$min} AND {$max} THEN 1 ELSE 0 END) as {$alias}";
+                $cases[] = "SUM(CASE WHEN {$ageExpression} BETWEEN {$min} AND {$max} THEN 1 ELSE 0 END) as {$alias}";
             }
         }
 

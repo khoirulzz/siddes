@@ -5,7 +5,8 @@
 
 @section('content')
     @php
-        $household = $item->currentMembership?->household;
+        $household = $prefillHousehold ?? $item->currentMembership?->household;
+        $contextHouseholdId = $contextHouseholdContext ?? (($formMode ?? null) === 'member' ? $household?->id : null);
     @endphp
 
     <section class="panel">
@@ -14,8 +15,37 @@
             @if($method !== 'POST')
                 @method($method)
             @endif
+            @if($contextHouseholdId)
+                <input type="hidden" name="context_household_id" value="{{ $contextHouseholdId }}">
+            @endif
 
             <h2 style="margin-bottom:0.85rem;">Data Wilayah & Keluarga</h2>
+            @if($household && in_array(($formMode ?? null), ['member', 'edit'], true))
+                <div class="household-context-card">
+                    <div>
+                        <span class="eyebrow">Terhubung ke KK</span>
+                        <strong class="identifier">{{ $household->no_kk }}</strong>
+                        <p>{{ $household->nama_kepala_keluarga ?: 'Kepala keluarga belum ditetapkan' }} · {{ $household->dusun ?: '-' }}, RT {{ $household->rt ?: '-' }} / RW {{ $household->rw ?: '-' }}</p>
+                    </div>
+                    <a class="btn btn-secondary" href="{{ route('dashboard.population-households.edit', $household) }}">Edit Data KK</a>
+                </div>
+                <p class="form-notice">Alamat dan wilayah adalah data bersama seluruh anggota. Gunakan “Edit Data KK” untuk mengubahnya.</p>
+                @foreach([
+                    'no_kk' => $household->no_kk,
+                    'nama_kepala_keluarga' => $household->nama_kepala_keluarga,
+                    'alamat' => $household->alamat,
+                    'rt' => $household->rt,
+                    'rw' => $household->rw,
+                    'kode_pos' => $household->kode_pos,
+                    'dusun' => $household->dusun,
+                    'desa' => $household->desa,
+                    'kecamatan' => $household->kecamatan,
+                    'kabupaten' => $household->kabupaten,
+                    'provinsi' => $household->provinsi,
+                ] as $field => $value)
+                    <input type="hidden" name="{{ $field }}" value="{{ old($field, $value) }}">
+                @endforeach
+            @else
             <div class="form-grid">
                 <div class="field">
                     <label for="no_kk">Nomor KK</label>
@@ -79,8 +109,9 @@
                     <input id="provinsi" type="text" name="provinsi" value="{{ old('provinsi', $item->provinsi ?: $household?->provinsi ?: \App\Models\PopulationRecord::DEFAULT_PROVINCE) }}">
                 </div>
             </div>
+            @endif
 
-            <h2 style="margin:1.1rem 0 0.85rem;">Biodata Anggota Keluarga</h2>
+            <h2 style="margin:1.1rem 0 0.85rem;">{{ ($formMode ?? null) === 'household' ? 'Biodata Kepala Keluarga' : 'Biodata Penduduk' }}</h2>
             <div class="form-grid">
                 <div class="field">
                     <label for="no_urut_kk">No Urut di KK</label>
@@ -91,7 +122,7 @@
                     <label for="status_hubungan">Status Hubungan Dalam Keluarga</label>
                     <select id="status_hubungan" name="status_hubungan" required>
                         @foreach($statusHubunganOptions as $statusHubungan)
-                            <option value="{{ $statusHubungan }}" @selected(old('status_hubungan', $item->status_hubungan ?: $item->currentMembership?->status_hubungan ?: 'Kepala Keluarga') === $statusHubungan)>
+                            <option value="{{ $statusHubungan }}" @selected(old('status_hubungan', $item->status_hubungan ?: $item->currentMembership?->status_hubungan ?: (($formMode ?? null) === 'member' ? 'Anak' : 'Kepala Keluarga')) === $statusHubungan)>
                                 {{ $statusHubungan }}
                             </option>
                         @endforeach
@@ -198,7 +229,7 @@
 
             <div class="actions" style="margin-top:0.8rem;">
                 <button class="btn btn-primary" type="submit">Simpan</button>
-                <a class="btn btn-secondary" href="{{ route('dashboard.population-records.index') }}">Kembali</a>
+                <a class="btn btn-secondary" href="{{ $contextHouseholdId ? route('dashboard.population-households.show', $contextHouseholdId) : route('dashboard.population-records.index') }}">Kembali</a>
             </div>
         </form>
     </section>

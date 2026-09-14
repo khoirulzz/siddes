@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\OperatorController;
 use App\Http\Controllers\Admin\PbbPaymentRequestController;
 use App\Http\Controllers\Admin\PbbTaxObjectController;
 use App\Http\Controllers\Admin\PopulationRecordController;
+use App\Http\Controllers\Admin\PopulationImportController;
+use App\Http\Controllers\Admin\HouseholdController;
 use App\Http\Controllers\Admin\ServiceArchiveController;
 use App\Http\Controllers\Admin\VillageActivityController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
@@ -135,10 +137,20 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
         Route::post('/generate/announcement', [AiContentController::class, 'generateAnnouncement'])->name('generate.announcement');
     });
 
-    Route::post('population-records/import', [PopulationRecordController::class, 'import'])
+    Route::post('population-records/import/preview', [PopulationImportController::class, 'preview'])
+        ->name('population-records.import.preview');
+    Route::post('population-records/import', [PopulationImportController::class, 'store'])
         ->name('population-records.import');
-    Route::get('population-records/template/download', [PopulationRecordController::class, 'template'])
+    Route::get('population-records/template/download', [PopulationImportController::class, 'template'])
         ->name('population-records.template');
+    Route::get('population-records/statistics', [PopulationRecordController::class, 'statistics'])
+        ->name('population-records.statistics');
+    Route::get('population-records/households/{household}', [HouseholdController::class, 'show'])
+        ->name('population-households.show');
+    Route::get('population-records/households/{household}/edit', [HouseholdController::class, 'edit'])
+        ->name('population-households.edit');
+    Route::put('population-records/households/{household}', [HouseholdController::class, 'update'])
+        ->name('population-households.update');
         
     Route::delete('pbb-tax-objects/destroy-by-year', [PbbTaxObjectController::class, 'destroyByYear'])
         ->name('pbb-tax-objects.destroy-year');

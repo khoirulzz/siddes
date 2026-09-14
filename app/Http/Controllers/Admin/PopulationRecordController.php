@@ -3,19 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Imports\PopulationRecordsImport;
 use App\Models\Household;
+use App\Models\PopulationImportRun;
 use App\Models\PopulationRecord;
-use App\Support\SpreadsheetImportHelper;
 use App\Services\PopulationHouseholdSyncService;
 use App\Support\PopulationStatHelper;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
-use Maatwebsite\Excel\Facades\Excel;
 
 class PopulationRecordController extends Controller
 {
@@ -29,47 +26,23 @@ class PopulationRecordController extends Controller
      */
     public function index(Request $request)
     {
-        $viewMode = $request->query('view') === 'kk' ? 'kk' : 'individual';
+        $viewMode = $request->query('view') === 'individual' ? 'individual' : 'kk';
         $selectedHamlet = $request->string('hamlet')->toString() ?: 'Semua';
+        if ($selectedHamlet !== 'Semua' && ! in_array($selectedHamlet, PopulationRecord::HAMLETS, true)) {
+            $selectedHamlet = 'Semua';
+        }
         $search = trim((string) $request->query('q', ''));
 
-        $residentQuery = PopulationRecord::query()
-            ->with(['currentMembership.household'])
-            ->inHamlet($selectedHamlet);
-        $this->applySearchFilter($residentQuery, $search);
+        $residentStatsQuery = PopulationRecord::query()->inHamlet($selectedHamlet);
+        $this->applySearchFilter($residentStatsQuery, $search);
 
-        $records = (clone $residentQuery)
-            ->orderByRaw('COALESCE(dusun, hamlet)')
-            ->orderByRaw('COALESCE(nama_lengkap, full_name)')
-            ->paginate(50)
-            ->withQueryString();
-
-        $filteredTotal = (clone $residentQuery)->count();
-
-        $summaryByHamlet = (clone $residentQuery)
-            ->selectRaw('COALESCE(dusun, hamlet) as hamlet_name, COUNT(*) as total')
-            ->groupByRaw('COALESCE(dusun, hamlet)')
-            ->orderByRaw('COALESCE(dusun, hamlet)')
-            ->get();
-
-        $genderByHamlet = (clone $residentQuery)
+        $filteredTotal = (clone $residentStatsQuery)->count();
+        $genderByHamlet = (clone $residentStatsQuery)
             ->selectRaw('COALESCE(jenis_kelamin, gender) as gender_name, COUNT(*) as total')
             ->groupByRaw('COALESCE(jenis_kelamin, gender)')
             ->pluck('total', 'gender_name');
 
-        $ageSummaryResult = (clone $residentQuery)
-            ->selectRaw(PopulationStatHelper::buildAgeSqlCases())
-            ->first();
-
-        $educationRawResult = (clone $residentQuery)
-            ->selectRaw('pendidikan, COUNT(*) as total')
-            ->groupBy('pendidikan')
-            ->get();
-
         $householdsQuery = Household::query()
-            ->with([
-                'currentMembers.resident:id,nik,nama_lengkap,full_name',
-            ])
             ->withCount([
                 'currentMembers as total_members' => function ($query): void {
                     $query->where('is_current', true);
@@ -94,42 +67,107 @@ class PopulationRecordController extends Controller
             });
         }
 
-        $households = $householdsQuery
-            ->orderByDesc('updated_at')
-            ->orderBy('no_kk')
-            ->paginate(30, ['*'], 'kk_page')
-            ->withQueryString();
+        $filteredHouseholdTotal = (clone $householdsQuery)->count();
+        $records = null;
+        $households = null;
+
+        if ($viewMode === 'individual') {
+            $records = PopulationRecord::query()
+                ->with(['currentMembership.household'])
+                ->inHamlet($selectedHamlet);
+            $this->applySearchFilter($records, $search);
+            $records = $records
+                ->orderByRaw('COALESCE(dusun, hamlet)')
+                ->orderByRaw('COALESCE(nama_lengkap, full_name)')
+                ->paginate(40)
+                ->withQueryString();
+        } else {
+            $households = $householdsQuery
+                ->orderByDesc('updated_at')
+                ->orderBy('no_kk')
+                ->paginate(30, ['*'], 'kk_page')
+                ->withQueryString();
+        }
 
         return view('dashboard.population.index', [
             'items' => $records,
             'households' => $households,
             'viewMode' => $viewMode,
             'filteredTotal' => $filteredTotal,
+            'filteredHouseholdTotal' => $filteredHouseholdTotal,
             'hamlets' => PopulationRecord::HAMLETS,
             'selectedHamlet' => $selectedHamlet,
             'filters' => [
                 'q' => $search,
             ],
-            'summaryByHamlet' => $summaryByHamlet,
             'genderSummary' => [
                 'Laki-laki' => (int) ($genderByHamlet['Laki-laki'] ?? 0),
                 'Perempuan' => (int) ($genderByHamlet['Perempuan'] ?? 0),
             ],
-            'ageSummary' => PopulationStatHelper::formatAgeAggregation($ageSummaryResult),
-            'educationSummary' => PopulationStatHelper::buildEducationSummary($educationRawResult),
+            'recentImports' => PopulationImportRun::query()
+                ->with('user:id,name')
+                ->latest()
+                ->limit(5)
+                ->get(),
+        ]);
+    }
+
+    public function statistics(Request $request): JsonResponse
+    {
+        $selectedHamlet = $request->string('hamlet')->toString() ?: 'Semua';
+        if ($selectedHamlet !== 'Semua' && ! in_array($selectedHamlet, PopulationRecord::HAMLETS, true)) {
+            $selectedHamlet = 'Semua';
+        }
+        $search = trim((string) $request->query('q', ''));
+        $query = PopulationRecord::query()->inHamlet($selectedHamlet);
+        $this->applySearchFilter($query, $search);
+
+        $hamlets = (clone $query)
+            ->selectRaw('COALESCE(dusun, hamlet) as hamlet_name, COUNT(*) as total')
+            ->groupByRaw('COALESCE(dusun, hamlet)')
+            ->orderByRaw('COALESCE(dusun, hamlet)')
+            ->get();
+        $genders = (clone $query)
+            ->selectRaw('COALESCE(jenis_kelamin, gender) as gender_name, COUNT(*) as total')
+            ->groupByRaw('COALESCE(jenis_kelamin, gender)')
+            ->pluck('total', 'gender_name');
+        $ageSummary = PopulationStatHelper::formatAgeAggregation(
+            (clone $query)->selectRaw(PopulationStatHelper::buildAgeSqlCases())->first(),
+        );
+        $educationSummary = PopulationStatHelper::buildEducationSummary(
+            (clone $query)->selectRaw('pendidikan, COUNT(*) as total')->groupBy('pendidikan')->get(),
+        );
+
+        return response()->json([
+            'hamlets' => ['labels' => $hamlets->pluck('hamlet_name'), 'data' => $hamlets->pluck('total')->map(fn ($total): int => (int) $total)],
+            'genders' => ['labels' => ['Laki-laki', 'Perempuan'], 'data' => [(int) ($genders['Laki-laki'] ?? 0), (int) ($genders['Perempuan'] ?? 0)]],
+            'ages' => $ageSummary,
+            'education' => $educationSummary,
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
+        $prefillHousehold = $request->integer('household')
+            ? Household::query()->findOrFail($request->integer('household'))
+            : null;
+        $formMode = $prefillHousehold ? 'member' : ($request->query('mode') === 'household' ? 'household' : 'resident');
+        $title = match ($formMode) {
+            'household' => 'Tambah KK Baru',
+            'member' => 'Tambah Anggota Keluarga',
+            default => 'Tambah Penduduk',
+        };
+
         return view('dashboard.population.form', [
             'item' => new PopulationRecord(),
             'method' => 'POST',
             'route' => route('dashboard.population-records.store'),
-            'title' => 'Tambah Data Kependudukan',
+            'title' => $title,
+            'formMode' => $formMode,
+            'prefillHousehold' => $prefillHousehold,
             'hamlets' => PopulationRecord::HAMLETS,
             'statusPerkawinanOptions' => PopulationRecord::STATUS_PERKAWINAN_OPTIONS,
             'statusHubunganOptions' => PopulationRecord::STATUS_HUBUNGAN_OPTIONS,
@@ -145,7 +183,13 @@ class PopulationRecordController extends Controller
         $payload = $this->validatePayload($request);
 
         $resident = PopulationRecord::create($this->extractResidentPayload($payload));
-        $this->householdSync->sync($resident, $payload);
+        $household = $this->householdSync->sync($resident, $payload);
+
+        if ($request->filled('context_household_id')) {
+            return redirect()
+                ->route('dashboard.population-households.show', $household)
+                ->with('success', 'Anggota keluarga berhasil ditambahkan.');
+        }
 
         return redirect()->route('dashboard.population-records.index')->with('success', 'Data kependudukan berhasil ditambahkan.');
     }
@@ -161,7 +205,7 @@ class PopulationRecordController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(PopulationRecord $populationRecord)
+    public function edit(Request $request, PopulationRecord $populationRecord)
     {
         $populationRecord->loadMissing(['currentMembership.household']);
         $household = $populationRecord->currentMembership?->household;
@@ -177,6 +221,9 @@ class PopulationRecordController extends Controller
             'method' => 'PUT',
             'route' => route('dashboard.population-records.update', $populationRecord),
             'title' => 'Edit Data Kependudukan',
+            'formMode' => 'edit',
+            'prefillHousehold' => $household,
+            'contextHouseholdContext' => $request->integer('household') ?: null,
             'hamlets' => PopulationRecord::HAMLETS,
             'statusPerkawinanOptions' => PopulationRecord::STATUS_PERKAWINAN_OPTIONS,
             'statusHubunganOptions' => PopulationRecord::STATUS_HUBUNGAN_OPTIONS,
@@ -192,7 +239,13 @@ class PopulationRecordController extends Controller
         $payload = $this->validatePayload($request);
 
         $populationRecord->update($this->extractResidentPayload($payload));
-        $this->householdSync->sync($populationRecord, $payload);
+        $household = $this->householdSync->sync($populationRecord, $payload);
+
+        if ($request->integer('context_household_id') === $household->id) {
+            return redirect()
+                ->route('dashboard.population-households.show', $household)
+                ->with('success', 'Data penduduk berhasil diperbarui.');
+        }
 
         return redirect()->route('dashboard.population-records.index')->with('success', 'Data kependudukan berhasil diperbarui.');
     }
@@ -200,11 +253,18 @@ class PopulationRecordController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PopulationRecord $populationRecord)
+    public function destroy(Request $request, PopulationRecord $populationRecord)
     {
         $householdIds = $populationRecord->householdMemberships()->pluck('household_id')->all();
+        $returnHouseholdId = $request->integer('context_household_id');
         $populationRecord->delete();
         $this->householdSync->cleanupEmptyHouseholds($householdIds);
+
+        if ($returnHouseholdId && Household::query()->whereKey($returnHouseholdId)->exists()) {
+            return redirect()
+                ->route('dashboard.population-households.show', $returnHouseholdId)
+                ->with('success', 'Data penduduk berhasil dihapus.');
+        }
 
         return redirect()->route('dashboard.population-records.index')->with('success', 'Data kependudukan berhasil dihapus.');
     }
@@ -244,6 +304,7 @@ class PopulationRecordController extends Controller
             'nama_ayah' => ['nullable', 'string', 'max:255'],
             'nama_ibu' => ['nullable', 'string', 'max:255'],
             'golongan_darah' => ['nullable', Rule::in(PopulationRecord::GOLONGAN_DARAH_OPTIONS)],
+            'context_household_id' => ['nullable', 'integer', 'exists:households,id'],
         ]);
 
         $validator->after(function ($validator) use ($request): void {
@@ -318,85 +379,6 @@ class PopulationRecordController extends Controller
             'kode_pos' => $payload['kode_pos'],
             'address_detail' => $payload['address_detail'],
         ];
-    }
-
-    public function import(Request $request)
-    {
-        $payload = $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt'],
-            'hamlet_override' => ['nullable', Rule::in(PopulationRecord::HAMLETS)],
-        ]);
-
-        $file = $request->file('file');
-        if ($file === null) {
-            return redirect()->back()->withErrors(['file' => 'File import tidak ditemukan.']);
-        }
-
-        $csvDelimiter = SpreadsheetImportHelper::detectCsvDelimiter($file);
-        $readerType = SpreadsheetImportHelper::resolveReaderType($file);
-
-        $import = new PopulationRecordsImport(
-            app(PopulationHouseholdSyncService::class),
-            $payload['hamlet_override'] ?? null,
-            $file->getClientOriginalName(),
-            $csvDelimiter,
-        );
-
-        try {
-            Excel::import($import, $file, null, $readerType);
-        } catch (\Throwable $exception) {
-            report($exception);
-            return redirect()->back()->withErrors([
-                'file' => 'Import gagal diproses. Pastikan format kolom sesuai template dan file tidak rusak.',
-            ]);
-        }
-
-        $summary = $import->summary();
-        $message = "Import selesai: {$summary['inserted']} data baru, {$summary['updated']} data diperbarui, {$summary['skipped']} baris dilewati.";
-
-        return redirect()->route('dashboard.population-records.index')->with('success', $message);
-    }
-
-    public function template()
-    {
-        $columns = [
-            'no_kk',
-            'nama_kepala_keluarga',
-            'alamat',
-            'rt',
-            'rw',
-            'kode_pos',
-            'dusun',
-            'desa',
-            'kecamatan',
-            'kabupaten',
-            'provinsi',
-            'no_urut_kk',
-            'status_hubungan',
-            'nik',
-            'nama_lengkap',
-            'jenis_kelamin',
-            'tempat_lahir',
-            'tanggal_lahir',
-            'agama',
-            'pendidikan',
-            'jenis_pekerjaan',
-            'status_perkawinan',
-            'kewarganegaraan',
-            'no_paspor',
-            'no_kitas_kitap',
-            'nama_ayah',
-            'nama_ibu',
-            'golongan_darah',
-        ];
-
-        return response()->streamDownload(function () use ($columns): void {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, $columns);
-            fclose($handle);
-        }, 'template-kependudukan-kk.csv', [
-            'Content-Type' => 'text/csv',
-        ]);
     }
 
     private function applySearchFilter(Builder $query, string $search): void

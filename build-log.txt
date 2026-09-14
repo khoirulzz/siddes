@@ -1,21 +1,63 @@
+Run ./gradlew assembleRelease
+
+Welcome to Gradle 9.1.0!
+
+Here are the highlights of this release:
+ - Full Java 25 support
+ - Native task graph visualization
+ - Enhanced console output
+
+For more details see https://docs.gradle.org/9.1.0/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+Calculating task graph as no cached configuration is available for tasks: assembleRelease
+> Task :app:preBuild UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseNavigationResources FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :app:compileReleaseNavigationResources FROM-CACHE
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:generateReleaseRFile FROM-CACHE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :app:desugarReleaseFileDependencies FROM-CACHE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:processReleaseMainManifest FROM-CACHE
+> Task :app:processReleaseManifest FROM-CACHE
+> Task :app:processReleaseManifestForPackage FROM-CACHE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :app:mergeExtDexRelease FROM-CACHE
+> Task :app:extractProguardFiles
+> Task :app:processReleaseResources FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:optimizeReleaseResources FROM-CACHE
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:312:101 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+
 
 > Task :app:compileReleaseKotlin FAILED
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:20:38 Conflicting import: imported name 'FontWeight' is ambiguous.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:26:38 Conflicting import: imported name 'FontWeight' is ambiguous.
-36 actionable tasks: 18 executed, 18 from cache
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:28 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:33 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:38 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:40 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:58 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:80 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:82 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:87 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:92 Unsupported escape sequence.
-e: file:///home/runner/work/siddes/siddes/mobile/app/src/main/java/com/desa/lambanggelun/sid/ui/ai/AiAssistantScreen.kt:313:94 Unsupported escape sequence.
-
 FAILURE: Build failed with an exception.
+36 actionable tasks: 18 executed, 18 from cache
 
+Configuration cache entry stored.
 * What went wrong:
 Execution failed for task ':app:compileReleaseKotlin'.
 > A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
@@ -27,6 +69,5 @@ Execution failed for task ':app:compileReleaseKotlin'.
 > Run with --scan to generate a Build Scan (Powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 25s
-Configuration cache entry stored.
+BUILD FAILED in 23s
 Error: Process completed with exit code 1.

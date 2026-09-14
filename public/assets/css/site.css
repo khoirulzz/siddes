@@ -2888,13 +2888,139 @@ textarea {
     color: #dceafb;
 }
 
+/* App download uses the public site's shared colors and button styles. */
+.sid-download { padding-bottom: 1rem; }
+.sid-download-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+.sid-download-breadcrumb a { color: var(--primary); }
+.sid-download-breadcrumb .bi { font-size: 0.65rem; }
+.sid-download-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding: clamp(1.25rem, 4vw, 3rem);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: radial-gradient(ellipse at top left, rgba(31, 138, 112, 0.1), transparent 65%), var(--surface);
+}
+.sid-download-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.sid-download-intro h1 {
+    margin: 1rem 0;
+    font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+    line-height: 1.25;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+}
+.sid-download-intro > p {
+    max-width: 35rem;
+    color: var(--muted);
+    line-height: 1.85;
+    font-size: 0.92rem;
+    margin: 0 0 1.5rem;
+}
+.sid-download-guide-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.sid-download-card {
+    min-width: 0;
+    padding: clamp(1.1rem, 2.5vw, 1.8rem);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--primary);
+    border-radius: 1rem;
+    box-shadow: 0 12px 32px rgba(15, 76, 129, 0.07);
+}
+.sid-download-app-brand { display: flex; align-items: center; gap: 0.9rem; }
+.sid-download-app-logo {
+    display: grid;
+    place-items: center;
+    flex: 0 0 72px;
+    height: 76px;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--bg);
+}
+.sid-download-app-logo img { display: block; object-fit: contain; }
+.sid-download-app-brand h2 { margin: 0 0 0.25rem; font-size: 1.3rem; }
+.sid-download-app-brand p { margin: 0; font-size: 0.78rem; color: var(--muted); }
+.sid-download-card-copy { margin: 1.2rem 0; font-size: 0.86rem; color: var(--muted); line-height: 1.7; }
+.sid-download-specs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+.sid-download-specs span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.45rem;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 0.72rem;
+}
+.sid-download-button { width: 100%; min-height: 48px; gap: 0.6rem; text-align: center; }
+.sid-download-file-note { margin: 0.65rem 0 1.2rem; text-align: center; font-size: 0.7rem; color: var(--muted); }
+.sid-download-install-note { display: flex; align-items: flex-start; gap: 0.55rem; border-top: 1px solid var(--line); padding-top: 1rem; color: var(--muted); }
+.sid-download-install-note > .bi { color: var(--primary); flex-shrink: 0; }
+.sid-download-install-note p { margin: 0; font-size: 0.75rem; line-height: 1.7; }
+.sid-download-install-note a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.sid-download-section { margin-top: 2.5rem; }
+.sid-download .section-title { align-items: flex-start; flex-direction: column; gap: 0.4rem; }
+.sid-download .section-title h2 { font-size: clamp(1.15rem, 2vw, 1.4rem); }
+.sid-download .section-title .muted { font-size: 0.85rem; }
+.sid-download-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; }
+.sid-download-feature { display: flex; align-items: flex-start; gap: 0.85rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 0.85rem; background: var(--surface); }
+.sid-download-feature-icon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 0.65rem; background: var(--bg); color: var(--primary); font-size: 1.15rem; }
+.sid-download-feature:nth-child(even) .sid-download-feature-icon { color: var(--accent); }
+.sid-download-feature h3, .sid-download-steps h3 { margin: 0 0 0.4rem; font-size: 0.9rem; }
+.sid-download-feature p, .sid-download-steps p { margin: 0; font-size: 0.8rem; line-height: 1.8; color: var(--muted); }
+.sid-download-install { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 2.5rem; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); scroll-margin-top: 7rem; }
+.sid-download-install-heading h2 { margin: 0.65rem 0; font-size: 1.35rem; line-height: 1.4; }
+.sid-download-install-heading > p { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
+.sid-download-web-option { margin-top: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 0.75rem; }
+.sid-download-web-option > .bi { color: var(--accent); font-size: 1.2rem; }
+.sid-download-web-option p { margin: 0.5rem 0 0.85rem; color: var(--muted); font-size: 0.78rem; line-height: 1.8; }
+.sid-download-web-option .btn { font-size: 0.78rem; }
+.sid-download-steps { display: grid; align-content: center; gap: 1.4rem; list-style: none; margin: 0; padding: 0; counter-reset: install; }
+.sid-download-steps li { position: relative; padding-left: 3.25rem; counter-increment: install; }
+.sid-download-steps li::before { content: counter(install, decimal-leading-zero); position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--bg); color: var(--primary); border: 1px solid var(--line); font-size: 0.8rem; font-weight: 600; }
+.sid-download a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.sid-download-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 960px) {
+    .sid-download-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sid-download-hero { gap: 1.5rem; }
+}
+@media (max-width: 700px) {
+    .sid-download-hero, .sid-download-install { grid-template-columns: minmax(0, 1fr); }
+    .sid-download-features { grid-template-columns: minmax(0, 1fr); }
+    .sid-download-section { margin-top: 1.75rem; }
+    .sid-download-intro h1 { font-size: clamp(1.75rem, 6vw, 2.3rem); }
+}
+
 .footer-address-chip {
     margin: 0;
     border: 1px solid rgba(199, 219, 236, 0.35);
     border-radius: 0.68rem;
     padding: 0.5rem 0.56rem;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.5rem;
     font-size: 0.8rem;
     line-height: 1.5;
@@ -2955,8 +3081,8 @@ textarea {
     transform: translateY(-1px);
 }
 
-.footer-contact-item span,
-.footer-social-link span {
+.footer-contact-item > span:not(.footer-icon),
+.footer-social-link > span:not(.footer-icon) {
     display: block;
     min-width: 0;
 }
@@ -2993,6 +3119,7 @@ textarea {
 }
 
 .footer-icon svg {
+    display: block;
     width: 18px;
     height: 18px;
 }

@@ -28,6 +28,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+
+    'groq' => [
+        'key'           => env('GROQ_API_KEY'),
+        'base_url'      => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+        'model_primary'  => env('GROQ_MODEL_PRIMARY', 'openai/gpt-oss-120b'),
+        'model_secondary'=> env('GROQ_MODEL_SECONDARY', 'qwen/qwen3-27b'),
+        'model_fallback' => env('GROQ_MODEL_FALLBACK', 'openai/gpt-oss-20b'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

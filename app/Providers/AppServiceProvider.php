@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Providers;
 
@@ -72,6 +72,10 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(120)->by($ip),
             ];
         });
+
+        RateLimiter::for('ai-chat', function (Request $request) {
+            return Limit::perMinute(15)->by((string) $request->ip());
+        });
     }
 
     private function applyVillageConfigOverrides(): void
@@ -123,3 +127,4 @@ class AppServiceProvider extends ServiceProvider
         return $rawValue;
     }
 }
+

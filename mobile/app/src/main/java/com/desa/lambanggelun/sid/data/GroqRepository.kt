@@ -191,7 +191,7 @@ PENTING: Jika pengguna menanyakan status tiket, melacak surat, atau memberikan f
             add(GroqMessage(role = "user", content = question))
         }
 
-        // Try primary model, fallback to secondary
+        // Tier 1: Primary model, fallback to secondary
         return tryWithFallback(messages, key, conversationHistory.isEmpty())
     }
 
@@ -200,16 +200,16 @@ PENTING: Jika pengguna menanyakan status tiket, melacak surat, atau memberikan f
         cacheKey: String,
         shouldCache: Boolean
     ): Result<AiResponse> {
-        // Try primary model first
+        // Tier 1: Primary model
         runCatching {
             callGroq(GroqApiClient.MODEL_PRIMARY, messages)
         }.onSuccess { response ->
             if (shouldCache && response.draftData == null && response.text != null) cache[cacheKey] = response.text
             return Result.success(response)
         }.onFailure { primaryError ->
-            // Fallback to secondary model
+            // Tier 2: Secondary model
             runCatching {
-                callGroq(GroqApiClient.MODEL_FALLBACK, messages)
+                callGroq(GroqApiClient.MODEL_SECONDARY, messages)
             }.onSuccess { response ->
                 if (shouldCache && response.draftData == null && response.text != null) cache[cacheKey] = response.text
                 return Result.success(response)

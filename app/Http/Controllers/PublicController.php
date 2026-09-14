@@ -279,4 +279,10 @@ class PublicController extends Controller
         ]);
     }
 
+
+    public function downloadApp()
+    {
+        return view('public.download-app');
+    }
+
 }

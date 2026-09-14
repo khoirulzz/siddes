@@ -21,6 +21,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\PublicAiChatController;
 use App\Http\Controllers\PublicServiceController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,15 @@ Route::controller(PublicController::class)->group(function () {
     Route::get('/pengumuman', 'announcementIndex')->name('announcements.index');
     Route::get('/pengumuman/{announcement}', 'announcementShow')->name('announcements.show');
 });
+
+
+// ─── AI Public Chatbot ───────────────────────────────────────────────────────
+Route::post('/ai/chat', [PublicAiChatController::class, 'sendMessage'])
+    ->middleware('throttle:ai-chat')
+    ->name('ai.public.chat');
+
+// ─── Download Aplikasi Android ───────────────────────────────────────────────
+Route::get('/download-app', [PublicController::class, 'downloadApp'])->name('download.app');
 
 Route::controller(PublicServiceController::class)->prefix('layanan')->name('services.')->group(function () {
     Route::get('/pbb', 'pbbForm')->name('pbb');

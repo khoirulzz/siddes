@@ -104,8 +104,9 @@ object GroqApiClient {
     private const val BASE_URL = "https://api.groq.com/openai/v1/"
 
     // Model rotation: primary → fallback
-    const val MODEL_PRIMARY  = "openai/gpt-oss-120b"
-    const val MODEL_FALLBACK = "openai/gpt-oss-20b"
+    const val MODEL_PRIMARY   = "openai/gpt-oss-120b"
+    const val MODEL_SECONDARY = "qwen/qwen3-27b"
+    const val MODEL_FALLBACK  = "openai/gpt-oss-20b"
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())

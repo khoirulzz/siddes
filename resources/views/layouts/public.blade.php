@@ -7,6 +7,7 @@
     <meta name="description" content="@yield('meta_description', 'Portal Informasi dan Layanan Online Resmi Pemerintah Desa ' . config('village.name') . ', ' . config('village.district') . '. Akses mandiri untuk surat online, PBB, pengaduan warga, dan berita desa terbaru.')">
     <meta name="keywords" content="@yield('meta_keywords', 'desa, ' . config('village.name') . ', ' . config('village.district') . ', portal desa, layanan online, surat online, pbb desa, pengaduan warga, berita desa')">
     <meta name="author" content="{{ config('village.developed_by', 'Pemerintah Desa ' . config('village.name')) }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="index, follow">
 
     <!-- Open Graph / Facebook -->
@@ -182,6 +183,12 @@
                             <a href="http://bumdes.desalambanggelun.web.id" target="_blank" rel="noopener">BUMDes</a>
                             <a href="http://karangtaruna.desalambanggelun.web.id" target="_blank" rel="noopener">Karangtaruna</a>
                         </div>
+                    </li>
+
+                    <li>
+                        <a class="{{ request()->routeIs('download.app') ? 'active' : '' }}" href="{{ route('download.app') }}">
+                            <span style="font-size:15px">📱</span> SID App
+                        </a>
                     </li>
                 </ul>
             </nav>
@@ -1048,5 +1055,7 @@
             });
         });
     </script>
+
+    @include('partials.ai-chatbot-widget')
 </body>
 </html>

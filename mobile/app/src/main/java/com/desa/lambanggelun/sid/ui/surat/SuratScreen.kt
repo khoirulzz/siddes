@@ -286,41 +286,51 @@ fun DynamicFieldInput(field: LetterField, value: String, onValueChange: (String)
         }
         "date" -> {
             val cal = Calendar.getInstance()
-            OutlinedTextField(
-                value = value,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(field.label) },
-                placeholder = { Text("Ketuk untuk memilih tanggal") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        DatePickerDialog(context, { _, y, m, d ->
-                            onValueChange("$y-${(m + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}")
-                        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
-                    },
-                trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
-                isError = field.required && value.isBlank()
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(field.label) },
+                    placeholder = { Text("Ketuk untuk memilih tanggal") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = { Icon(Icons.Default.CalendarToday, null) },
+                    isError = field.required && value.isBlank()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable {
+                            DatePickerDialog(context, { _, y, m, d ->
+                                onValueChange("$y-${(m + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}")
+                            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+                        }
+                )
+            }
         }
         "time" -> {
             val cal = Calendar.getInstance()
-            OutlinedTextField(
-                value = value,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(field.label) },
-                placeholder = { Text("Ketuk untuk memilih waktu") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        TimePickerDialog(context, { _, h, m ->
-                            onValueChange("${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}")
-                        }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
-                    },
-                trailingIcon = { Icon(Icons.Default.AccessTime, null) },
-                isError = field.required && value.isBlank()
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(field.label) },
+                    placeholder = { Text("Ketuk untuk memilih waktu") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = { Icon(Icons.Default.AccessTime, null) },
+                    isError = field.required && value.isBlank()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable {
+                            TimePickerDialog(context, { _, h, m ->
+                                onValueChange("${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}")
+                            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+                        }
+                )
+            }
         }
         else -> {
             OutlinedTextField(

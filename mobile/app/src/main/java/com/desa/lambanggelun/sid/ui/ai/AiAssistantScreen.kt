@@ -12,6 +12,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -235,15 +242,26 @@ fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> 
                     }
                 }
             } else {
-                Text(
-                    text = msg.content,
-                    color = when {
-                        isUser  -> Color.White
-                        isError -> MaterialTheme.colorScheme.error
-                        else    -> MaterialTheme.colorScheme.onSurface
-                    },
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp
+                val annotatedText = parseSimpleMarkdown(msg.content)
+                ClickableText(
+                    text = annotatedText,
+                    style = androidx.compose.ui.text.TextStyle(
+                        color = when {
+                            isUser  -> Color.White
+                            isError -> MaterialTheme.colorScheme.error
+                            else    -> MaterialTheme.colorScheme.onSurface
+                        },
+                        fontSize = 13.sp,
+                        lineHeight = 19.sp
+                    ),
+                    onClick = { offset ->
+                        annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                            .firstOrNull()?.let { annotation ->
+                                try {
+                                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(annotation.item)))
+                                } catch (e: Exception) {}
+                            }
+                    }
                 )
                 if (msg.draftData != null) {
                     Spacer(Modifier.height(8.dp))
@@ -286,5 +304,39 @@ fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> 
                 }
             }
         }
+    }
+}
+
+
+fun parseSimpleMarkdown(text: String): AnnotatedString {
+    return buildAnnotatedString {
+        val regex = Regex("\[([^\]]+)\]\((https?://[^)]+)\)|(https?://[^\\s]+)|\*\*([^\*]+)\*\*")
+        var lastIndex = 0
+        regex.findAll(text).forEach { match ->
+            append(text.substring(lastIndex, match.range.first))
+            
+            if (match.groups[1] != null && match.groups[2] != null) {
+                // [text](url)
+                pushStringAnnotation("URL", match.groups[2]!!.value)
+                withStyle(SpanStyle(color = Color(0xFF2196F3), textDecoration = TextDecoration.Underline)) {
+                    append(match.groups[1]!!.value)
+                }
+                pop()
+            } else if (match.groups[3] != null) {
+                // raw url
+                pushStringAnnotation("URL", match.groups[3]!!.value)
+                withStyle(SpanStyle(color = Color(0xFF2196F3), textDecoration = TextDecoration.Underline)) {
+                    append(match.groups[3]!!.value)
+                }
+                pop()
+            } else if (match.groups[4] != null) {
+                // bold
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(match.groups[4]!!.value)
+                }
+            }
+            lastIndex = match.range.last + 1
+        }
+        append(text.substring(lastIndex))
     }
 }

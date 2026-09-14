@@ -187,7 +187,7 @@
 
                     <li>
                         <a class="{{ request()->routeIs('download.app') ? 'active' : '' }}" href="{{ route('download.app') }}">
-                            <span style="font-size:15px">📱</span> SID App
+                            Download
                         </a>
                     </li>
                 </ul>

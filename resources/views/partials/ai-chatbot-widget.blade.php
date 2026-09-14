@@ -1,211 +1,284 @@
-{{-- =========================================================
-     AI CHATBOT FLOATING WIDGET
-     Dirender di semua halaman publik via layouts/public.blade.php
-     ========================================================= --}}
-<div id="ai-chatbot-widget" role="dialog" aria-label="Asisten AI Desa" aria-modal="true">
-    {{-- Trigger Button --}}
-    <button id="ai-chat-trigger" type="button" aria-label="Buka asisten AI" aria-expanded="false" aria-controls="ai-chat-panel">
-        <svg id="chat-icon-open" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <circle cx="8" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/>
+
+<!-- Marked.js for better markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<div id="ai-chatbot-widget">
+    <!-- Toggle Button -->
+    <button id="ai-chat-trigger" aria-label="Buka Asisten AI" aria-expanded="false">
+        <svg id="chat-icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <svg id="chat-icon-close" viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true" style="display:none">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <svg id="chat-icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
         <span id="chat-unread-badge" style="display:none">1</span>
     </button>
 
-    {{-- Chat Panel --}}
-    <div id="ai-chat-panel" hidden>
+    <!-- Chat Panel -->
+    <div id="ai-chat-panel" class="collapsed">
         <div class="aichat-header">
             <div class="aichat-header-info">
-                <div class="aichat-avatar" aria-hidden="true">🤖</div>
+                <!-- Premium CS Icon -->
+                <div class="aichat-avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
                 <div>
-                    <p class="aichat-name">Asisten AI Desa</p>
-                    <p class="aichat-status"><span class="aichat-online-dot"></span> Online</p>
+                    <strong>Layanan AI Desa</strong>
+                    <span><i class="online-dot"></i> Online</span>
                 </div>
             </div>
             <div class="aichat-header-actions">
-                <button type="button" id="ai-chat-clear" title="Hapus riwayat chat" aria-label="Hapus riwayat chat" style="display:none">
-                    <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button id="ai-chat-clear" title="Bersihkan obrolan" style="display:none">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                 </button>
-                <button type="button" id="ai-chat-close" aria-label="Tutup chat">
-                    <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <!-- Close Button (Mobile primarily) -->
+                <button id="ai-chat-close-btn" class="mobile-only" title="Tutup">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
         </div>
 
-        <div class="aichat-messages" id="aichat-messages" role="log" aria-live="polite" aria-relevant="additions">
-            {{-- Pesan selamat datang default --}}
+        <div id="aichat-messages">
             <div class="aichat-bubble aichat-bubble--ai aichat-welcome" id="aichat-welcome">
                 <div class="aichat-bubble-inner">
-                    <p>👋 Halo! Saya asisten AI <strong>{{ config('village.name') }}</strong>.</p>
-                    <p>Saya bisa bantu Anda soal layanan desa, cara pengajuan surat, cek PBB, pengaduan, dan lainnya.</p>
-                    <div class="aichat-quick-questions" id="aichat-quick">
-                        <p class="aichat-quick-label">Pertanyaan populer:</p>
-                        <button type="button" class="aichat-quick-btn" data-q="Bagaimana cara mengajukan surat keterangan domisili?">Cara surat domisili?</button>
-                        <button type="button" class="aichat-quick-btn" data-q="Bagaimana cara cek tagihan PBB saya?">Cek tagihan PBB</button>
-                        <button type="button" class="aichat-quick-btn" data-q="Bagaimana cara melacak status pengajuan surat saya?">Lacak status surat</button>
-                        <button type="button" class="aichat-quick-btn" data-q="Apa saja layanan online yang tersedia di desa?">Layanan online apa saja?</button>
-                    </div>
+                    <p>Halo! Saya asisten AI Desa Lambanggelun. Silakan tanya tentang layanan desa, surat, PBB, dll.</p>
+                </div>
+                <div class="aichat-quick-replies">
+                    <button class="aichat-quick-btn" data-q="Bagaimana cara buat surat domisili?">Cara surat domisili?</button>
+                    <button class="aichat-quick-btn" data-q="Bagaimana cara cek tagihan PBB?">Cek tagihan PBB</button>
                 </div>
             </div>
         </div>
 
         <div class="aichat-input-area">
-            <textarea id="aichat-input" placeholder="Tanyakan sesuatu..." rows="1" maxlength="1000" aria-label="Pesan untuk asisten AI"></textarea>
-            <button type="button" id="aichat-send" aria-label="Kirim pesan" disabled>
-                <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <textarea id="aichat-input" rows="1" placeholder="Tanyakan sesuatu..." aria-label="Pesan AI"></textarea>
+            <button id="aichat-send" disabled aria-label="Kirim Pesan">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-2px">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
             </button>
         </div>
     </div>
 </div>
 
 <style>
-/* ── Floating Trigger ── */
-#ai-chatbot-widget { position: fixed; bottom: 24px; right: 24px; z-index: 9999; font-family: 'Poppins', sans-serif; }
+/* Reset & Base */
+#ai-chatbot-widget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+}
+#ai-chatbot-widget * { box-sizing: inherit; }
+
+/* Toggle Button */
 #ai-chat-trigger {
-    width: 56px; height: 56px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: linear-gradient(135deg, #6366f1, #7c3aed);
-    border: none; cursor: pointer; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 20px rgba(99,102,241,.5);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(99,102,241,.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform .2s, box-shadow .2s;
-    position: relative;
+    z-index: 2;
 }
-#ai-chat-trigger:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(99,102,241,.6); }
+#ai-chat-trigger:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(99,102,241,.6); }
 #chat-unread-badge {
-    position: absolute; top: -4px; right: -4px;
+    position: absolute; top: -2px; right: -2px;
     width: 18px; height: 18px; border-radius: 50%;
-    background: #ef4444; color: #fff; font-size: 10px; font-weight: 700;
+    background: #ef4444; border: 2px solid #fff;
+    color: #fff; font-size: 10px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
 }
 
-/* ── Panel ── */
+/* Chat Panel */
 #ai-chat-panel {
-    position: absolute; bottom: 68px; right: 0;
-    width: 340px;
-    background: var(--surface-alt, #fff);
-    border-radius: 20px;
-    box-shadow: 0 12px 48px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06);
-    display: flex; flex-direction: column;
+    position: absolute;
+    bottom: 76px;
+    right: 0;
+    width: 360px;
+    height: 500px;
+    max-height: calc(100vh - 100px);
+    background: var(--surface, #fff);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    max-height: 520px;
-    animation: aichat-pop .22s cubic-bezier(.34,1.56,.64,1);
+    transform-origin: bottom right;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }
-[data-theme="dark"] #ai-chat-panel { background: #1e293b; box-shadow: 0 12px 48px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.07); }
-@keyframes aichat-pop { from { opacity:0; transform: scale(.92) translateY(12px); } to { opacity:1; transform: scale(1) translateY(0); } }
+#ai-chat-panel.collapsed {
+    visibility: hidden;
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+    pointer-events: none;
+}
+[data-theme="dark"] #ai-chat-panel { background: #1e293b; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
 
-/* ── Header ── */
+/* Header */
 .aichat-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px;
     background: linear-gradient(135deg, #6366f1, #7c3aed);
     color: #fff;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
-.aichat-header-info { display: flex; align-items: center; gap: 10px; }
-.aichat-avatar { font-size: 24px; line-height: 1; }
-.aichat-name { font-size: 13px; font-weight: 700; margin: 0; color: #fff; }
-.aichat-status { font-size: 11px; margin: 2px 0 0; color: rgba(255,255,255,.75); display: flex; align-items: center; gap: 4px; }
-.aichat-online-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; }
-.aichat-header-actions { display: flex; gap: 6px; }
-.aichat-header-actions button { background: rgba(255,255,255,.15); border: none; color: #fff; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
-.aichat-header-actions button:hover { background: rgba(255,255,255,.28); }
+.aichat-header-info { display: flex; align-items: center; gap: 12px; }
+.aichat-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+}
+.aichat-header-info strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.2; margin-bottom: 2px; }
+.aichat-header-info span { display: flex; align-items: center; gap: 4px; font-size: 11px; opacity: .9; }
+.online-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block; }
+.aichat-header-actions button {
+    background: transparent; border: none; color: rgba(255,255,255,.7);
+    cursor: pointer; padding: 4px; border-radius: 6px;
+    transition: background .2s, color .2s;
+    display: flex; align-items: center; justify-content: center;
+}
+.aichat-header-actions button:hover { background: rgba(255,255,255,.15); color: #fff; }
+.mobile-only { display: none !important; }
 
-/* ── Messages ── */
-.aichat-messages {
-    flex: 1; overflow-y: auto; padding: 12px;
-    display: flex; flex-direction: column; gap: 10px;
-    scroll-behavior: smooth;
-    min-height: 240px; max-height: 320px;
+/* Messages */
+#aichat-messages {
+    flex: 1; padding: 16px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 12px;
+    background: var(--bg, #f8fafc);
 }
-.aichat-messages::-webkit-scrollbar { width: 4px; }
-.aichat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 4px; }
-.aichat-bubble { display: flex; }
-.aichat-bubble--ai { justify-content: flex-start; }
-.aichat-bubble--user { justify-content: flex-end; }
+[data-theme="dark"] #aichat-messages { background: #0f172a; }
+
+.aichat-bubble { display: flex; flex-direction: column; max-width: 85%; }
+.aichat-bubble--ai { align-self: flex-start; }
+.aichat-bubble--user { align-self: flex-end; }
+
 .aichat-bubble-inner {
-    max-width: 85%; padding: 9px 13px;
-    border-radius: 16px; font-size: 12.5px; line-height: 1.65;
+    padding: 10px 14px; border-radius: 14px;
+    font-size: 13px; line-height: 1.5;
+    word-break: break-word;
 }
 .aichat-bubble--ai .aichat-bubble-inner {
-    background: var(--surface, #f1f5f9);
-    color: var(--text-1, #1e293b);
-    border-top-left-radius: 4px;
+    background: var(--surface, #fff); color: var(--text-1, #1e293b);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
-[data-theme="dark"] .aichat-bubble--ai .aichat-bubble-inner { background: #334155; color: #e2e8f0; }
+[data-theme="dark"] .aichat-bubble--ai .aichat-bubble-inner { background: #1e293b; color: #f8fafc; }
 .aichat-bubble--user .aichat-bubble-inner {
-    background: linear-gradient(135deg, #6366f1, #7c3aed);
-    color: #fff; border-top-right-radius: 4px;
+    background: #6366f1; color: #fff;
+    border-bottom-right-radius: 4px;
 }
-.aichat-bubble-inner p { margin: 0 0 6px; }
-.aichat-bubble-inner p:last-child { margin-bottom: 0; }
-.aichat-bubble-inner a { color: #6366f1; text-decoration: underline; word-break: break-all; }
-.aichat-bubble--user .aichat-bubble-inner a { color: #c7d2fe; }
-.aichat-bubble-inner strong { font-weight: 700; }
-.aichat-bubble-inner ul, .aichat-bubble-inner ol { padding-left: 18px; margin: 4px 0; }
-.aichat-bubble-inner li { margin-bottom: 2px; }
 
-/* Quick questions */
-.aichat-quick-label { font-size: 11px; color: var(--text-2, #64748b); margin-bottom: 6px !important; font-weight: 600; }
-.aichat-quick-questions { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+/* Markdown Rendering Styles */
+.aichat-bubble-inner p { margin: 0 0 8px; }
+.aichat-bubble-inner p:last-child { margin: 0; }
+.aichat-bubble-inner a { color: #3b82f6; text-decoration: underline; }
+.aichat-bubble-inner ul, .aichat-bubble-inner ol { margin: 4px 0 8px; padding-left: 20px; }
+.aichat-bubble--user .aichat-bubble-inner a { color: #fff; font-weight: 500; }
+.aichat-bubble-inner strong { font-weight: 600; }
+.aichat-bubble-inner code { background: rgba(0,0,0,.05); padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 11.5px; }
+[data-theme="dark"] .aichat-bubble-inner code { background: rgba(255,255,255,.1); }
+
+/* Quick Replies */
+.aichat-quick-replies { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .aichat-quick-btn {
-    background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
-    color: #6366f1; font-size: 11.5px; font-weight: 500; padding: 6px 10px;
-    border-radius: 8px; cursor: pointer; text-align: left;
-    transition: background .15s, border-color .15s;
+    background: transparent; border: 1px solid #c7d2fe; color: #4f46e5;
+    border-radius: 12px; padding: 6px 12px; font-size: 12px; font-weight: 500;
+    text-align: left; cursor: pointer; transition: all .2s;
     font-family: inherit;
 }
-.aichat-quick-btn:hover { background: rgba(99,102,241,.18); border-color: rgba(99,102,241,.4); }
-[data-theme="dark"] .aichat-quick-btn { color: #a5b4fc; background: rgba(99,102,241,.12); }
+.aichat-quick-btn:hover { background: #e0e7ff; border-color: #a5b4fc; }
+[data-theme="dark"] .aichat-quick-btn { border-color: #3730a3; color: #818cf8; }
+[data-theme="dark"] .aichat-quick-btn:hover { background: #312e81; border-color: #4f46e5; }
 
-/* Loading dots */
-.aichat-loading-dots { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
-.aichat-loading-dots span {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--text-2, #94a3b8);
-    animation: aichat-bounce .8s ease-in-out infinite;
-}
-.aichat-loading-dots span:nth-child(2) { animation-delay: .15s; }
-.aichat-loading-dots span:nth-child(3) { animation-delay: .3s; }
-@keyframes aichat-bounce { 0%,80%,100% { transform: scale(.6); opacity:.4; } 40% { transform: scale(1); opacity:1; } }
-
-/* ── Input ── */
+/* Input */
 .aichat-input-area {
-    display: flex; align-items: flex-end; gap: 8px;
-    padding: 10px 12px;
+    display: flex; gap: 8px; padding: 12px;
     border-top: 1px solid var(--border, rgba(0,0,0,.08));
-    background: var(--surface-alt, #fff);
+    background: var(--surface, #fff);
 }
 [data-theme="dark"] .aichat-input-area { background: #1e293b; border-color: rgba(255,255,255,.07); }
 #aichat-input {
     flex: 1; border: 1.5px solid var(--border, rgba(0,0,0,.12));
-    border-radius: 12px; padding: 8px 12px; font-size: 12.5px;
+    border-radius: 20px; padding: 8px 14px; font-size: 13px;
     font-family: inherit; resize: none; outline: none;
-    background: var(--surface, #f8fafc); color: var(--text-1, #1e293b);
-    transition: border-color .15s; line-height: 1.5; max-height: 80px; overflow-y: auto;
+    background: var(--bg, #f8fafc); color: var(--text-1, #1e293b);
+    transition: border-color .2s; line-height: 1.4; max-height: 80px; overflow-y: auto;
 }
 #aichat-input:focus { border-color: #6366f1; }
-[data-theme="dark"] #aichat-input { background: #334155; color: #e2e8f0; border-color: rgba(255,255,255,.12); }
+[data-theme="dark"] #aichat-input { background: #0f172a; color: #e2e8f0; border-color: rgba(255,255,255,.12); }
 #aichat-send {
-    width: 36px; height: 36px; flex-shrink: 0;
-    border-radius: 10px; border: none; cursor: pointer; color: #fff;
+    width: 38px; height: 38px; flex-shrink: 0;
+    border-radius: 50%; border: none; cursor: pointer; color: #fff;
     background: linear-gradient(135deg, #6366f1, #7c3aed);
     display: flex; align-items: center; justify-content: center;
-    transition: opacity .2s, transform .15s;
+    transition: opacity .2s, transform .2s;
 }
-#aichat-send:disabled { opacity: .4; cursor: not-allowed; }
-#aichat-send:not(:disabled):hover { transform: scale(1.08); }
+#aichat-send:disabled { opacity: .4; cursor: not-allowed; transform: scale(0.9); }
+#aichat-send:not(:disabled):hover { transform: scale(1.05); }
 
-@media (max-width: 420px) {
-    #ai-chatbot-widget { bottom: 16px; right: 12px; }
-    #ai-chat-panel { width: calc(100vw - 24px); right: -12px; }
+/* Loading Dots */
+.aichat-loading-dots { display: flex; gap: 4px; padding: 4px; }
+.aichat-loading-dots span {
+    width: 6px; height: 6px; background: #94a3b8; border-radius: 50%;
+    animation: aichat-bounce 1.4s infinite ease-in-out both;
+}
+.aichat-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.aichat-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes aichat-bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+/* Mobile Fullscreen Optimization */
+@media (max-width: 480px) {
+    #ai-chatbot-widget { bottom: 16px; right: 16px; }
+    .mobile-only { display: flex !important; }
+    
+    /* When open, make it cover the screen */
+    #ai-chatbot-widget.widget-open {
+        bottom: 0; right: 0; width: 100%; height: 100%;
+    }
+    #ai-chatbot-widget.widget-open #ai-chat-trigger { display: none; }
+    
+    #ai-chat-panel {
+        bottom: 0; right: 0; width: 100%; height: 100%;
+        max-height: 100vh; border-radius: 0;
+        transform-origin: bottom center;
+    }
+    #ai-chat-panel.collapsed {
+        transform: translateY(100%);
+    }
 }
 </style>
 
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     const widget   = document.getElementById('ai-chatbot-widget');
     const trigger  = document.getElementById('ai-chat-trigger');
     const panel    = document.getElementById('ai-chat-panel');
@@ -216,47 +289,89 @@
     const input    = document.getElementById('aichat-input');
     const sendBtn  = document.getElementById('aichat-send');
     const clearBtn = document.getElementById('ai-chat-clear');
-    const closeBtn = document.getElementById('ai-chat-close');
+    const closeBtn = document.getElementById('ai-chat-close-btn');
 
-    let history = []; // {role, content}
+    let history = []; 
     let isOpen  = false;
     let isLoading = false;
+    let collapseTimer = null;
+    const AUTO_COLLAPSE_MS = 30000; // 30 seconds
 
-    // ── Open / Close ──
-    function togglePanel(open) {
-        isOpen = open ?? !isOpen;
-        panel.hidden = !isOpen;
-        iconOpen.style.display  = isOpen ? 'none' : '';
-        iconClose.style.display = isOpen ? '' : 'none';
-        trigger.setAttribute('aria-expanded', isOpen);
+    // Initialize Marked.js if available
+    const renderContent = (text) => {
+        if (typeof marked !== 'undefined') {
+            return marked.parse(text);
+        }
+        return text.replace(/\n/g, '<br>');
+    };
+
+    // Load from SessionStorage so it persists across page reloads in same tab
+    function loadSession() {
+        try {
+            const saved = sessionStorage.getItem('sid_ai_chat');
+            if (saved) {
+                history = JSON.parse(saved);
+                if (history.length > 0) {
+                    const welcome = document.getElementById('aichat-welcome');
+                    if (welcome) welcome.style.display = 'none';
+                    clearBtn.style.display = 'flex';
+                    
+                    history.forEach(msg => {
+                        appendBubble(msg.role, msg.content, false, true);
+                    });
+                }
+            }
+        } catch (e) {}
+    }
+
+    function saveSession() {
+        sessionStorage.setItem('sid_ai_chat', JSON.stringify(history));
+    }
+
+    // Timer Logic
+    function resetCollapseTimer() {
+        if (collapseTimer) clearTimeout(collapseTimer);
         if (isOpen) {
-            badge.style.display = 'none';
-            input.focus();
-            scrollBottom();
+            collapseTimer = setTimeout(() => {
+                togglePanel(false); // Auto collapse after 30s
+            }, AUTO_COLLAPSE_MS);
         }
     }
+    
+    // Reset timer on any interaction
+    panel.addEventListener('mousemove', resetCollapseTimer);
+    panel.addEventListener('touchstart', resetCollapseTimer);
+    input.addEventListener('keydown', resetCollapseTimer);
+
+    // Open / Close
+    function togglePanel(open) {
+        isOpen = open ?? !isOpen;
+        
+        if (isOpen) {
+            panel.classList.remove('collapsed');
+            widget.classList.add('widget-open');
+            iconOpen.style.display  = 'none';
+            iconClose.style.display = '';
+            badge.style.display = 'none';
+            setTimeout(() => { input.focus(); scrollBottom(); }, 300);
+            resetCollapseTimer();
+        } else {
+            panel.classList.add('collapsed');
+            widget.classList.remove('widget-open');
+            iconOpen.style.display  = '';
+            iconClose.style.display = 'none';
+            if (collapseTimer) clearTimeout(collapseTimer);
+        }
+        trigger.setAttribute('aria-expanded', isOpen);
+    }
+    
     trigger.addEventListener('click', () => togglePanel());
     closeBtn.addEventListener('click', () => togglePanel(false));
 
-    // ── Render markdown-light & linkify ──
-    function renderContent(text) {
-        // Bold: **text**
-        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        // Links: [label](url) or bare https://...
-        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        text = text.replace(/(^|[\s(])(https?:\/\/[^\s<>"')\]]+)/g,
-            '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-        // Bullet: lines starting with - or *
-        text = text.replace(/^[-*]\s(.+)/gm, '<li>$1</li>');
-        text = text.replace(/(<li>.*<\/li>\n?)+/gs, '<ul>$&</ul>');
-        // Paragraphs: double newline
-        text = text.replace(/\n{2,}/g, '</p><p>');
-        text = text.replace(/\n/g, '<br>');
-        return '<p>' + text + '</p>';
-    }
-
-    function appendBubble(role, content, isLoading) {
+    // Force close on load (per request: otomatis menutup tanpa hilang)
+    // We don't restore `isOpen` state on navigation, we always start collapsed.
+    
+    function appendBubble(role, content, isLoading, skipScroll = false) {
         const wrap = document.createElement('div');
         wrap.className = 'aichat-bubble aichat-bubble--' + (role === 'user' ? 'user' : 'ai');
 
@@ -272,7 +387,7 @@
 
         wrap.appendChild(inner);
         messages.appendChild(wrap);
-        scrollBottom();
+        if(!skipScroll) scrollBottom();
         return wrap;
     }
 
@@ -280,20 +395,22 @@
         messages.scrollTop = messages.scrollHeight;
     }
 
-    // ── Send message ──
+    // Send Message
     async function sendMessage(text) {
         if (isLoading || !text.trim()) return;
         isLoading = true;
         sendBtn.disabled = true;
+        resetCollapseTimer();
 
-        // Hide welcome message & quick questions after first send
         const welcome = document.getElementById('aichat-welcome');
         if (welcome) welcome.style.display = 'none';
 
         appendBubble('user', text);
         const loadingBubble = appendBubble('assistant', '', true);
-
         clearBtn.style.display = 'flex';
+
+        history.push({ role: 'user', content: text });
+        saveSession();
 
         try {
             const res = await fetch('{{ route("ai.public.chat") }}', {
@@ -314,22 +431,24 @@
                 : (data.message || 'Maaf, terjadi kesalahan. Silakan coba lagi.');
 
             appendBubble('assistant', reply);
-            history.push({ role: 'user', content: text });
             history.push({ role: 'assistant', content: reply });
 
-            if (history.length > 20) history = history.slice(-20);
+            if (history.length > 30) history = history.slice(-30);
+            saveSession();
 
         } catch (err) {
             loadingBubble.remove();
             appendBubble('assistant', 'Maaf, koneksi bermasalah. Periksa internet Anda dan coba lagi.');
+            history.pop(); // remove user msg if failed
         }
 
         isLoading = false;
         sendBtn.disabled = input.value.trim() === '';
         input.focus();
+        resetCollapseTimer();
     }
 
-    // ── Input events ──
+    // Input events
     input.addEventListener('input', function () {
         sendBtn.disabled = this.value.trim() === '' || isLoading;
         this.style.height = 'auto';
@@ -349,7 +468,7 @@
         if (val) { input.value = ''; input.style.height = 'auto'; sendMessage(val); }
     });
 
-    // ── Quick questions ──
+    // Quick questions
     messages.addEventListener('click', function (e) {
         const btn = e.target.closest('.aichat-quick-btn');
         if (!btn) return;
@@ -357,23 +476,26 @@
         if (q) sendMessage(q);
     });
 
-    // ── Clear chat ──
+    // Clear chat
     clearBtn.addEventListener('click', function () {
         history = [];
+        sessionStorage.removeItem('sid_ai_chat');
         messages.innerHTML = '';
-        const welcome = document.getElementById('aichat-welcome');
-        // Re-create welcome bubble
         const div = document.createElement('div');
         div.className = 'aichat-bubble aichat-bubble--ai aichat-welcome';
         div.id = 'aichat-welcome';
-        div.innerHTML = messages.querySelector('.aichat-welcome')?.innerHTML || '<div class="aichat-bubble-inner"><p>👋 Chat telah dihapus. Ada yang bisa saya bantu?</p></div>';
+        div.innerHTML = '<div class="aichat-bubble-inner"><p>Chat telah dihapus. Ada yang bisa saya bantu?</p></div>';
         messages.appendChild(div);
         clearBtn.style.display = 'none';
+        input.focus();
     });
 
-    // ── Show unread badge after 3s if panel not opened ──
+    // Init
+    loadSession();
+
+    // Show badge after 3s if no history
     setTimeout(() => {
-        if (!isOpen) badge.style.display = 'flex';
+        if (!isOpen && history.length === 0) badge.style.display = 'flex';
     }, 3000);
-})();
+});
 </script>

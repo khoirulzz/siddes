@@ -17,7 +17,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -310,7 +309,7 @@ fun ChatBubble(msg: ChatMessage, onNavigateToPengaduan: (PengaduanDraftData) -> 
 
 fun parseSimpleMarkdown(text: String): AnnotatedString {
     return buildAnnotatedString {
-        val regex = Regex("\[([^\]]+)\]\((https?://[^)]+)\)|(https?://[^\\s]+)|\*\*([^\*]+)\*\*")
+        val regex = Regex("""\[([^\]]+)\]\((https?://[^)]+)\)|(https?://[^\s]+)|\*\*([^\*]+)\*\*""")\]\((https?://[^)]+)\)|(https?://[^\\s]+)|\*\*([^\*]+)\*\*")
         var lastIndex = 0
         regex.findAll(text).forEach { match ->
             append(text.substring(lastIndex, match.range.first))

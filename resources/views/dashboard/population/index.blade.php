@@ -7,9 +7,8 @@
     <section class="panel population-hero">
         <div class="population-hero__content">
             <div>
-                <span class="eyebrow">Administrasi Penduduk</span>
-                <h2>Data keluarga yang lebih mudah dibaca dan diperbarui</h2>
-                <p class="muted">Mulai dari daftar KK, buka anggota keluarga saat diperlukan, atau beralih ke daftar individu.</p>
+                <h2>Data Kependudukan</h2>
+                <p class="muted">{{ $selectedHamlet === 'Semua' ? 'Seluruh dusun' : 'Dusun '.$selectedHamlet }}{{ $filters['q'] !== '' ? ' · Hasil pencarian: '.$filters['q'] : '' }}</p>
             </div>
             <div class="actions population-hero__actions">
                 <a class="btn btn-primary" href="{{ route('dashboard.population-records.create', ['mode' => 'household']) }}">Tambah KK Baru</a>
@@ -20,11 +19,11 @@
 
         <div class="population-stats">
             <article class="population-stat population-stat--family">
-                <span>KK ditemukan</span>
+                <span>Kartu Keluarga</span>
                 <strong>{{ number_format($filteredHouseholdTotal, 0, ',', '.') }}</strong>
             </article>
             <article class="population-stat population-stat--people">
-                <span>Penduduk ditemukan</span>
+                <span>Penduduk</span>
                 <strong>{{ number_format($filteredTotal, 0, ',', '.') }}</strong>
             </article>
             <article class="population-stat population-stat--male">
@@ -38,127 +37,13 @@
         </div>
     </section>
 
-    <details class="panel population-import" id="populationImportPanel">
-        <summary>
-            <span>
-                <strong>Import Excel atau CSV</strong>
-                <small>Pratinjau dan periksa kesalahan sebelum data disimpan.</small>
-            </span>
-            <span class="details-action">Buka import</span>
-        </summary>
-
-        <div class="population-import__body">
-            <div class="import-guide">
-                <div>
-                    <strong>Gunakan template Excel terbaru</strong>
-                    <p>NIK dan No. KK sudah disiapkan sebagai teks agar tidak dibulatkan Excel.</p>
-                </div>
-                <div class="actions">
-                    <a class="btn btn-primary" href="{{ route('dashboard.population-records.template') }}">Unduh XLSX</a>
-                    <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template', ['format' => 'csv']) }}">Unduh CSV</a>
-                </div>
-            </div>
-
-            <form
-                id="populationImportForm"
-                class="import-form"
-                data-preview-url="{{ route('dashboard.population-records.import.preview') }}"
-                data-commit-url="{{ route('dashboard.population-records.import') }}"
-            >
-                @csrf
-                <div class="field">
-                    <label for="populationImportFile">File data</label>
-                    <input id="populationImportFile" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
-                    <small class="muted">XLSX, XLS, CSV, atau TXT · maksimal 15 MB dan 10.000 baris.</small>
-                </div>
-                <div class="field">
-                    <label for="populationHamletOverride">Tetapkan dusun untuk semua baris <span class="muted">(opsional)</span></label>
-                    <select id="populationHamletOverride" name="hamlet_override">
-                        <option value="">Ikuti isi file</option>
-                        @foreach($hamlets as $hamlet)
-                            <option value="{{ $hamlet }}">{{ $hamlet }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="actions import-form__actions">
-                    <button class="btn btn-primary" type="submit" data-preview-button>Periksa File</button>
-                    <button class="btn btn-secondary" type="button" data-reset-import>Reset</button>
-                </div>
-            </form>
-
-            <div class="import-feedback" data-import-feedback hidden role="status"></div>
-
-            <section class="import-preview" data-import-preview hidden aria-live="polite">
-                <div class="toolbar">
-                    <div>
-                        <h3>Hasil pratinjau</h3>
-                        <p class="muted" data-preview-meta></p>
-                    </div>
-                    <div class="actions">
-                        <button class="btn btn-secondary" type="button" data-download-report>Unduh Laporan</button>
-                        <button class="btn btn-primary" type="button" data-commit-import>Import Baris Valid</button>
-                    </div>
-                </div>
-                <div class="import-summary" data-import-summary></div>
-                <div class="table-wrap import-preview__table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Baris</th>
-                                <th>Nama / NIK</th>
-                                <th>No. KK</th>
-                                <th>Tindakan</th>
-                                <th>Hasil pemeriksaan</th>
-                            </tr>
-                        </thead>
-                        <tbody data-preview-rows></tbody>
-                    </table>
-                </div>
-            </section>
-
-            @if($recentImports->isNotEmpty())
-                <details class="import-history">
-                    <summary>Riwayat 5 import terakhir</summary>
-                    <div class="table-wrap">
-                        <table>
-                            <thead><tr><th>Waktu</th><th>File</th><th>Petugas</th><th>Status</th><th>Ringkasan</th></tr></thead>
-                            <tbody>
-                                @foreach($recentImports as $run)
-                                    @php
-                                        $runStatusClass = match ($run->status) {
-                                            'completed' => 'success',
-                                            'processing' => 'update',
-                                            default => 'danger',
-                                        };
-                                        $runStatusLabel = match ($run->status) {
-                                            'completed' => 'Selesai',
-                                            'processing' => 'Diproses',
-                                            default => 'Gagal',
-                                        };
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $run->created_at->format('d-m-Y H:i') }}</td>
-                                        <td>{{ $run->original_filename }}</td>
-                                        <td>{{ $run->user?->name ?: '-' }}</td>
-                                        <td><span class="status-pill status-pill--{{ $runStatusClass }}">{{ $runStatusLabel }}</span></td>
-                                        <td>{{ $run->residents_created }} baru · {{ $run->residents_updated }} diperbarui · {{ $run->invalid_rows }} dilewati</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </details>
-            @endif
-        </div>
-    </details>
-
     <section class="panel population-workspace">
         <div class="population-tabs" role="navigation" aria-label="Jenis tampilan kependudukan">
             <a class="population-tab {{ $viewMode === 'kk' ? 'active' : '' }}" href="{{ route('dashboard.population-records.index', ['view' => 'kk', 'hamlet' => $selectedHamlet !== 'Semua' ? $selectedHamlet : null, 'q' => $filters['q']]) }}">
-                <span>Data KK</span><small>Kelola per keluarga</small>
+                <span>Kartu Keluarga</span>
             </a>
             <a class="population-tab {{ $viewMode === 'individual' ? 'active' : '' }}" href="{{ route('dashboard.population-records.index', ['view' => 'individual', 'hamlet' => $selectedHamlet !== 'Semua' ? $selectedHamlet : null, 'q' => $filters['q']]) }}">
-                <span>Data Penduduk</span><small>Cari per individu</small>
+                <span>Penduduk</span>
             </a>
         </div>
 
@@ -179,7 +64,7 @@
             </div>
             <div class="actions">
                 <button class="btn btn-primary" type="submit">Terapkan</button>
-                <a class="btn btn-secondary" href="{{ route('dashboard.population-records.index', ['view' => $viewMode]) }}">Reset</a>
+                <a class="btn btn-secondary" href="{{ route('dashboard.population-records.index', ['view' => $viewMode]) }}">Hapus Filter</a>
             </div>
         </form>
     </section>
@@ -220,7 +105,7 @@
     @else
         <section class="panel population-list-panel">
             <div class="toolbar">
-                <div><h2>Daftar Penduduk</h2><p class="muted">Data pokok ditampilkan ringkas; buka edit untuk biodata lengkap.</p></div>
+                <div><h2>Daftar Penduduk</h2><p class="muted">Pilih Edit untuk melihat dan memperbarui biodata.</p></div>
                 <span class="result-count">{{ number_format($items->total(), 0, ',', '.') }} penduduk</span>
             </div>
             <div class="table-wrap population-table-wrap population-table-wrap--compact">
@@ -254,6 +139,120 @@
             @include('dashboard.population.partials.pagination', ['paginator' => $items, 'label' => 'penduduk'])
         </section>
     @endif
+
+    <details class="panel population-import" id="populationImportPanel">
+        <summary>
+            <span>
+                <strong>Import Excel atau CSV</strong>
+                <small>Unggah data penduduk dan periksa hasilnya sebelum disimpan.</small>
+            </span>
+            <span class="details-action"><span class="when-closed">Buka</span><span class="when-open">Tutup</span></span>
+        </summary>
+
+        <div class="population-import__body">
+            <div class="import-guide">
+                <div>
+                    <strong>1. Siapkan file</strong>
+                    <p>Isi satu penduduk per baris. Golongan darah, pendidikan, dan nama orang tua yang belum diketahui boleh dikosongkan atau diisi “Tidak Tahu”.</p>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template') }}">Template Excel</a>
+                    <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template', ['format' => 'csv']) }}">Unduh CSV</a>
+                </div>
+            </div>
+
+            <form
+                id="populationImportForm"
+                class="import-form"
+                data-preview-url="{{ route('dashboard.population-records.import.preview') }}"
+                data-commit-url="{{ route('dashboard.population-records.import') }}"
+            >
+                @csrf
+                <div class="field">
+                    <label for="populationImportFile">2. Pilih file penduduk</label>
+                    <input id="populationImportFile" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                    <small class="muted">XLSX, XLS, CSV, atau TXT · maksimal 15 MB dan 10.000 baris.</small>
+                </div>
+                <div class="field">
+                    <label for="populationHamletOverride">Dusun untuk seluruh data <span class="muted">(opsional)</span></label>
+                    <select id="populationHamletOverride" name="hamlet_override">
+                        <option value="">Ikuti isi file</option>
+                        @foreach($hamlets as $hamlet)
+                            <option value="{{ $hamlet }}">{{ $hamlet }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="actions import-form__actions">
+                    <button class="btn btn-primary" type="submit" data-preview-button>Periksa File</button>
+                    <button class="btn btn-secondary" type="button" data-reset-import>Batal</button>
+                </div>
+            </form>
+
+            <div class="import-feedback" data-import-feedback hidden role="status"></div>
+
+            <section class="import-preview" data-import-preview hidden aria-live="polite">
+                <div class="toolbar">
+                    <div>
+                        <h3>3. Tinjau hasil pemeriksaan</h3>
+                        <p class="muted" data-preview-meta></p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" type="button" data-download-report>Unduh Laporan</button>
+                        <button class="btn btn-primary" type="button" data-commit-import>Import Baris Valid</button>
+                    </div>
+                </div>
+                <div class="import-summary" data-import-summary></div>
+                <div class="table-wrap import-preview__table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Baris</th>
+                                <th>Nama / NIK</th>
+                                <th>No. KK</th>
+                                <th>Tindakan</th>
+                                <th>Hasil pemeriksaan</th>
+                            </tr>
+                        </thead>
+                        <tbody data-preview-rows></tbody>
+                    </table>
+                </div>
+            </section>
+
+            @if($recentImports->isNotEmpty())
+                <details class="import-history">
+                    <summary>Riwayat import terakhir</summary>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Waktu</th><th>File</th><th>Petugas</th><th>Status</th><th>Ringkasan</th></tr></thead>
+                            <tbody>
+                                @foreach($recentImports as $run)
+                                    @php
+                                        $runStatusClass = match ($run->status) {
+                                            'completed' => 'success',
+                                            'processing' => 'update',
+                                            default => 'danger',
+                                        };
+                                        $runStatusLabel = match ($run->status) {
+                                            'completed' => 'Selesai',
+                                            'processing' => 'Diproses',
+                                            default => 'Gagal',
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $run->created_at->format('d-m-Y H:i') }}</td>
+                                        <td>{{ $run->original_filename }}</td>
+                                        <td>{{ $run->user?->name ?: '-' }}</td>
+                                        <td><span class="status-pill status-pill--{{ $runStatusClass }}">{{ $runStatusLabel }}</span></td>
+                                        <td>{{ $run->residents_created }} baru · {{ $run->residents_updated }} diperbarui · {{ $run->invalid_rows }} dilewati</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            @endif
+        </div>
+    </details>
 
     <details
         class="panel population-analytics"
@@ -320,16 +319,16 @@
                 previewData = payload;
                 previewToken = token;
                 const summary = payload.summary;
-                document.querySelector('[data-preview-meta]').textContent = `Sheet “${payload.sheet}”, header pada baris ${payload.header_row}.`;
+                document.querySelector('[data-preview-meta]').textContent = `${summary.valid} dari ${summary.total} baris siap disimpan. ${summary.invalid > 0 ? 'Baris yang perlu diperbaiki akan dilewati.' : 'Periksa catatan sebelum melanjutkan.'}`;
                 document.querySelector('[data-import-summary]').innerHTML = [
-                    ['Total baris', summary.total], ['Valid', summary.valid], ['Bermasalah', summary.invalid],
+                    ['Diperiksa', summary.total], ['Siap disimpan', summary.valid], ['Perlu diperbaiki', summary.invalid], ['Catatan', summary.warnings],
                     ['KK baru', summary.households_created], ['Penduduk baru', summary.residents_created],
                     ['Diperbarui', summary.residents_updated], ['Tidak berubah', summary.residents_unchanged], ['Pindah KK', summary.residents_moved],
                 ].map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join('');
 
                 document.querySelector('[data-preview-rows]').innerHTML = payload.rows.map((row) => {
                     const issues = row.issues.length
-                        ? `<ul class="issue-list">${row.issues.map((issue) => `<li class="issue-${issue.severity}"><strong>${escapeHtml(issue.field)}</strong>: ${escapeHtml(issue.message)}${issue.hint ? `<small>${escapeHtml(issue.hint)}</small>` : ''}</li>`).join('')}</ul>`
+                        ? `<ul class="issue-list">${row.issues.map((issue) => `<li class="issue-${issue.severity}"><strong>${escapeHtml(issue.field_label || issue.field.replaceAll('_', ' '))}</strong>: ${escapeHtml(issue.message)}${issue.hint ? `<small>${escapeHtml(issue.hint)}</small>` : ''}</li>`).join('')}</ul>`
                         : '<span class="preview-ok">Siap diimpor</span>';
                     return `<tr class="preview-row preview-row--${row.status}">
                         <td>${row.row}</td>
@@ -367,7 +366,7 @@
             commitButton?.addEventListener('click', async () => {
                 if (!previewToken || !previewData || previewData.summary.valid < 1) return;
                 setBusy(commitButton, true, 'Menyimpan…', 'Import Baris Valid');
-                showFeedback('Menyimpan seluruh baris valid dalam satu transaksi.');
+                showFeedback('Menyimpan data penduduk. Tunggu hingga proses selesai.');
                 const body = new FormData(form);
                 body.append('preview_token', previewToken);
                 try {

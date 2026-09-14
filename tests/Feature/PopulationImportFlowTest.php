@@ -173,6 +173,45 @@ class PopulationImportFlowTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_unknown_optional_blood_type_does_not_block_a_new_household(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        foreach (['TIDAK TAHU', 'N/A', '-', 'nilai lainnya'] as $value) {
+            $contents = str_replace(';O'."\n", ';'.$value."\n", $this->validCsv(5));
+            $preview = $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), [
+                'file' => $this->upload($contents),
+            ])->assertOk()->assertJsonPath('preview.summary.valid', 5)
+                ->assertJsonPath('preview.summary.invalid', 0);
+            $this->assertGreaterThanOrEqual(5, $preview->json('preview.summary.warnings'));
+        }
+
+        $this->postJson(route('dashboard.population-records.import'), [
+            'file' => $this->upload($contents), 'preview_token' => $preview->json('token'),
+        ])->assertOk()->assertJsonPath('result.residents_created', 5);
+        $this->assertDatabaseCount('population_records', 5);
+        $this->assertSame(0, PopulationRecord::query()->whereNotNull('golongan_darah')->count());
+    }
+
+    public function test_optional_placeholders_preserve_known_values_on_update(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $resident = $this->createResident('3326010101800001', '3326010101010001', 'SMA');
+        $resident->update(['golongan_darah' => 'A', 'nama_ayah' => 'Ayah Uji']);
+        $contents = "no_kk;nik;nama_lengkap;golongan_darah;pendidikan;nama_ayah;kode_pos\n3326010101010001;3326010101800001;Nama Baru;TIDAK TAHU;N/A;-;abc\n";
+        $preview = $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), [
+            'file' => $this->upload($contents),
+        ])->assertOk()->assertJsonPath('preview.summary.valid', 1);
+        $this->postJson(route('dashboard.population-records.import'), [
+            'file' => $this->upload($contents), 'preview_token' => $preview->json('token'),
+        ])->assertOk();
+        $resident->refresh();
+        $this->assertSame('Nama Baru', $resident->nama_lengkap);
+        $this->assertSame('A', $resident->golongan_darah);
+        $this->assertSame('SMA', $resident->pendidikan);
+        $this->assertSame('Ayah Uji', $resident->nama_ayah);
+        $this->assertSame(PopulationRecord::DEFAULT_POSTAL_CODE, $resident->kode_pos);
+    }
+
     private function validCsv(int $rows): string
     {
         $header = 'no_kk;nama_kepala_keluarga;alamat;rt;rw;kode_pos;dusun;desa;kecamatan;kabupaten;provinsi;no_urut_kk;status_hubungan;nik;nama_lengkap;jenis_kelamin;tempat_lahir;tanggal_lahir;agama;pendidikan;jenis_pekerjaan;status_perkawinan;kewarganegaraan;no_paspor;no_kitas_kitap;nama_ayah;nama_ibu;golongan_darah';

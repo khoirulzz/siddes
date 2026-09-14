@@ -1107,16 +1107,41 @@ td .btn, td .actions .btn {
 }
 
 /* Population workspace */
+.population-import .when-open { display: none; }
+.population-import[open] .when-open { display: inline; }
+.population-import[open] .when-closed { display: none; }
+.population-import .field { min-width: 0; }
+.population-import input[type="file"] { width: 100%; padding: 12px; background: #f8fafc; }
+.population-import input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 12px;
+    border: 1px solid #c7d9ea;
+    border-radius: 6px;
+    background: #fff;
+    color: #17324d;
+    font: inherit;
+    cursor: pointer;
+}
+.population-import .import-summary > div:nth-child(2) { background: #eefaf6; border-color: #a9d6c8; }
+.population-import .import-summary > div:nth-child(3) { background: #fff9ec; border-color: #ead0a0; }
+.population-import .import-summary strong { font-variant-numeric: tabular-nums; font-size: 1.4rem; }
+.population-import .import-summary span { min-height: 2.5em; }
+.population-import [hidden] { display: none !important; }
+.population-import .toolbar { flex-wrap: wrap; gap: 12px; }
+.population-import .toolbar h3 { margin: 0 0 6px; }
+.population-import .table-wrap td { overflow-wrap: anywhere; }
+.population-workspace .field { min-width: 0; }
+
 .population-hero {
     position: relative;
     overflow: hidden;
     border-color: #c7d9ea;
-    background:
-        radial-gradient(circle at 92% 10%, rgba(31, 138, 112, 0.16), transparent 32%),
-        linear-gradient(140deg, #ffffff 0%, #eef6fd 100%);
+    background: #fff;
+    padding: clamp(18px, 2.4vw, 28px);
 }
 
 .population-hero::after {
+    display: none;
     content: "";
     position: absolute;
     width: 180px;
@@ -1161,6 +1186,7 @@ td .btn, td .actions .btn {
 
 .population-hero__actions {
     justify-content: flex-end;
+    flex-wrap: wrap;
 }
 
 .population-stats {
@@ -1175,8 +1201,8 @@ td .btn, td .actions .btn {
 .population-stat {
     position: relative;
     overflow: hidden;
-    min-height: 82px;
-    padding: 0.76rem 0.85rem;
+    min-height: 104px;
+    padding: 1rem 1.15rem;
     border: 1px solid rgba(15, 76, 129, 0.14);
     border-radius: 0.78rem;
     background: rgba(255, 255, 255, 0.86);
@@ -1206,7 +1232,9 @@ td .btn, td .actions .btn {
     display: block;
     margin-top: 0.25rem;
     color: #102b43;
-    font-size: 1.42rem;
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
 }
 
 .population-import > summary,
@@ -1276,14 +1304,15 @@ details[open] > summary .details-action::after {
 
 .import-form {
     display: grid;
-    grid-template-columns: minmax(260px, 1.4fr) minmax(220px, 1fr) auto;
-    align-items: end;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
     gap: 0.75rem;
     margin-top: 0.8rem;
 }
 
 .import-form__actions {
-    padding-bottom: 0.02rem;
+    grid-column: 1 / -1;
+    padding-top: 0.4rem;
 }
 
 .import-feedback {
@@ -1387,8 +1416,7 @@ details[open] > summary .details-action::after {
 .import-history .table-wrap { margin-top: 0.65rem; }
 
 .population-tabs {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
     gap: 0.6rem;
     margin-bottom: 0.85rem;
 }
@@ -1400,6 +1428,8 @@ details[open] > summary .details-action::after {
     border: 1px solid var(--line);
     border-radius: 0.72rem;
     background: #fff;
+    text-align: center;
+    min-width: 145px;
 }
 
 .population-tab span { font-size: 0.9rem; font-weight: 700; }
@@ -1418,7 +1448,7 @@ details[open] > summary .details-action::after {
 .population-filter__search { min-width: 0; }
 
 .population-list-panel .toolbar { align-items: flex-start; }
-.population-list-panel .toolbar p { margin: -0.25rem 0 0; }
+.population-list-panel .toolbar p { margin: 0.25rem 0 0; }
 
 .result-count,
 .member-count {
@@ -1435,7 +1465,7 @@ details[open] > summary .details-action::after {
 }
 
 .population-table-wrap--compact {
-    max-height: none;
+    max-height: 68vh;
 }
 
 .population-table-wrap--compact table {
@@ -1605,8 +1635,9 @@ details[open] > summary .details-action::after {
         width: 100%;
     }
 
-    .population-stats,
-    .population-tabs,
+    .population-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .population-tab { flex: 1; min-width: 0; }
+
     .household-detail-grid,
     .household-member-stats { grid-template-columns: 1fr; }
 
@@ -1627,6 +1658,7 @@ details[open] > summary .details-action::after {
 
     .population-table-wrap--compact {
         overflow: visible;
+        max-height: none;
         border: 0;
     }
 

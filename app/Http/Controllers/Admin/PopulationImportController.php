@@ -233,7 +233,7 @@ class PopulationImportController extends Controller
         $this->addListValidation($dataSheet, 'P2:P10001', ['Laki-laki', 'Perempuan']);
         $this->addListValidation($dataSheet, 'V2:V10001', PopulationRecord::STATUS_PERKAWINAN_OPTIONS);
         $this->addListValidation($dataSheet, 'W2:W10001', ['WNI', 'WNA']);
-        $this->addListValidation($dataSheet, 'AB2:AB10001', PopulationRecord::GOLONGAN_DARAH_OPTIONS);
+        $this->addListValidation($dataSheet, 'AB2:AB10001', [...PopulationRecord::GOLONGAN_DARAH_OPTIONS, 'Tidak Tahu']);
 
         $instructions = $spreadsheet->createSheet();
         $instructions->setTitle('Petunjuk');
@@ -247,6 +247,7 @@ class PopulationImportController extends Controller
             ['6.', 'Sel kosong pada penduduk existing tidak menghapus data lama.'],
             ['7.', 'Import bersifat merge dan tidak menghapus penduduk yang tidak tercantum di file.'],
             ['8.', 'Gunakan pratinjau dan perbaiki baris merah sebelum menekan Import.'],
+            ['9.', 'Golongan darah, pendidikan, nama orang tua, alamat, kode pos, dan dokumen boleh diisi Tidak Tahu, N/A, atau tanda - bila belum diketahui; data lama tetap dipertahankan. WNA tetap wajib memiliki paspor atau KITAS/KITAP. Golongan darah di luar A/B/AB/O menjadi catatan.'],
         ], null, 'A1');
         $instructions->getStyle('A1:B1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('0F4C81');
         $instructions->getColumnDimension('A')->setWidth(8);

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}?v={{ substr(hash_file('sha256', public_path('assets/css/dashboard.css')), 0, 12) }}">
 </head>
 <body>
     <div class="dashboard-shell" data-dashboard-shell>

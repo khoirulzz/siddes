@@ -162,7 +162,16 @@ class PopulationImportService
     {
         $issues = [];
         $cells = $rawRow['_cells'];
-        $text = fn (string $field): ?string => $this->textValue($cells[$field]['value'] ?? null);
+        $optionalFields = ['pendidikan', 'nama_ayah', 'nama_ibu', 'golongan_darah', 'kode_pos', 'no_paspor', 'no_kitas_kitap', 'alamat'];
+        $text = function (string $field) use ($cells, $optionalFields, &$issues): ?string {
+            $value = $this->textValue($cells[$field]['value'] ?? null);
+            if ($value !== null && in_array($field, $optionalFields, true)
+                && in_array(Str::lower($value), ['-', '--', '—', '–', 'n/a', 'na', 'null', 'tidak tahu', 'tidak diketahui', 'belum diketahui', 'belum diisi', 'tidak ada'], true)) {
+                $issues[] = $this->issue('warning', $field, 'optional_ignored', 'Isian belum diketahui dianggap kosong. Data lama, jika ada, tetap dipertahankan.');
+                return null;
+            }
+            return $value;
+        };
 
         $nik = $this->identifierValue('nik', $cells['nik'] ?? null, $issues);
         $noKk = $this->identifierValue('no_kk', $cells['no_kk'] ?? null, $issues);
@@ -276,6 +285,12 @@ class PopulationImportService
             'no_paspor' => 80, 'no_kitas_kitap' => 80, 'nama_ayah' => 255, 'nama_ibu' => 255,
         ] as $field => $limit) {
             if ($values[$field] !== null && mb_strlen($values[$field]) > $limit) {
+                if (in_array($field, ['pendidikan', 'nama_ayah', 'nama_ibu', 'alamat'], true)) {
+                    $this->addIssue($row, 'warning', $field, 'optional_ignored', "Isian melebihi {$limit} karakter dan tidak digunakan. Data lama tetap dipertahankan.");
+                    $values[$field] = null;
+                    $providedValues[$field] = null;
+                    continue;
+                }
                 $this->addIssue($row, 'error', $field, 'too_long', "Nilai {$field} melebihi {$limit} karakter.");
             }
         }
@@ -489,7 +504,10 @@ class PopulationImportService
                 );
                 if (count($validHeads) !== 1) {
                     foreach ($indexes as $index) {
-                        $this->addIssue($rows[$index], 'error', 'status_hubungan', 'head_required', "KK baru {$noKk} harus memiliki tepat satu kepala keluarga yang valid.");
+                        $message = count($heads) === 1
+                            ? 'Baris kepala keluarga (baris '.$rows[$heads[0]]['row'].') belum lolos pemeriksaan. Perbaiki kesalahan pada baris tersebut agar anggota KK dapat diimpor.'
+                            : 'KK baru harus memiliki tepat satu anggota dengan hubungan Kepala Keluarga.';
+                        $this->addIssue($rows[$index], 'error', 'status_hubungan', 'head_required', $message);
                     }
                 }
             }
@@ -651,6 +669,10 @@ class PopulationImportService
             return $map[$key];
         }
 
+        if ($field === 'golongan_darah') {
+            $issues[] = $this->issue('warning', $field, 'optional_ignored', 'Golongan darah tidak dikenali dan tidak digunakan. Data lama tetap dipertahankan.');
+            return null;
+        }
         $issues[] = $this->issue('error', $field, 'unknown_value', "Nilai '{$value}' tidak dikenali pada kolom {$field}.");
         return null;
     }
@@ -660,9 +682,13 @@ class PopulationImportService
         if ($value === null || $value === '') {
             return null;
         }
-        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        $digits = trim($value);
         if ($digits === '' || strlen($digits) < $min || strlen($digits) > $max) {
-            $issues[] = $this->issue('error', $field, 'invalid_code', "Kolom {$field} harus berisi {$min}-{$max} digit.");
+            $issues[] = $this->issue($field === 'kode_pos' ? 'warning' : 'error', $field, $field === 'kode_pos' ? 'optional_ignored' : 'invalid_code', "Kolom {$field} harus berisi {$min}-{$max} digit. Isian tidak digunakan.");
+            return null;
+        }
+        if (! ctype_digit($digits)) {
+            $issues[] = $this->issue($field === 'kode_pos' ? 'warning' : 'error', $field, $field === 'kode_pos' ? 'optional_ignored' : 'invalid_code', 'Isian harus berupa digit angka dan tidak digunakan.');
             return null;
         }
 
@@ -725,6 +751,7 @@ class PopulationImportService
     private function issue(string $severity, string $field, string $code, string $message): array
     {
         $hint = match ($code) {
+            'optional_ignored' => 'Baris tetap dapat diimpor. Lengkapi data ini nanti melalui formulir edit bila sudah diketahui.',
             'numeric_identifier', 'scientific_identifier' => 'Ubah kolom NIK/No. KK menjadi Text, lalu isi ulang dari sumber asli sebelum menyimpan file.',
             'duplicate_nik' => 'Sisakan satu baris untuk setiap NIK.',
             'duplicate_order', 'occupied_order' => 'Gunakan nomor urut lain yang belum dipakai pada KK tersebut.',
@@ -738,6 +765,12 @@ class PopulationImportService
             default => str_ends_with($code, '_required') ? 'Lengkapi kolom ini lalu jalankan pratinjau ulang.' : 'Perbaiki nilai pada kolom ini lalu jalankan pratinjau ulang.',
         };
 
-        return compact('severity', 'field', 'code', 'message', 'hint');
+        $fieldLabel = match ($field) {
+            'nik' => 'NIK', 'no_kk' => 'Nomor KK', 'no_urut_kk' => 'Nomor urut anggota',
+            'status_hubungan' => 'Hubungan keluarga', 'no_kitas_kitap' => 'Nomor KITAS/KITAP',
+            'rt' => 'RT', 'rw' => 'RW', 'jenis_pekerjaan' => 'Pekerjaan',
+            default => Str::ucfirst(str_replace('_', ' ', $field)),
+        };
+        return [...compact('severity', 'field', 'code', 'message', 'hint'), 'field_label' => $fieldLabel];
     }
 }

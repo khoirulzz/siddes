@@ -171,7 +171,7 @@
                 <div class="field">
                     <label for="populationImportFile">2. Pilih file penduduk</label>
                     <input id="populationImportFile" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
-                    <small class="muted">XLSX, XLS, CSV, atau TXT · maksimal 15 MB dan 10.000 baris.</small>
+                    <small class="muted">XLSX, XLS, CSV, atau TXT · maksimal 15 MB dan 6.000 baris data.</small>
                 </div>
                 <div class="field">
                     <label for="populationHamletOverride">Dusun untuk seluruh data <span class="muted">(opsional)</span></label>
@@ -344,7 +344,8 @@
                 const data = await response.json().catch(() => ({}));
                 let fallback = 'Permintaan gagal diproses. Periksa kembali file lalu coba lagi.';
                 if ([408, 504, 524].includes(response.status)) fallback = 'Waktu tunggu server habis. Server belum mengirimkan hasil proses.';
-                else if (response.status >= 500) fallback = 'Server mengalami kendala saat memproses data. Jika berulang, hubungi administrator untuk memeriksa koneksi database dan log server.';
+                else if ([502, 503].includes(response.status)) fallback = 'Server terputus atau sementara tidak tersedia saat memproses file. Tunggu hingga situs kembali normal. Jika berulang, hubungi administrator dengan kode ' + response.status + '.';
+                else if (response.status >= 500) fallback = 'Server mengalami kendala saat memproses data (kode ' + response.status + '). Hubungi administrator untuk memeriksa log server.';
                 else if ([401, 419].includes(response.status)) fallback = 'Sesi telah berakhir. Muat ulang halaman atau masuk kembali sebelum melanjutkan.';
                 else if (response.status === 413) fallback = 'File melebihi batas unggahan server. Gunakan file yang lebih kecil.';
                 return { data, message: response.status >= 500 ? fallback : data.message || Object.values(data.errors || {}).flat()[0] || fallback };

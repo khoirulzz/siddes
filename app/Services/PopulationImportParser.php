@@ -8,14 +8,20 @@ use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class PopulationImportParser
 {
-    public const MAX_ROWS = 10_000;
+    public const MAX_ROWS = 6_000;
 
     private const HEADER_SCAN_LIMIT = 15;
+
+    private const CHUNK_ROWS = 500;
+
+    private const MAX_COLUMNS = 128;
 
     private const DELIMITERS = [';', ',', "\t", '|'];
 
@@ -77,11 +83,18 @@ class PopulationImportParser
 
         while (($values = fgetcsv($handle, 0, $delimiter, '"', '\\')) !== false) {
             $rowNumber++;
+            if ($rowNumber % 100 === 0) {
+                PopulationImportMemory::check();
+            }
+            if (count($values) > self::MAX_COLUMNS) {
+                fclose($handle);
+                throw new PopulationImportException('File memiliki terlalu banyak kolom. Gunakan kolom yang tersedia pada template.');
+            }
             $sourceRows[$rowNumber] = $values;
 
             if ($rowNumber > self::MAX_ROWS + self::HEADER_SCAN_LIMIT + 1) {
                 fclose($handle);
-                throw new PopulationImportException('File melebihi batas 10.000 baris data. Pecah file menjadi beberapa bagian.');
+                throw new PopulationImportException('File melebihi batas 6.000 baris data. Pecah file menjadi beberapa bagian.');
             }
         }
         fclose($handle);
@@ -108,7 +121,7 @@ class PopulationImportParser
 
             $rows[] = ['_row' => $number, '_cells' => $cells];
             if (count($rows) > self::MAX_ROWS) {
-                throw new PopulationImportException('File melebihi batas 10.000 baris data. Pecah file menjadi beberapa bagian.');
+                throw new PopulationImportException('File melebihi batas 6.000 baris data. Pecah file menjadi beberapa bagian.');
             }
         }
 
@@ -128,67 +141,262 @@ class PopulationImportParser
         }
 
         try {
+            $this->checkArchiveSize($path);
             $reader = IOFactory::createReaderForFile($path);
             $reader->setReadDataOnly(false);
-            $spreadsheet = $reader->load($path);
-        } catch (\Throwable $exception) {
-            throw new PopulationImportException('File Excel rusak, berpassword, atau format aslinya tidak sesuai ekstensi.', previous: $exception);
-        }
-
-        try {
-            $worksheets = $spreadsheet->getAllSheets();
-            usort($worksheets, static function (Worksheet $left, Worksheet $right): int {
-                $leftPreferred = in_array(PopulationImportSchema::normalizeHeader($left->getTitle()), ['data', 'data_kependudukan', 'data_penduduk'], true);
-                $rightPreferred = in_array(PopulationImportSchema::normalizeHeader($right->getTitle()), ['data', 'data_kependudukan', 'data_penduduk'], true);
+            $reader->setReadEmptyCells(false);
+            $worksheetTargets = $reader instanceof XlsxReader ? $this->xlsxWorksheetTargets($path) : [];
+            $worksheets = $reader instanceof XlsxReader
+                ? array_map(static fn (string $title): array => ['worksheetName' => $title], array_keys($worksheetTargets))
+                : $reader->listWorksheetInfo($path);
+            if (count($worksheets) === 0) {
+                throw new PopulationImportException('Sheet Excel tidak ditemukan. Simpan ulang file sebagai XLSX atau XLS standar.');
+            }
+            if (count($worksheets) > 8) {
+                throw new PopulationImportException('File memiliki terlalu banyak sheet. Salin sheet Data ke workbook terpisah (maksimal 8 sheet).');
+            }
+            usort($worksheets, static function (array $left, array $right): int {
+                $leftPreferred = in_array(PopulationImportSchema::normalizeHeader($left['worksheetName']), ['data', 'data_kependudukan', 'data_penduduk'], true);
+                $rightPreferred = in_array(PopulationImportSchema::normalizeHeader($right['worksheetName']), ['data', 'data_kependudukan', 'data_penduduk'], true);
 
                 return (int) $rightPreferred <=> (int) $leftPreferred;
             });
 
-            foreach ($worksheets as $worksheet) {
-                $header = $this->findWorksheetHeader($worksheet);
+            foreach ($worksheets as $info) {
+                PopulationImportMemory::check();
+                $sheetName = $info['worksheetName'];
+                $reader->setLoadSheetsOnly([$sheetName]);
+                $reader->setReadFilter($this->readFilter(1, self::HEADER_SCAN_LIMIT));
+                $spreadsheet = $reader->load($path);
+                try {
+                    $header = $this->findWorksheetHeader($spreadsheet->getSheetByName($sheetName));
+                } finally {
+                    $spreadsheet->disconnectWorksheets();
+                    unset($spreadsheet);
+                    gc_collect_cycles();
+                }
                 if ($header === null) {
                     continue;
                 }
 
                 [$headerRow, $columnMap] = $header;
                 $rows = [];
-                $highestRow = $worksheet->getHighestDataRow();
-                if ($highestRow - $headerRow > self::MAX_ROWS) {
-                    throw new PopulationImportException('File melebihi batas 10.000 baris data. Pecah file menjadi beberapa bagian.');
+                if (isset($info['totalColumns']) && (int) $info['totalColumns'] > self::MAX_COLUMNS) {
+                    throw new PopulationImportException('Area sheet terlalu lebar. Hapus kolom tambahan di luar template sebelum mengunggah ulang.');
                 }
-                for ($rowNumber = $headerRow + 1; $rowNumber <= $highestRow; $rowNumber++) {
-                    $cells = [];
-                    foreach ($columnMap as $columnIndex => $canonical) {
-                        $cell = $worksheet->getCell([$columnIndex, $rowNumber]);
-                        $cells[$canonical] = [
-                            'value' => $cell->getValue(),
-                            'type' => $cell->getDataType(),
-                            'is_date' => $cell->getDataType() === DataType::TYPE_NUMERIC && ExcelDate::isDateTime($cell),
-                        ];
-                    }
+                $chunkStarts = $reader instanceof XlsxReader
+                    ? $this->xlsxContentChunkStarts($path, $worksheetTargets[$sheetName], $headerRow)
+                    : $this->legacyChunkStarts((int) $info['totalRows'], $headerRow);
 
-                    if (! $this->cellsContainData($cells)) {
-                        continue;
-                    }
+                foreach ($chunkStarts as $start) {
+                    PopulationImportMemory::check();
+                    $end = $start + self::CHUNK_ROWS - 1;
+                    $reader->setReadFilter($this->readFilter($start, $end, array_keys($columnMap)));
+                    $spreadsheet = $reader->load($path);
+                    try {
+                        $worksheet = $spreadsheet->getSheetByName($sheetName);
+                        for ($rowNumber = $start; $rowNumber <= $end; $rowNumber++) {
+                            if ($rowNumber <= $headerRow) {
+                                continue;
+                            }
+                            $cells = [];
+                            foreach ($columnMap as $columnIndex => $canonical) {
+                                // getCell() creates missing cells. Never materialize blank template areas.
+                                if (! $worksheet->cellExists([$columnIndex, $rowNumber])) {
+                                    continue;
+                                }
+                                $cell = $worksheet->getCell([$columnIndex, $rowNumber]);
+                                $cells[$canonical] = [
+                                    'value' => $cell->getValue(),
+                                    'type' => $cell->getDataType(),
+                                    'is_date' => $cell->getDataType() === DataType::TYPE_NUMERIC && ExcelDate::isDateTime($cell),
+                                ];
+                            }
 
-                    $rows[] = ['_row' => $rowNumber, '_cells' => $cells];
-                    if (count($rows) > self::MAX_ROWS) {
-                        throw new PopulationImportException('File melebihi batas 10.000 baris data. Pecah file menjadi beberapa bagian.');
+                            if ($this->cellsContainData($cells)) {
+                                $rows[] = ['_row' => $rowNumber, '_cells' => $cells];
+                            }
+                        }
+                    } finally {
+                        $spreadsheet->disconnectWorksheets();
+                        unset($cell, $worksheet, $spreadsheet);
+                        gc_collect_cycles();
                     }
                 }
 
                 return [
-                    'sheet' => $worksheet->getTitle(),
+                    'sheet' => $sheetName,
                     'header_row' => $headerRow,
                     'headers' => array_values($columnMap),
                     'rows' => $rows,
                 ];
             }
-        } finally {
-            $spreadsheet->disconnectWorksheets();
+        } catch (PopulationImportException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            throw new PopulationImportException('File Excel rusak, berpassword, atau format aslinya tidak sesuai ekstensi.', previous: $exception);
         }
 
         throw new PopulationImportException('Header data tidak ditemukan. Minimal sertakan kolom no_kk, nik, dan nama_lengkap.');
+    }
+
+    /** @return array<string, string> Sheet title => internal XLSX path */
+    private function xlsxWorksheetTargets(string $path): array
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            throw new PopulationImportException('Arsip Excel tidak dapat dibaca. Simpan ulang sebagai XLSX tanpa password.');
+        }
+
+        try {
+            $workbookXml = $zip->getFromName('xl/workbook.xml');
+            $relationshipsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+            if (! is_string($workbookXml) || ! is_string($relationshipsXml)) {
+                throw new PopulationImportException('Struktur XLSX tidak lengkap. Simpan ulang file melalui Excel atau LibreOffice.');
+            }
+
+            $workbook = @simplexml_load_string($workbookXml);
+            $relationships = @simplexml_load_string($relationshipsXml);
+            if ($workbook === false || $relationships === false) {
+                throw new PopulationImportException('Struktur XLSX tidak dapat dibaca. Simpan ulang file melalui Excel atau LibreOffice.');
+            }
+
+            $relationshipNamespace = 'http://schemas.openxmlformats.org/package/2006/relationships';
+            $documentRelationshipNamespace = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+            $targets = [];
+            foreach ($relationships->children($relationshipNamespace)->Relationship as $relationship) {
+                $attributes = $relationship->attributes();
+                if ((string) ($attributes['TargetMode'] ?? '') !== 'External') {
+                    $targets[(string) $attributes['Id']] = (string) $attributes['Target'];
+                }
+            }
+
+            $sheets = [];
+            foreach ($workbook->children('http://schemas.openxmlformats.org/spreadsheetml/2006/main')->sheets->sheet as $sheet) {
+                $attributes = $sheet->attributes();
+                $relationshipId = (string) $sheet->attributes($documentRelationshipNamespace)['id'];
+                $target = $targets[$relationshipId] ?? null;
+                if ($target === null) {
+                    continue;
+                }
+                $target = str_replace('\\', '/', $target);
+                $target = str_starts_with($target, '/') ? ltrim($target, '/') : 'xl/'.$target;
+                if (str_starts_with($target, 'xl/worksheets/')) {
+                    $sheets[(string) $attributes['name']] = $target;
+                }
+            }
+
+            return $sheets;
+        } finally {
+            $zip->close();
+        }
+    }
+
+    /**
+     * Reads XLSX XML as a stream to find only row ranges with actual values/formulas.
+     * It deliberately ignores blank cells which exist solely because of Excel formatting.
+     *
+     * @return array<int, int>
+     */
+    private function xlsxContentChunkStarts(string $path, string $sheetTarget, int $headerRow): array
+    {
+        $reader = new \XMLReader();
+        $source = 'zip://'.str_replace('\\', '/', $path).'#'.$sheetTarget;
+        if (! $reader->open($source, null, LIBXML_NONET | LIBXML_COMPACT)) {
+            throw new PopulationImportException('Sheet Data tidak dapat dibaca. Simpan ulang file Excel lalu coba kembali.');
+        }
+
+        $starts = [];
+        $dataRows = 0;
+        try {
+            while ($reader->read()) {
+                if ($reader->nodeType !== \XMLReader::ELEMENT || $reader->localName !== 'c') {
+                    continue;
+                }
+
+                $coordinate = $reader->getAttribute('r');
+                if (! is_string($coordinate) || preg_match('/^[A-Z]+(\d+)$/i', $coordinate, $match) !== 1) {
+                    continue;
+                }
+                $rowNumber = (int) $match[1];
+                if ($rowNumber <= $headerRow) {
+                    continue;
+                }
+
+                $cellXml = $reader->readOuterXML();
+                if (! $this->xlsxCellHasValue($cellXml)) {
+                    continue;
+                }
+
+                if (! isset($starts[$rowNumber])) {
+                    $dataRows++;
+                    if ($dataRows > self::MAX_ROWS) {
+                        throw new PopulationImportException('File melebihi batas 6.000 baris data. Pecah file menjadi beberapa bagian.');
+                    }
+                    $starts[$rowNumber] = (intdiv($rowNumber - 1, self::CHUNK_ROWS) * self::CHUNK_ROWS) + 1;
+                }
+            }
+        } finally {
+            $reader->close();
+        }
+
+        return array_values(array_unique(array_values($starts)));
+    }
+
+    private function xlsxCellHasValue(string $cellXml): bool
+    {
+        return preg_match('/<(?:[A-Za-z_][\w.-]*:)?(?:v|f|is)\b/i', $cellXml) === 1;
+    }
+
+    /** @return array<int, int> */
+    private function legacyChunkStarts(int $highestRow, int $headerRow): array
+    {
+        if ($highestRow - $headerRow > 50_000) {
+            throw new PopulationImportException('Area file XLS terlalu besar untuk diperiksa dengan aman. Simpan sebagai XLSX atau CSV lalu coba kembali.');
+        }
+
+        return range($headerRow + 1, $highestRow, self::CHUNK_ROWS);
+    }
+
+    private function readFilter(int $start, int $end, ?array $columns = null): IReadFilter
+    {
+        $allowed = $columns === null ? range(1, self::MAX_COLUMNS) : $columns;
+
+        return new class($start, $end, $allowed) implements IReadFilter {
+            public function __construct(private int $start, private int $end, private array $columns) {}
+
+            public function readCell($columnAddress, $row, $worksheetName = ''): bool
+            {
+                return $row >= $this->start && $row <= $this->end
+                    && in_array(Coordinate::columnIndexFromString($columnAddress), $this->columns, true);
+            }
+        };
+    }
+
+    private function checkArchiveSize(string $path): void
+    {
+        if (file_get_contents($path, false, null, 0, 2) !== 'PK') {
+            return;
+        }
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            throw new PopulationImportException('Arsip Excel tidak dapat dibaca. Simpan ulang sebagai XLSX tanpa password.');
+        }
+        try {
+            $total = 0;
+            if ($zip->numFiles > 256) {
+                throw new PopulationImportException('Workbook terlalu kompleks. Salin hanya data penduduk ke template baru.');
+            }
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $entry = $zip->statIndex($index);
+                $total += $entry['size'];
+                if ($entry['size'] > 8 * 1024 * 1024 || $total > 24 * 1024 * 1024) {
+                    throw new PopulationImportException('Isi Excel setelah dibuka terlalu besar untuk diproses dengan aman. Hapus sheet/gambar/format yang tidak diperlukan, pecah file, atau gunakan CSV.');
+                }
+            }
+        } finally {
+            $zip->close();
+        }
     }
 
     /** @return array{0: int, 1: array<int, string>} */
@@ -227,7 +435,8 @@ class PopulationImportParser
         for ($row = 1; $row <= $scanTo; $row++) {
             $values = [];
             for ($column = 1; $column <= $highestColumn; $column++) {
-                $values[$column] = $worksheet->getCell([$column, $row])->getValue();
+                $values[$column] = $worksheet->cellExists([$column, $row])
+                    ? $worksheet->getCell([$column, $row])->getValue() : null;
             }
             $map = $this->mapHeaders($values);
             if (count($map) > count($bestMap)) {
@@ -242,7 +451,8 @@ class PopulationImportParser
 
         $headerValues = [];
         for ($column = 1; $column <= $highestColumn; $column++) {
-            $headerValues[] = $worksheet->getCell([$column, $bestRow])->getValue();
+            $headerValues[] = $worksheet->cellExists([$column, $bestRow])
+                ? $worksheet->getCell([$column, $bestRow])->getValue() : null;
         }
         $duplicates = $this->duplicateCanonicalHeaders($headerValues);
         if ($duplicates !== []) {

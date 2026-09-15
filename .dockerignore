@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+vendor
+node_modules
+bootstrap/cache/*.php
+storage/logs/*
+storage/framework/views/*
+storage/framework/testing/*
+template-kependudukan-*.xlsx
+laporan-validasi-kependudukan.csv
+*.sql
+log-render.md
+deploylog.md

@@ -26,3 +26,8 @@ Thumbs.db
 env2.example
 .env.example
 deploylog.md
+.agents/
+agent-history.md
+template-kependudukan-berhasil.xlsx
+template-kependudukan-gagal.xlsx
+skills-lock.json

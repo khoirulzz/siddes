@@ -11,6 +11,25 @@ class PopulationAdminUiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_template_uses_column_formats_without_thousands_of_empty_cells(): void
+    {
+        $controller = app(\App\Http\Controllers\Admin\PopulationImportController::class);
+        $method = new \ReflectionMethod($controller, 'buildTemplateWorkbook');
+        $book = $method->invoke($controller);
+        try {
+            $sheet = $book->getSheetByName('Data');
+            $this->assertLessThan(100, count($sheet->getCellCollection()->getCoordinates()));
+            $this->assertSame('@', $sheet->getCell('N6000')->getStyle()->getNumberFormat()->getFormatCode());
+            $this->assertSame('@', $sheet->getCell('A6000')->getStyle()->getNumberFormat()->getFormatCode());
+            $this->assertSame('dd-mm-yyyy', $sheet->getCell('R6000')->getStyle()->getNumberFormat()->getFormatCode());
+            $this->assertSame('A2', $sheet->getFreezePane());
+            $this->assertSame('A1:AB6001', $sheet->getAutoFilter()->getRange());
+            $this->assertSame('G2:G6001', $sheet->getCell('G2')->getDataValidation()->getSqref());
+        } finally {
+            $book->disconnectWorksheets();
+        }
+    }
+
     public function test_population_index_defaults_to_household_view(): void
     {
         $user = User::factory()->create(['role' => 'admin']);

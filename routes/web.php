@@ -148,8 +148,10 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
     });
 
     Route::post('population-records/import/preview', [PopulationImportController::class, 'preview'])
+        ->middleware(\App\Http\Middleware\SerializePopulationImport::class)
         ->name('population-records.import.preview');
     Route::post('population-records/import', [PopulationImportController::class, 'store'])
+        ->middleware(\App\Http\Middleware\SerializePopulationImport::class)
         ->name('population-records.import');
     Route::get('population-records/template/download', [PopulationImportController::class, 'template'])
         ->name('population-records.template');

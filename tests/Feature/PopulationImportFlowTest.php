@@ -14,6 +14,26 @@ class PopulationImportFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_import_busy_lock_rejects_another_preview_and_releases_after_validation_error(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $lock = \Illuminate\Support\Facades\Cache::store('file')->lock('population-import-processing', 600);
+        $this->assertTrue($lock->get());
+        try {
+            $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'))
+                ->assertStatus(429)->assertHeader('Retry-After', '30');
+        } finally {
+            $lock->release();
+        }
+        $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'))->assertStatus(422);
+        $nextLock = \Illuminate\Support\Facades\Cache::store('file')->lock('population-import-processing', 600);
+        try {
+            $this->assertTrue($nextLock->get());
+        } finally {
+            $nextLock->release();
+        }
+    }
+
     public function test_five_valid_rows_can_be_previewed_and_committed_without_deleting_other_data(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
@@ -23,7 +43,6 @@ class PopulationImportFlowTest extends TestCase
         $preview = $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), [
             'file' => $this->upload($contents),
         ]);
-
         $preview->assertOk()
             ->assertJsonPath('preview.summary.total', 5)
             ->assertJsonPath('preview.summary.valid', 5)
@@ -45,16 +64,50 @@ class PopulationImportFlowTest extends TestCase
         $this->assertDatabaseCount('population_import_runs', 1);
     }
 
+    public function test_xlsx_preview_commit_and_reimport_preserve_five_residents(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $book->getActiveSheet()->setTitle('Data');
+        foreach (explode("\n", trim($this->validCsv(5))) as $index => $line) {
+            foreach (str_getcsv($line, ';', '"', '\\') as $column => $value) {
+                $sheet->setCellValueExplicit([$column + 1, $index + 1], $value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            }
+        }
+        $sheet->getStyle('A2:A10001')->getNumberFormat()->setFormatCode('@');
+        $sheet->getStyle('N2:N10001')->getNumberFormat()->setFormatCode('@');
+        $path = tempnam(sys_get_temp_dir(), 'population-flow-xlsx-');
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($book))->save($path);
+        $book->disconnectWorksheets();
+        unset($sheet, $book);
+        gc_collect_cycles();
+        gc_mem_caches();
+        $upload = fn () => new UploadedFile($path, 'data.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+        try {
+            $preview = $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), ['file' => $upload()])
+                ->assertOk()->assertJsonPath('preview.summary.valid', 5);
+            $this->assertDatabaseCount('population_records', 0);
+            $this->actingAs($user)->postJson(route('dashboard.population-records.import'), [
+                'file' => $upload(), 'preview_token' => $preview->json('token'),
+            ])->assertOk()->assertJsonPath('result.residents_created', 5);
+            $this->assertDatabaseCount('population_records', 5);
+            $this->assertDatabaseCount('households', 1);
+            $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), ['file' => $upload()])
+                ->assertOk()->assertJsonPath('preview.summary.residents_unchanged', 5);
+        } finally {
+            unlink($path);
+        }
+    }
+
     public function test_preview_reports_specific_errors_and_commit_imports_only_valid_rows(): void
     {
         $user = User::factory()->create(['role' => 'operator']);
         $contents = $this->validCsv(2);
-        $contents .= "3326010101010001;Budi Santoso;Alamat;001;002;51164;Bojongireng;Desa Lambanggelun;Kecamatan Paninggaran;Kabupaten Pekalongan;Provinsi Jawa Tengah;3;Anak;3.326010101800003E+15;Rusak;Perempuan;Pekalongan;01/01/2010;Islam;SMA;Pelajar;Belum Kawin;WNI;;;;;O\n";
+        $contents .= "3326010101010001;Budi Santoso;Alamat Dusun;001;002;51164;Bojongireng;Desa Lambanggelun;Kecamatan Paninggaran;Kabupaten Pekalongan;Provinsi Jawa Tengah;3;Anak;3.326010101800003E+15;Rusak;Perempuan;Pekalongan;01/01/2010;Islam;SMA;Pelajar;Belum Kawin;WNI;;;;;O\n";
 
         $preview = $this->actingAs($user)->postJson(route('dashboard.population-records.import.preview'), [
             'file' => $this->upload($contents),
         ]);
-
         $preview->assertOk()
             ->assertJsonPath('preview.summary.valid', 2)
             ->assertJsonPath('preview.summary.invalid', 1)

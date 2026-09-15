@@ -6,6 +6,7 @@ use App\Exceptions\PopulationImportException;
 use App\Http\Controllers\Controller;
 use App\Models\PopulationImportRun;
 use App\Models\PopulationRecord;
+use App\Services\PopulationImportParser;
 use App\Services\PopulationImportService;
 use App\Support\PopulationImportSchema;
 use App\Support\PopulationImportToken;
@@ -30,6 +31,7 @@ class PopulationImportController extends Controller
 
     public function preview(Request $request): JsonResponse
     {
+        $started = microtime(true);
         $validated = $this->validateRequest($request);
         $file = $request->file('file');
 
@@ -48,15 +50,29 @@ class PopulationImportController extends Controller
                 'preview' => $this->importService->publicPreview($preview),
             ]);
         } catch (PopulationImportException $exception) {
+            if ($exception->getPrevious() !== null) {
+                Log::error('Population import workbook reader failed.', [
+                    'exception_class' => $exception->getPrevious()::class,
+                    'elapsed_ms' => (int) ((microtime(true) - $started) * 1000),
+                    'peak_memory_bytes' => memory_get_peak_usage(true),
+                ]);
+            }
+            if ($exception->getCode() === 507) {
+                Log::error('Population import preview stopped at memory budget.', [
+                    'elapsed_ms' => (int) ((microtime(true) - $started) * 1000),
+                    'peak_memory_bytes' => memory_get_peak_usage(true),
+                ]);
+            }
             return response()->json([
                 'message' => $exception->getMessage(),
                 'errors' => ['file' => [$exception->getMessage()]],
             ], 422);
         } catch (\Throwable $exception) {
-            Log::warning('Population import preview failed.', [
+            Log::error('Population import preview failed.', [
                 'user_id' => $request->user()?->id,
-                'filename' => $file?->getClientOriginalName(),
                 'exception_class' => $exception::class,
+                'elapsed_ms' => (int) ((microtime(true) - $started) * 1000),
+                'peak_memory_bytes' => memory_get_peak_usage(true),
             ]);
             return response()->json([
                 'message' => 'File gagal diproses. Pastikan file tidak rusak dan menggunakan template terbaru.',
@@ -204,8 +220,9 @@ class PopulationImportController extends Controller
         $dataSheet->setTitle('Data');
         $dataSheet->fromArray(PopulationImportSchema::COLUMNS, null, 'A1');
         $lastColumn = Coordinate::stringFromColumnIndex(count(PopulationImportSchema::COLUMNS));
+        $lastDataRow = PopulationImportParser::MAX_ROWS + 1;
         $dataSheet->freezePane('A2');
-        $dataSheet->setAutoFilter("A1:{$lastColumn}10001");
+        $dataSheet->setAutoFilter("A1:{$lastColumn}{$lastDataRow}");
         $dataSheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0F4C81']],
@@ -224,16 +241,17 @@ class PopulationImportController extends Controller
         }
 
         foreach (['A', 'D', 'E', 'F', 'N', 'X', 'Y'] as $column) {
-            $dataSheet->getStyle("{$column}2:{$column}10001")->getNumberFormat()->setFormatCode('@');
+            // Column defaults preserve text entry without creating 70,000 blank cells.
+            $dataSheet->getStyle("{$column}:{$column}")->getNumberFormat()->setFormatCode('@');
         }
-        $dataSheet->getStyle('R2:R10001')->getNumberFormat()->setFormatCode('dd-mm-yyyy');
+        $dataSheet->getStyle('R:R')->getNumberFormat()->setFormatCode('dd-mm-yyyy');
 
-        $this->addListValidation($dataSheet, 'G2:G10001', PopulationRecord::HAMLETS);
-        $this->addListValidation($dataSheet, 'M2:M10001', PopulationRecord::STATUS_HUBUNGAN_OPTIONS);
-        $this->addListValidation($dataSheet, 'P2:P10001', ['Laki-laki', 'Perempuan']);
-        $this->addListValidation($dataSheet, 'V2:V10001', PopulationRecord::STATUS_PERKAWINAN_OPTIONS);
-        $this->addListValidation($dataSheet, 'W2:W10001', ['WNI', 'WNA']);
-        $this->addListValidation($dataSheet, 'AB2:AB10001', [...PopulationRecord::GOLONGAN_DARAH_OPTIONS, 'Tidak Tahu']);
+        $this->addListValidation($dataSheet, "G2:G{$lastDataRow}", PopulationRecord::HAMLETS);
+        $this->addListValidation($dataSheet, "M2:M{$lastDataRow}", PopulationRecord::STATUS_HUBUNGAN_OPTIONS);
+        $this->addListValidation($dataSheet, "P2:P{$lastDataRow}", ['Laki-laki', 'Perempuan']);
+        $this->addListValidation($dataSheet, "V2:V{$lastDataRow}", PopulationRecord::STATUS_PERKAWINAN_OPTIONS);
+        $this->addListValidation($dataSheet, "W2:W{$lastDataRow}", ['WNI', 'WNA']);
+        $this->addListValidation($dataSheet, "AB2:AB{$lastDataRow}", [...PopulationRecord::GOLONGAN_DARAH_OPTIONS, 'Tidak Tahu']);
 
         $instructions = $spreadsheet->createSheet();
         $instructions->setTitle('Petunjuk');
@@ -248,11 +266,12 @@ class PopulationImportController extends Controller
             ['7.', 'Import bersifat merge dan tidak menghapus penduduk yang tidak tercantum di file.'],
             ['8.', 'Gunakan pratinjau dan perbaiki baris merah sebelum menekan Import.'],
             ['9.', 'Golongan darah, pendidikan, nama orang tua, alamat, kode pos, dan dokumen boleh diisi Tidak Tahu, N/A, atau tanda - bila belum diketahui; data lama tetap dipertahankan. WNA tetap wajib memiliki paspor atau KITAS/KITAP. Golongan darah di luar A/B/AB/O menjadi catatan.'],
+            ['10.', 'Template menyediakan hingga 6.000 baris data. Baris kosong dan format kosong tidak perlu dihapus sebelum pemeriksaan file.'],
         ], null, 'A1');
         $instructions->getStyle('A1:B1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('0F4C81');
         $instructions->getColumnDimension('A')->setWidth(8);
         $instructions->getColumnDimension('B')->setWidth(105);
-        $instructions->getStyle('A1:B10')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+        $instructions->getStyle('A1:B11')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
         $spreadsheet->setActiveSheetIndex(0);
 
         return $spreadsheet;

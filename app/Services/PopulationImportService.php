@@ -29,11 +29,14 @@ class PopulationImportService
     /** @return array<string, mixed> */
     public function preview(UploadedFile $file, ?string $hamletOverride = null): array
     {
+        PopulationImportMemory::begin();
         $parsed = $this->parser->parse($file);
         $rows = array_map(
             fn (array $row): array => $this->normalizeRow($row, $hamletOverride),
             $parsed['rows'],
         );
+        unset($parsed['rows']);
+        PopulationImportMemory::check();
 
         $niks = collect($rows)->pluck('values.nik')->filter()->unique()->values();
         $noKks = collect($rows)->pluck('values.no_kk')->filter()->unique()->values();
@@ -42,6 +45,7 @@ class PopulationImportService
         $households = $this->loadHouseholds($noKks, withMembers: true);
 
         foreach ($rows as &$row) {
+            PopulationImportMemory::check();
             $resident = $row['values']['nik'] ? $residents->get($row['values']['nik']) : null;
             $household = $row['values']['no_kk'] ? $households->get($row['values']['no_kk']) : null;
             $this->validateAndHydrateRow($row, $resident, $household, $file->getClientOriginalName());
@@ -56,6 +60,8 @@ class PopulationImportService
         unset($row);
 
         $summary = $this->buildSummary($rows, $households);
+        unset($residents, $households);
+        PopulationImportMemory::check();
         $fingerprint = hash('sha256', json_encode(array_map(static fn (array $row): array => [
             'row' => $row['row'],
             'values' => $row['values'],
@@ -575,6 +581,7 @@ class PopulationImportService
     {
         $residents = collect();
         foreach ($niks->chunk(500) as $chunk) {
+            PopulationImportMemory::check();
             $query = PopulationRecord::query();
             if ($withMembership) {
                 $query->with(['currentMembership.household']);
@@ -591,6 +598,7 @@ class PopulationImportService
     {
         $households = collect();
         foreach ($noKks->chunk(500) as $chunk) {
+            PopulationImportMemory::check();
             $query = Household::query();
             if ($withMembers) {
                 $query->with(['currentMembers.resident']);

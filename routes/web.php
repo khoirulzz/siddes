@@ -167,7 +167,12 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
     Route::delete('pbb-tax-objects/destroy-by-year', [PbbTaxObjectController::class, 'destroyByYear'])
         ->name('pbb-tax-objects.destroy-year');
     Route::resource('pbb-tax-objects', PbbTaxObjectController::class);
-    Route::post('pbb-tax-objects/import', [PbbTaxObjectController::class, 'import'])->name('pbb-tax-objects.import');
+    Route::post('pbb-tax-objects/import/preview', [PbbTaxObjectController::class, 'previewImport'])
+        ->middleware(\App\Http\Middleware\SerializePbbImport::class)
+        ->name('pbb-tax-objects.import.preview');
+    Route::post('pbb-tax-objects/import/commit', [PbbTaxObjectController::class, 'commitImport'])
+        ->middleware(\App\Http\Middleware\SerializePbbImport::class)
+        ->name('pbb-tax-objects.import.commit');
     Route::get('pbb-tax-objects/template/download', [PbbTaxObjectController::class, 'template'])
         ->name('pbb-tax-objects.template');
 

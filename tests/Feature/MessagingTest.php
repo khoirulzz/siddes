@@ -89,6 +89,38 @@ class MessagingTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_multiline_template_preview_and_html_draft_have_identical_payloads(): void
+    {
+        $ids = ['c53dfbb3-58d3-4e92-bf85-32f39f317064', '7f04a191-7eef-4cef-9970-7e4c7d7fa72e'];
+        $previewPayload = null;
+        $createPayload = null;
+        Http::fake(function ($request) use (&$previewPayload, &$createPayload, $ids) {
+            if (str_ends_with($request->url(), '/preview')) {
+                $previewPayload = $request->data();
+                return Http::response(['previewToken' => 'signed', 'recipientCount' => 2, 'samples' => []]);
+            }
+            $createPayload = $request->data();
+            unset($createPayload['previewToken']);
+            // JSON object field order is not meaningful; keep value types strict.
+            ksort($previewPayload);
+            ksort($createPayload);
+            return $createPayload === $previewPayload
+                ? Http::response(['id' => $ids[0]], 201)
+                : Http::response(['message' => 'Isi atau penerima berubah. Tinjau campaign kembali.'], 409);
+        });
+        $payload = ['name' => 'Informasi desa', 'content' => "Halo {{nama}},\n\nInformasi terbaru:\nhttps://desa.test", 'templateId' => $ids[0], 'contactIds' => $ids, 'batchSize' => 10, 'useBanner' => false, 'useInteractiveCta' => false];
+        $this->actingAs($this->user('operator'))->postJson('/dashboard/messaging/campaigns/preview', $payload)->assertOk();
+        // Native HTML textarea submission uses CRLF, unlike the JSON preview.
+        $payload['content'] = str_replace("\n", "\r\n", $payload['content']);
+        $payload['contactIds'] = array_reverse($ids);
+        $payload['batchSize'] = '10';
+        unset($payload['useBanner'], $payload['useInteractiveCta']);
+        $response = $this->from('/dashboard/messaging/campaigns/create')->post('/dashboard/messaging/campaigns', [...$payload, 'request_uuid' => '008efbf6-447f-4e6f-bad9-2156f592d86a', 'previewToken' => 'signed']);
+        $this->assertSame($previewPayload, $createPayload);
+        $response->assertRedirect('/dashboard/messaging/campaigns/'.$ids[0])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('messaging_submissions', ['request_uuid' => '008efbf6-447f-4e6f-bad9-2156f592d86a', 'status' => 'CONFIRMED']);
+    }
+
     public function test_all_module_views_render_without_exposing_keys(): void
     {
         $id = 'c53dfbb3-58d3-4e92-bf85-32f39f317064';
@@ -121,5 +153,40 @@ class MessagingTest extends TestCase
         $offline = false;
         $this->get('/dashboard/messaging/campaigns/reconcile/'.$key)->assertRedirect('/dashboard/messaging/campaigns/'.$id);
         $this->assertDatabaseHas('messaging_submissions', ['request_uuid' => $key, 'status' => 'CONFIRMED']);
+    }
+
+    public function test_message_excerpt_is_collapsed_and_full_content_is_escaped(): void
+    {
+        $content = str_repeat('Informasi untuk warga desa. ', 10)."\n<script>alert('x')</script>";
+        $html = view('dashboard.messaging.message-content', ['text' => $content])->render();
+        $this->assertStringContainsString('data-message-detail', $html);
+        $this->assertStringNotContainsString(' open', $html);
+        $this->assertStringContainsString('Informasi untuk warga desa.', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+        $this->assertStringNotContainsString('<script>', $html);
+        preg_match('/<summary[^>]*><span>(.*?)<\/span>/s', $html, $excerpt);
+        $this->assertLessThanOrEqual(113, mb_strlen(html_entity_decode($excerpt[1])));
+    }
+
+    public function test_populated_history_and_templates_use_expandable_messages(): void
+    {
+        $id = 'c53dfbb3-58d3-4e92-bf85-32f39f317064';
+        Http::fake(function ($request) use ($id) {
+            $item = str_contains($request->url(), '/templates')
+                ? ['id' => $id, 'name' => 'Informasi', 'content' => "Halo {{nama}}\nInformasi desa", 'isActive' => true]
+                : ['id' => $id, 'recipient' => '6281234567890', 'renderedMessage' => "Halo warga\nInformasi desa", 'status' => 'SENT', 'deliveryStatus' => 'PENDING', 'attempts' => 1, 'maxAttempts' => 3, 'errorMessage' => null];
+            return Http::response(['items' => [$item], 'pagination' => ['page' => 1, 'perPage' => 20, 'total' => 1, 'lastPage' => 1]]);
+        });
+        $this->actingAs($this->user('operator'));
+        foreach (['/history', '/templates'] as $path) $this->get('/dashboard/messaging'.$path)->assertOk()->assertSee('data-message-detail', false)->assertSee('messaging-content-cell', false);
+    }
+
+    public function test_rejected_preview_preserves_form_and_can_be_reviewed_again(): void
+    {
+        Http::fake(['messaging.test/*' => Http::response(['message' => 'Isi atau penerima berubah. Tinjau campaign kembali.'], 409)]);
+        $payload = ['request_uuid' => '7f04a191-7eef-4cef-9970-7e4c7d7fa72e', 'name' => 'Informasi', 'content' => "Pesan baru\nBaris kedua", 'contactIds' => ['c53dfbb3-58d3-4e92-bf85-32f39f317064'], 'batchSize' => 10, 'previewToken' => 'old'];
+        $this->actingAs($this->user('operator'))->from('/dashboard/messaging/campaigns/create')->post('/dashboard/messaging/campaigns', $payload)
+            ->assertRedirect('/dashboard/messaging/campaigns/create')->assertSessionHas('error')->assertSessionHasInput('content', $payload['content'])->assertSessionHasInput('contactIds', $payload['contactIds']);
+        $this->assertDatabaseHas('messaging_submissions', ['request_uuid' => $payload['request_uuid'], 'status' => 'REJECTED', 'campaign_id' => null]);
     }
 }

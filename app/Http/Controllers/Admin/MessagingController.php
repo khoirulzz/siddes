@@ -87,6 +87,12 @@ class MessagingController extends Controller
 
     private function campaignPayload(Request $request): array
     {
+        // JSON preview uses LF; native HTML textarea submission uses CRLF.
+        // Canonicalize before validation, ledger hashing and backend forwarding.
+        // Keep the backend's content/recipient snapshot validation intact.
+        if (is_string($request->input('content'))) {
+            $request->merge(['content' => str_replace(["\r\n", "\r"], "\n", $request->input('content'))]);
+        }
         $data = $request->validate(['name' => 'required|string|min:2|max:120', 'content' => 'required|string|max:4000', 'templateId' => 'nullable|uuid', 'contactIds' => 'required|array|min:1|max:1000', 'contactIds.*' => 'required|uuid|distinct', 'batchSize' => 'required|integer|min:1|max:50', 'useBanner' => 'nullable|boolean', 'useInteractiveCta' => 'nullable|boolean']);
         $data['batchSize'] = (int) $data['batchSize'];
         $data['useBanner'] = $request->boolean('useBanner');

@@ -30,6 +30,14 @@ Cron tetap POST setiap 10 menit, header `Authorization: Bearer <INTERNAL_DISPATC
 
 ## Operasional dan kegagalan
 
+### Perbaikan preview dan antarmuka (2026-09-17)
+
+- Isi campaign dinormalisasi dari CRLF/CR ke LF di adapter Laravel, sebelum validasi, hash ledger dan forwarding. Preview JSON dan submit textarea HTML kini memakai isi identik. Spasi, baris kosong, token bertanda tangan, perubahan penerima/consent dan idempotensi tetap diperiksa; validasi snapshot backend tidak dilewati. Tidak membutuhkan migration atau redeploy WAPBB.
+- Kontak/template memakai workspace responsif dengan form terpisah; checkbox memiliki ukuran tetap dan nama/nomor penerima dipisahkan. Riwayat, template dan isi campaign memakai ringkasan 110 karakter yang dapat dibuka/tutup melalui elemen details native. Isi tetap di-escape Blade, bukan HTML pesan.
+- Template composer dimuat ketika picker dibuka, pilihan penerima tetap tersimpan lintas halaman/pencarian, dan hanya perubahan payload yang membatalkan preview. Loading, hitungan karakter, penerima kosong dan kegagalan daftar ditampilkan secara eksplisit.
+- Refresh aktif ditahan ketika operator sedang berinteraksi, submitting atau membuka detail pesan. Tidak menambahkan request per ekspansi pesan, library UI, upload atau perubahan queue/dispatcher.
+- Jika key pernah ditempelkan ke chat atau file example, perlakukan sebagai terekspos: buat pasangan baru di environment Render WAPBB/SIDDes. Example harus tetap tanpa key nyata; jangan mengganti encryption key session sebagai bagian dari rotasi key integrasi.
+
 - Semua informasi memakai satu daftar kontak (nama perwakilan rumah dan nomor WhatsApp). Tidak terkait KK, NOP, pembayaran, multi-account atau multi-tenant.
 - Kontak opt-out/nonaktif/nomor berubah sejak snapshot tidak direlay. Import CSV/XLSX maksimal 5 MB/1.000 baris; parser XLSX dimuat hanya saat digunakan. Persetujuan kosong berarti opt-out. Server memvalidasi ulang.
 - Text-only default. Banner opsional adalah URL konfigurasi yang disnapshot ketika draft dibuat; bukan upload atau URL gambar bebas. Caption memakai isi pesan final.

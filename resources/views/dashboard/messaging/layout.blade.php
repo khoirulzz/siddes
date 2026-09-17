@@ -6,7 +6,7 @@
 <div class="messaging-module" data-messaging-module>
     <nav class="messaging-tabs" aria-label="Menu pesan WhatsApp">
         @foreach(['index'=>'Ringkasan','contacts'=>'Kontak','templates'=>'Template','campaigns'=>'Campaign','history'=>'Riwayat'] as $key=>$label)
-        <a class="{{ request()->routeIs('dashboard.messaging.'.$key, 'dashboard.messaging.'.$key.'.*') ? 'active' : '' }}" href="{{ route('dashboard.messaging.'.$key) }}">{{ $label }}</a>
+        <a class="{{ request()->routeIs('dashboard.messaging.'.$key, 'dashboard.messaging.'.$key.'.*') ? 'active' : '' }}" @if(request()->routeIs('dashboard.messaging.'.$key, 'dashboard.messaging.'.$key.'.*')) aria-current="page" @endif href="{{ route('dashboard.messaging.'.$key) }}">{{ $label }}</a>
         @endforeach
         @if(auth()->user()->isAdmin())<a class="{{ request()->routeIs('dashboard.messaging.connection*') ? 'active' : '' }}" href="{{ route('dashboard.messaging.connection') }}">Koneksi</a>@endif
     </nav>

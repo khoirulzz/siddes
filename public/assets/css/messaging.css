@@ -83,11 +83,47 @@
 .messaging-module .table-pagination { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
 .messaging-module [data-import-preview] { max-height: 300px; overflow: auto; margin: 1rem 0; }
 .messaging-empty { padding: 1rem; color: var(--muted, #64748b); text-align: center; }
+.messaging-connection-hero { display: flex; align-items: center; gap: 1.5rem; padding: 1.75rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
+.messaging-connection-hero--ready { background: #f0fdf4; border-color: #bbf7d0; }
+.messaging-connection-hero--pairing { background: #eff6ff; border-color: #bfdbfe; }
+.messaging-connection-hero--warning { background: #fffbeb; border-color: #fde68a; }
+.messaging-connection-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 96px; height: 96px; flex: 0 0 96px; border-radius: 50%; color: #64748b; background: #e2e8f0; }
+.messaging-connection-icon--ready { color: #15803d; background: #dcfce7; }
+.messaging-connection-icon--pairing { color: #2563eb; background: #dbeafe; }
+.messaging-connection-icon--warning { color: #b45309; background: #fef3c7; }
+.messaging-connection-symbol { width: 58px; height: 58px; }
+.messaging-connection-mark { position: absolute; right: -2px; bottom: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: currentColor; border: 3px solid #fff; border-radius: 50%; }
+.messaging-connection-mark svg { width: 19px; height: 19px; stroke: #fff; }
+.messaging-connection-copy { min-width: 0; }
+.messaging-module .messaging-connection-copy h3 { margin: 0 0 .35rem; font-size: 1.3rem; letter-spacing: -.02em; }
+.messaging-connection-copy p { margin: 0; color: var(--muted, #64748b); max-width: 540px; }
+.messaging-connection-phone { display: inline-block; max-width: 100%; margin-top: .75rem; padding: .35rem .7rem; background: #fff; border: 1px solid #dbe5df; border-radius: 8px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.messaging-connection-notice { margin-top: 1rem; padding: .75rem 1rem; border-left: 3px solid #d97706; background: #fffbeb; border-radius: 6px; line-height: 1.6; font-size: .88rem; }
+.messaging-connection-footer { display: grid; gap: .75rem; padding-top: 1.25rem; margin-top: 1.25rem; border-top: 1px solid var(--messaging-line); }
+.messaging-connection-footer small { line-height: 1.6; }
+.messaging-pairing { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); align-items: center; gap: 2rem; margin-top: 1.5rem; }
+.messaging-pairing-code { padding: 1rem; border: 1px solid var(--messaging-line); border-radius: 12px; background: #fff; text-align: center; }
+.messaging-pairing-code .messaging-qr { margin: 0 auto .75rem; }
+.messaging-pairing-code span { font-size: .8rem; line-height: 1.5; }
+.messaging-pairing-steps { display: grid; gap: .9rem; padding-left: 1.2rem; line-height: 1.6; font-size: .9rem; }
+.messaging-pairing-steps li { padding-left: .4rem; }
+.messaging-connection-compact { display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--messaging-line); border-radius: 10px; margin-top: 1rem; }
+.messaging-connection-compact .messaging-connection-icon { width: 54px; height: 54px; flex-basis: 54px; }
+.messaging-connection-compact .messaging-connection-symbol { width: 34px; height: 34px; }
+.messaging-connection-compact .messaging-connection-mark { width: 23px; height: 23px; border-width: 2px; }
+.messaging-connection-compact .messaging-connection-mark svg { width: 14px; height: 14px; }
+.messaging-connection-compact p { margin: .25rem 0 0; font-size: .85rem; }
 @media (max-width: 1100px) {
     .messaging-workspace { grid-template-columns: 1fr; }
     .messaging-workspace > aside { position: static; }
 }
 @media (max-width: 700px) {
+    .messaging-connection-hero { align-items: flex-start; gap: 1rem; padding: 1rem; }
+    .messaging-connection-hero .messaging-connection-icon { width: 68px; height: 68px; flex-basis: 68px; }
+    .messaging-connection-hero .messaging-connection-symbol { width: 43px; height: 43px; }
+    .messaging-module .messaging-connection-copy h3 { font-size: 1.05rem; }
+    .messaging-pairing { grid-template-columns: 1fr; gap: 1rem; }
+    .messaging-pairing-code { max-width: 280px; justify-self: center; }
     .messaging-compose-grid, .messaging-grid, .messaging-form [data-recipient-list] { grid-template-columns: 1fr; }
     .messaging-tabs { gap: .2rem; }
     .messaging-tabs a { padding: .5rem .65rem; font-size: .82rem; }

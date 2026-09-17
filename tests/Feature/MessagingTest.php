@@ -134,7 +134,8 @@ class MessagingTest extends TestCase
         });
         $this->actingAs($this->user('admin'));
         foreach (['', '/templates', '/campaigns', '/campaigns/create', '/campaigns/'.$id, '/history', '/connection'] as $path) {
-            $this->get('/dashboard/messaging'.$path)->assertOk()->assertDontSee(str_repeat('a', 32));
+            $response = $this->get('/dashboard/messaging'.$path)->assertOk()->assertDontSee(str_repeat('a', 32));
+            foreach (['dispatcher', 'instance API', 'Request yang perlu diperiksa', 'Session tersimpan'] as $label) $response->assertDontSee($label);
         }
     }
 
@@ -188,5 +189,34 @@ class MessagingTest extends TestCase
         $this->actingAs($this->user('operator'))->from('/dashboard/messaging/campaigns/create')->post('/dashboard/messaging/campaigns', $payload)
             ->assertRedirect('/dashboard/messaging/campaigns/create')->assertSessionHas('error')->assertSessionHasInput('content', $payload['content'])->assertSessionHasInput('contactIds', $payload['contactIds']);
         $this->assertDatabaseHas('messaging_submissions', ['request_uuid' => $payload['request_uuid'], 'status' => 'REJECTED', 'campaign_id' => null]);
+    }
+
+    public function test_connection_visual_matches_each_state_and_hides_internal_labels(): void
+    {
+        $state = [];
+        Http::fake(function () use (&$state) { return Http::response($state); });
+        $this->actingAs($this->user('admin'));
+        foreach ([
+            'CONNECTED' => ['ready', 'WhatsApp terhubung'],
+            'CONNECTING' => ['pairing', 'Menghubungkan WhatsApp'],
+            'QR_READY' => ['pairing', 'Pindai kode QR'],
+            'DISCONNECTED' => ['offline', 'WhatsApp belum terhubung'],
+            'NEEDS_REAUTH' => ['warning', 'Hubungkan kembali WhatsApp'],
+        ] as $status => [$tone, $title]) {
+            $state = ['status' => $status, 'phoneNumber' => '6281234567890', 'authPersistence' => 'healthy', 'reason' => 'SESSION_IN_USE', 'qrDataUrl' => $status === 'QR_READY' ? 'data:image/png;base64,test' : null];
+            $response = $this->get('/dashboard/messaging/connection')->assertOk()->assertSee($title)->assertSee('data-connection-state="'.$tone.'"', false)->assertSee('+6281234567890');
+            foreach (['SESSION_IN_USE', 'instance API', 'database produksi', 'Session tersimpan'] as $label) $response->assertDontSee($label);
+            if ($status === 'QR_READY') $response->assertSee('Tautkan akun dalam tiga langkah')->assertSee('data-refresh-seconds="5"', false);
+            if ($status === 'CONNECTED') $response->assertSee('messaging-connection-icon--ready', false)->assertSee('Buat campaign');
+        }
+    }
+
+    public function test_degraded_and_unknown_connection_never_show_ready_check(): void
+    {
+        $state = ['status' => 'CONNECTED', 'authPersistence' => 'degraded', 'reason' => 'AUTH_PERSISTENCE_FAILED'];
+        Http::fake(function () use (&$state) { return Http::response($state); });
+        $this->actingAs($this->user('admin'))->get('/dashboard/messaging/connection')->assertOk()->assertSee('Koneksi perlu diperiksa')->assertSee('data-connection-state="warning"', false)->assertDontSee('messaging-connection-icon--ready', false)->assertDontSee('AUTH_PERSISTENCE_FAILED');
+        $state = ['status' => 'UNRECOGNIZED', 'reason' => 'INTERNAL_DATABASE_ERROR'];
+        $this->get('/dashboard/messaging/connection')->assertOk()->assertSee('Status belum tersedia')->assertDontSee('messaging-connection-icon--ready', false)->assertDontSee('INTERNAL_DATABASE_ERROR');
     }
 }

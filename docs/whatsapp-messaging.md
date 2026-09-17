@@ -32,6 +32,10 @@ Cron tetap POST setiap 10 menit, header `Authorization: Bearer <INTERNAL_DISPATC
 
 ### Perbaikan preview dan antarmuka (2026-09-17)
 
+- Halaman koneksi dan ringkasan menggunakan indikator visual berbasis status aktual: centang hijau hanya untuk CONNECTED tanpa gangguan persistensi, indikator pairing untuk CONNECTING/QR_READY, serta peringatan untuk reauth/degraded. Status tidak dikenal tidak dianggap terhubung. QR hanya tampil saat siap pairing, dengan panduan penautan tiga langkah.
+- Label internal (dispatcher, instance API, session, request, opt-in/out dan kode reason mentah) tidak ditampilkan sebagai panduan operator. Peringatan risiko pengiriman ganda, consent, draft belum dikirim dan gangguan layanan tetap ada dalam bahasa operasional. Ketentuan satu instance/session tetap berlaku dan dijelaskan di dokumentasi, bukan di halaman operasional.
+- Import menerima header `Persetujuan` selain `Opt In` untuk kompatibilitas. Nilai kosong tetap tidak memberikan consent. Tidak mengubah queue, izin, koneksi backend atau mekanisme preview/idempotensi.
+
 - Isi campaign dinormalisasi dari CRLF/CR ke LF di adapter Laravel, sebelum validasi, hash ledger dan forwarding. Preview JSON dan submit textarea HTML kini memakai isi identik. Spasi, baris kosong, token bertanda tangan, perubahan penerima/consent dan idempotensi tetap diperiksa; validasi snapshot backend tidak dilewati. Tidak membutuhkan migration atau redeploy WAPBB.
 - Kontak/template memakai workspace responsif dengan form terpisah; checkbox memiliki ukuran tetap dan nama/nomor penerima dipisahkan. Riwayat, template dan isi campaign memakai ringkasan 110 karakter yang dapat dibuka/tutup melalui elemen details native. Isi tetap di-escape Blade, bukan HTML pesan.
 - Template composer dimuat ketika picker dibuka, pilihan penerima tetap tersimpan lintas halaman/pencarian, dan hanya perubahan payload yang membatalkan preview. Loading, hitungan karakter, penerima kosong dan kegagalan daftar ditampilkan secara eksplisit.

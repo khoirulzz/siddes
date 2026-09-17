@@ -3,7 +3,7 @@
 <div class="messaging-workspace">
     <section class="panel">
         <div class="toolbar"><div><h2>Template pesan</h2><p>Pesan tersimpan yang dapat disesuaikan saat membuat campaign.</p></div></div>
-        <form class="messaging-search" method="GET"><input type="search" name="search" value="{{ request('search') }}" placeholder="Cari template" aria-label="Cari template"><button class="btn btn-secondary">Cari</button>@if(request('search'))<a class="btn btn-secondary" href="{{ route('dashboard.messaging.templates') }}">Reset</a>@endif</form>
+        <form class="messaging-search" method="GET"><input type="search" name="search" value="{{ request('search') }}" placeholder="Cari template" aria-label="Cari template"><button class="btn btn-secondary">Cari</button>@if(request('search'))<a class="btn btn-secondary" href="{{ route('dashboard.messaging.templates') }}">Hapus filter</a>@endif</form>
         <div class="messaging-table"><table><thead><tr><th>Template</th><th>Isi pesan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
             @forelse($items as $item)
             <tr><td><strong>{{ $item['name'] }}</strong></td><td class="messaging-content-cell">@include('dashboard.messaging.message-content', ['text'=>$item['content']])</td><td><span class="messaging-status {{ $item['isActive'] ? 'messaging-status--ready' : '' }}">{{ $item['isActive'] ? 'Aktif' : 'Nonaktif' }}</span></td><td><div class="actions">

@@ -12,7 +12,7 @@ class MessagingService
         $base = config('messaging.base_url');
         $key = config($connectionAdmin ? 'messaging.admin_key' : 'messaging.operator_key');
         if (! config('messaging.enabled') || ! $base || strlen((string) $key) < 32) {
-            throw new MessagingException('Layanan pesan belum dikonfigurasi.');
+            throw new MessagingException('Layanan WhatsApp belum tersedia. Hubungi pengelola layanan.');
         }
         if ($connectionAdmin && ! auth()->user()?->isAdmin()) {
             throw new MessagingException('Pengelolaan koneksi hanya untuk admin.', 403);

@@ -16,10 +16,10 @@
             </div>
             <aside class="messaging-compose-options">
                 <h3>Opsi pengiriman</h3>
-                <label>Pesan per batch<input type="number" name="batchSize" min="1" max="50" value="{{ old('batchSize', 10) }}" required><small class="muted">Batas maksimal setiap pemanggilan dispatcher.</small></label>
-                <label class="messaging-check"><input type="checkbox" name="useBanner" value="1" @checked(old('useBanner', false))><span>Gunakan banner default</span></label>
-                <img class="messaging-banner" src="{{ $settings['defaultBannerUrl'] }}" alt="Pratinjau banner default" data-banner hidden loading="lazy">
-                <label class="messaging-check"><input type="checkbox" name="useInteractiveCta" value="1" @checked(old('useInteractiveCta', false) && $settings['interactiveCtaEnabled']) @disabled(!$settings['interactiveCtaEnabled'])><span>Tombol tindakan<small class="muted">{{ $settings['interactiveCtaEnabled'] ? 'Gunakan tautan HTTPS pada pesan.' : 'Belum diaktifkan pada layanan.' }}</small></span></label>
+                <label>Batas pesan per tahap<input type="number" name="batchSize" min="1" max="50" value="{{ old('batchSize', 10) }}" required><small class="muted">Pengiriman diproses bertahap sesuai batas ini.</small></label>
+                <label class="messaging-check"><input type="checkbox" name="useBanner" value="1" @checked(old('useBanner', false))><span>Sertakan banner</span></label>
+                <img class="messaging-banner" src="{{ $settings['defaultBannerUrl'] }}" alt="Pratinjau banner" data-banner hidden loading="lazy">
+                @if($settings['interactiveCtaEnabled'])<label class="messaging-check"><input type="checkbox" name="useInteractiveCta" value="1" @checked(old('useInteractiveCta', false))><span>Sertakan tombol tautan<small class="muted">Tambahkan tautan HTTPS pada isi pesan.</small></span></label>@else<input type="checkbox" name="useInteractiveCta" hidden disabled>@endif
             </aside>
         </div>
         <fieldset>

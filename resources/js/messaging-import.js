@@ -26,8 +26,8 @@ export function mapContactRows(rows) {
     const headers = (rows[0] ?? []).map(normalize);
     const name = headers.findIndex((h) => ['nama','nama lengkap','nama penerima','name','full name'].includes(h));
     const phone = headers.findIndex((h) => ['nomor whatsapp','no whatsapp','nomor telepon','no telepon','phone','nomor hp','no hp','whatsapp','nomor','telepon','telp'].includes(h));
-    const opt = headers.findIndex((h) => ['opt in','whatsapp opt in','izin whatsapp','bersedia'].includes(h));
-    if (name < 0 || phone < 0) throw new Error('Header Nama Lengkap dan Nomor WhatsApp wajib ada.');
+    const opt = headers.findIndex((h) => ['persetujuan','izin','opt in','whatsapp opt in','izin whatsapp','bersedia'].includes(h));
+    if (name < 0 || phone < 0) throw new Error('Kolom Nama Lengkap dan Nomor WhatsApp wajib ada.');
     const result = rows.slice(1).map((row, index) => ({ rowNumber: index + 2, fullName: String(row[name] ?? '').trim(), phone: String(row[phone] ?? '').trim(), whatsappOptIn: opt >= 0 && ['ya','yes','true','1','setuju','bersedia','opt in','optin'].includes(normalize(row[opt])) })).filter((row) => row.fullName || row.phone);
     if (!result.length || result.length > 1000) throw new Error('File harus berisi 1–1.000 kontak.');
     return result;

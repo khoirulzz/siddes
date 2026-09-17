@@ -7,7 +7,7 @@
         <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nomor atau isi pesan" aria-label="Cari riwayat">
         <select name="status" aria-label="Filter status"><option value="">Semua status</option>@foreach(['QUEUED','PROCESSING','SENT','SERVER_ACK','DELIVERED','READ','FAILED','UNKNOWN','SKIPPED','CANCELLED'] as $value)<option value="{{ $value }}" @selected(request('status')===$value)>{{ \App\Support\MessagingLabels::status($value) }}</option>@endforeach</select>
         <button class="btn btn-secondary">Terapkan</button>
-        @if(request('search') || request('status'))<a class="btn btn-secondary" href="{{ route('dashboard.messaging.history', request()->only('campaignId')) }}">Reset</a>@endif
+        @if(request('search') || request('status'))<a class="btn btn-secondary" href="{{ route('dashboard.messaging.history', request()->only('campaignId')) }}">Hapus filter</a>@endif
     </form>
     @include('dashboard.messaging.messages')
     @include('dashboard.messaging.pagination', ['paginator'=>$items])

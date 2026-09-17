@@ -73,7 +73,7 @@ if (root) {
                 if (before !== JSON.stringify(payload())) throw new Error('Form berubah. Tinjau kembali pesan.');
                 const panel = $('[data-final-preview]'); panel.replaceChildren(make('strong', `${result.recipientCount} penerima`));
                 for (const sample of result.samples) panel.append(make('h3', sample.fullName), make('p', sample.renderedMessage));
-                if (result.useBanner) panel.append(make('p', 'Media: banner default + caption'));
+                if (result.useBanner) panel.append(make('p', 'Pesan dilengkapi banner.'));
                 if (result.useInteractiveCta) panel.append(make('p', `Tombol: ${result.ctaLabel}`));
                 panel.hidden = false; compose.elements.previewToken.value = result.previewToken; $('[data-create]').disabled = false;
             } catch (caught) { error(caught.message); }
@@ -88,13 +88,13 @@ if (root) {
         $('[data-toggle-import]').onclick = () => { const panel = $('[data-import-panel]'); panel.hidden = !panel.hidden; $('[data-toggle-import]').setAttribute('aria-expanded', String(!panel.hidden)); if (!panel.hidden) { panel.scrollIntoView({ block: 'start' }); importFile.focus({ preventScroll: true }); } };
         importFile.onchange = async () => {
             rows = []; $('[data-import-submit]').disabled = true;
-            try { if (!importFile.files[0]) return; rows = await parseContactFile(importFile.files[0]); const list = make('div'); list.append(make('p', `${rows.length} kontak. Pratinjau maksimal 20 baris:`)); rows.slice(0,20).forEach((row) => list.append(make('p', `${row.rowNumber}. ${row.fullName} | ${row.phone} | ${row.whatsappOptIn ? 'Opt-in' : 'Opt-out'}`))); $('[data-import-preview]').replaceChildren(list); $('[data-import-submit]').disabled = false; }
+            try { if (!importFile.files[0]) return; rows = await parseContactFile(importFile.files[0]); const list = make('div'); list.append(make('p', `${rows.length} kontak. Pratinjau maksimal 20 baris:`)); rows.slice(0,20).forEach((row) => list.append(make('p', `${row.rowNumber}. ${row.fullName} | ${row.phone} | ${row.whatsappOptIn ? 'Setuju' : 'Belum setuju'}`))); $('[data-import-preview]').replaceChildren(list); $('[data-import-submit]').disabled = false; }
             catch (caught) { $('[data-import-preview]').textContent = caught.message; }
         };
         $('[data-import-submit]').onclick = async () => {
             if (importing || !rows.length || !window.confirm(`Import ${rows.length} kontak? Duplikat akan dilewati.`)) return;
             importing = true; $('[data-import-submit]').disabled = true; importFile.disabled = true;
-            try { const result = await request($('[data-import-submit]').dataset.url, {rows}); rows = []; const panel = $('[data-import-preview]'); panel.replaceChildren(make('p', `${result.imported} berhasil | ${result.duplicates} duplikat | ${result.invalid} invalid`)); result.issues.forEach((issue) => panel.append(make('p', `Baris ${issue.rowNumber}: ${issue.message}`))); panel.append(make('a', 'Segarkan daftar kontak')); panel.lastChild.href = window.location.href; }
+            try { const result = await request($('[data-import-submit]').dataset.url, {rows}); rows = []; const panel = $('[data-import-preview]'); panel.replaceChildren(make('p', `${result.imported} berhasil | ${result.duplicates} duplikat | ${result.invalid} perlu diperbaiki`)); result.issues.forEach((issue) => panel.append(make('p', `Baris ${issue.rowNumber}: ${issue.message}`))); panel.append(make('a', 'Segarkan daftar kontak')); panel.lastChild.href = window.location.href; }
             catch (caught) { $('[data-import-preview]').textContent = caught.message; }
             finally { importing = false; importFile.disabled = false; $('[data-import-submit]').disabled = !rows.length; }
         };

@@ -117,7 +117,7 @@ class MessagingController extends Controller
         $validated = $request->validate(['request_uuid' => 'required|uuid', 'previewToken' => 'required|string']);
         $hash = hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
         $ledger = MessagingSubmission::firstOrCreate(['request_uuid' => $validated['request_uuid']], ['actor_id' => auth()->id(), 'payload_hash' => $hash]);
-        abort_unless((string) $ledger->actor_id === (string) auth()->id() && hash_equals($ledger->payload_hash, $hash), 409, 'Request ini sudah digunakan untuk isi berbeda.');
+        abort_unless((string) $ledger->actor_id === (string) auth()->id() && hash_equals($ledger->payload_hash, $hash), 409, 'Form ini sudah digunakan dengan isi berbeda. Tinjau kembali campaign.');
         if ($ledger->campaign_id) return redirect()->route('dashboard.messaging.campaigns.show', $ledger->campaign_id);
         try {
             if (! $ledger->wasRecentlyCreated) {
@@ -127,11 +127,11 @@ class MessagingController extends Controller
             $campaign = $existing ?? $this->messaging->request('POST', 'campaigns', [...$payload, 'previewToken' => $validated['previewToken'], '_idempotency_key' => $ledger->request_uuid]);
             if (! Str::isUuid($campaign['id'] ?? '')) throw new MessagingException('Respons pembuatan draft belum dapat dipastikan.', 503, true);
             $ledger->update(['campaign_id' => $campaign['id'], 'status' => 'CONFIRMED']);
-            return redirect()->route('dashboard.messaging.campaigns.show', $campaign['id'])->with('success', 'Draft dibuat. Tinjau lalu pilih Mulai untuk memasukkan pengiriman pada jadwal dispatcher.');
+            return redirect()->route('dashboard.messaging.campaigns.show', $campaign['id'])->with('success', 'Draft berhasil dibuat. Tinjau lalu pilih Mulai pengiriman.');
         } catch (MessagingException $error) {
             $ledger->update(['status' => $error->uncertain ? 'UNCERTAIN' : 'REJECTED']);
             if (! $error->uncertain) $request->merge(['request_uuid' => (string) Str::uuid()]);
-            return back()->withInput()->with('error', $error->uncertain ? 'Status pembuatan belum dapat dipastikan. Periksa request yang sama sebelum membuat campaign baru.' : $error->getMessage())->with('messaging_uncertain_key', $error->uncertain ? $ledger->request_uuid : null);
+            return back()->withInput()->with('error', $error->uncertain ? 'Status pembuatan belum dapat dipastikan. Periksa status draft ini sebelum membuat campaign baru.' : $error->getMessage())->with('messaging_uncertain_key', $error->uncertain ? $ledger->request_uuid : null);
         }
     }
 
@@ -144,7 +144,7 @@ class MessagingController extends Controller
             $ledger->update(['campaign_id' => $campaign['id'], 'status' => 'CONFIRMED']);
             return redirect()->route('dashboard.messaging.campaigns.show', $campaign['id']);
         } catch (MessagingException $error) {
-            return back()->with('error', $error->httpStatus === 404 ? 'Draft belum ditemukan. Tinjau ulang dan kirim form dengan request yang sama; jangan buat duplikat.' : $error->getMessage());
+            return back()->with('error', $error->httpStatus === 404 ? 'Draft belum ditemukan. Tinjau ulang lalu kirim kembali form yang sama; jangan membuat campaign kedua.' : $error->getMessage());
         }
     }
 

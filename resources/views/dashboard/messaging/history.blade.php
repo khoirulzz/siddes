@@ -1,0 +1,4 @@
+@extends('dashboard.messaging.layout')
+@section('messaging-content')
+<section class="panel" @if(collect($items->items())->contains(fn($m)=>in_array($m['status'], ['QUEUED','PROCESSING']))) data-refresh-seconds="15" @endif><div class="toolbar"><h2>Riwayat pengiriman</h2><a class="btn btn-secondary" href="{{ url()->full() }}">Segarkan</a></div><form class="messaging-search" method="GET"><input name="search" value="{{ request('search') }}" placeholder="Cari nomor atau isi"><select name="status"><option value="">Semua status</option>@foreach(['QUEUED','PROCESSING','SENT','DELIVERED','READ','FAILED','UNKNOWN','SKIPPED'] as $value)<option value="{{ $value }}" @selected(request('status')===$value)>{{ \App\Support\MessagingLabels::status($value) }}</option>@endforeach</select><button class="btn btn-secondary">Cari</button></form>@include('dashboard.messaging.messages')@include('dashboard.messaging.pagination', ['paginator'=>$items])</section>
+@endsection

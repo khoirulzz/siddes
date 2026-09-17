@@ -25,6 +25,8 @@ use App\Http\Controllers\PublicAiChatController;
 use App\Http\Controllers\PublicServiceController;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/messaging.php';
+
 // Endpoint sangat ringan untuk UptimeRobot / cron job (Ping Web + Database)
 Route::get('/health', function () {
     try {

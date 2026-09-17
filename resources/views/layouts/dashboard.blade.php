@@ -28,6 +28,9 @@
             <div class="menu-section">
                 <p class="menu-title">Utama</p>
                 <ul class="menu-list">
+                    @if(config('messaging.enabled'))
+                    <li><a class="{{ request()->routeIs('dashboard.messaging.*') ? 'active' : '' }}" href="{{ route('dashboard.messaging.index') }}" title="Pesan WhatsApp"><span class="menu-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="menu-link-label">Pesan WhatsApp</span></a></li>
+                    @endif
                     <li>
                         <a class="{{ request()->routeIs('dashboard.index') ? 'active' : '' }}" href="{{ route('dashboard.index') }}" title="Dashboard">
                             <span class="menu-link-icon" aria-hidden="true">

@@ -1,0 +1,1 @@
+@extends('dashboard.messaging.layout')

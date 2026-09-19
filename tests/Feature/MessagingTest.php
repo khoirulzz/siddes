@@ -30,6 +30,7 @@ class MessagingTest extends TestCase
     {
         $this->get('/dashboard/messaging')->assertRedirect(route('login'));
         $this->actingAs($this->user('operator'))->post('/dashboard/messaging/connection/connect')->assertForbidden();
+        $this->actingAs($this->user('operator'))->post('/dashboard/messaging/connection/replace-account')->assertForbidden();
         Http::assertNothingSent();
     }
 
@@ -38,6 +39,24 @@ class MessagingTest extends TestCase
         Http::fake(['messaging.test/*' => Http::response(['status' => 'CONNECTING'])]);
         $this->actingAs($this->user('admin'))->post('/dashboard/messaging/connection/connect')->assertRedirect();
         Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer '.str_repeat('a', 32)) && $request->hasHeader('X-SID-Actor-Id', '42'));
+    }
+
+    public function test_admin_can_replace_whatsapp_account_with_admin_key(): void
+    {
+        Http::fake(['messaging.test/*' => Http::response(['status' => 'CONNECTING', 'phoneNumber' => null])]);
+        $this->actingAs($this->user('admin'))->post('/dashboard/messaging/connection/replace-account')
+            ->assertRedirect()->assertSessionHas('success', 'Session lama dihapus. Pindai QR untuk menghubungkan akun baru.');
+        Http::assertSent(fn ($request) => $request->method() === 'POST'
+            && $request->url() === 'https://messaging.test/integration/v1/whatsapp/replace-account'
+            && $request->hasHeader('Authorization', 'Bearer '.str_repeat('a', 32))
+            && $request->hasHeader('X-SID-Actor-Id', '42'));
+    }
+
+    public function test_replace_account_backend_rejection_is_shown_to_admin(): void
+    {
+        Http::fake(['messaging.test/*' => Http::response(['message' => 'Hentikan atau jeda campaign yang sedang berjalan sebelum mengganti akun WhatsApp.'], 409)]);
+        $this->actingAs($this->user('admin'))->post('/dashboard/messaging/connection/replace-account')
+            ->assertRedirect()->assertSessionHas('error', 'Hentikan atau jeda campaign yang sedang berjalan sebelum mengganti akun WhatsApp.');
     }
 
     public function test_contact_list_uses_operator_key_and_does_not_expose_secret(): void
@@ -207,7 +226,7 @@ class MessagingTest extends TestCase
             $response = $this->get('/dashboard/messaging/connection')->assertOk()->assertSee($title)->assertSee('data-connection-state="'.$tone.'"', false)->assertSee('+6281234567890');
             foreach (['SESSION_IN_USE', 'instance API', 'database produksi', 'Session tersimpan'] as $label) $response->assertDontSee($label);
             if ($status === 'QR_READY') $response->assertSee('Tautkan akun dalam tiga langkah')->assertSee('data-refresh-seconds="5"', false);
-            if ($status === 'CONNECTED') $response->assertSee('messaging-connection-icon--ready', false)->assertSee('Buat campaign');
+            if ($status === 'CONNECTED') $response->assertSee('messaging-connection-icon--ready', false)->assertSee('Buat campaign')->assertSee('Putuskan koneksi')->assertSee('Ganti akun WhatsApp')->assertSee('/dashboard/messaging/connection/replace-account', false);
         }
     }
 

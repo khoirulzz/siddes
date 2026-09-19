@@ -24,6 +24,6 @@ Route::prefix('dashboard/messaging')->name('dashboard.messaging.')->middleware([
     Route::get('/recipients', [MessagingController::class, 'recipients'])->name('recipients');
     Route::middleware('role:admin')->group(function (): void {
         Route::get('/connection', [MessagingController::class, 'connection'])->name('connection');
-        Route::post('/connection/{action}', [MessagingController::class, 'connectionAction'])->whereIn('action', ['connect', 'disconnect'])->name('connection.action');
+        Route::post('/connection/{action}', [MessagingController::class, 'connectionAction'])->whereIn('action', ['connect', 'disconnect', 'replace-account'])->name('connection.action');
     });
 });

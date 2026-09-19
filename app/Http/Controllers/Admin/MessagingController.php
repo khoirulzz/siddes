@@ -175,6 +175,13 @@ class MessagingController extends Controller
 
     public function connectionAction(string $action)
     {
-        return $this->mutate(fn () => $this->messaging->request('POST', 'whatsapp/'.$action, [], true), 'Permintaan koneksi diproses.');
+        $messages = [
+            'connect' => 'Proses koneksi WhatsApp dimulai.',
+            'disconnect' => 'Koneksi dihentikan tanpa menghapus session.',
+            'replace-account' => 'Session lama dihapus. Pindai QR untuk menghubungkan akun baru.',
+        ];
+        abort_unless(array_key_exists($action, $messages), 404);
+
+        return $this->mutate(fn () => $this->messaging->request('POST', 'whatsapp/'.$action, [], true), $messages[$action]);
     }
 }

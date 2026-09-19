@@ -21,9 +21,12 @@
     <div class="messaging-connection-footer">
         <div class="actions">
             @if($connection['ready'])<a class="btn btn-primary" href="{{ route('dashboard.messaging.campaigns.create') }}">Buat campaign</a>@endif
-            <form method="POST" action="{{ route('dashboard.messaging.connection.action', $connected ? 'disconnect' : 'connect') }}" data-confirm="{{ $connected ? 'Putuskan koneksi WhatsApp? Pengiriman menunggu sampai akun terhubung kembali.' : 'Hubungkan akun WhatsApp?' }}">@csrf<button class="btn {{ $connected ? 'btn-secondary' : 'btn-primary' }}" @disabled($pairing)>{{ $connected ? 'Putuskan koneksi' : ($pairing ? 'Menunggu koneksi…' : 'Hubungkan WhatsApp') }}</button></form>
+            <form method="POST" action="{{ route('dashboard.messaging.connection.action', $connected ? 'disconnect' : 'connect') }}" data-confirm="{{ $connected ? 'Putuskan koneksi WhatsApp sementara? Session akun tetap tersimpan dan dapat digunakan kembali.' : 'Hubungkan akun WhatsApp?' }}">@csrf<button class="btn {{ $connected ? 'btn-secondary' : 'btn-primary' }}" @disabled($pairing)>{{ $connected ? 'Putuskan koneksi' : ($pairing ? 'Menunggu koneksi…' : 'Hubungkan WhatsApp') }}</button></form>
+            @if(!empty($state['phoneNumber']))
+            <form method="POST" action="{{ route('dashboard.messaging.connection.action', 'replace-account') }}" data-confirm="Ganti akun WhatsApp? Session akun lama akan dihapus permanen dan Anda harus memindai QR menggunakan akun baru. Pastikan tidak ada campaign yang sedang berjalan.">@csrf<button class="btn btn-danger" @disabled($pairing)>Ganti akun WhatsApp</button></form>
+            @endif
         </div>
-        <small class="muted">{{ $connection['ready'] ? 'Koneksi aktif tidak berarti pesan langsung dikirim. Pengiriman dimulai dari campaign.' : 'Pesan dalam antrean tetap menunggu hingga koneksi siap.' }}</small>
+        <small class="muted">{{ $connection['ready'] ? 'Koneksi aktif tidak berarti pesan langsung dikirim. Pengiriman dimulai dari campaign.' : 'Pesan dalam antrean tetap menunggu hingga koneksi siap.' }} Putuskan koneksi untuk berhenti sementara; pilih Ganti akun hanya jika ingin menghapus session lama.</small>
     </div>
 </section>
 @endsection

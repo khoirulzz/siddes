@@ -33,6 +33,7 @@ Cron tetap POST setiap 10 menit, header `Authorization: Bearer <INTERNAL_DISPATC
 ### Perbaikan preview dan antarmuka (2026-09-17)
 
 - Halaman koneksi dan ringkasan menggunakan indikator visual berbasis status aktual: centang hijau hanya untuk CONNECTED tanpa gangguan persistensi, indikator pairing untuk CONNECTING/QR_READY, serta peringatan untuk reauth/degraded. Status tidak dikenal tidak dianggap terhubung. QR hanya tampil saat siap pairing, dengan panduan penautan tiga langkah.
+- Admin dapat memilih **Putuskan koneksi** untuk berhenti sementara tanpa menghapus session, atau **Ganti akun WhatsApp** untuk menghapus session lama dan memulai pairing akun baru. Pergantian akun memakai admin key, memerlukan konfirmasi, dan ditolak backend ketika masih ada campaign `RUNNING`.
 - Label internal (dispatcher, instance API, session, request, opt-in/out dan kode reason mentah) tidak ditampilkan sebagai panduan operator. Peringatan risiko pengiriman ganda, consent, draft belum dikirim dan gangguan layanan tetap ada dalam bahasa operasional. Ketentuan satu instance/session tetap berlaku dan dijelaskan di dokumentasi, bukan di halaman operasional.
 - Import menerima header `Persetujuan` selain `Opt In` untuk kompatibilitas. Nilai kosong tetap tidak memberikan consent. Tidak mengubah queue, izin, koneksi backend atau mekanisme preview/idempotensi.
 

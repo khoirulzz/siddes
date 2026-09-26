@@ -84,19 +84,60 @@ if (root) {
     }
     const importFile = $('[data-import-file]');
     if (importFile) {
-        let rows = [], importing = false;
+        let rows = [], skipped = 0, importing = false, selectionId = 0;
+        const importPreview = $('[data-import-preview]');
+        const importStatus = $('[data-import-status]');
+        const importSubmit = $('[data-import-submit]');
+        const setImportStatus = (message, isError = false) => { importStatus.textContent = message; importStatus.classList.toggle('messaging-error', isError); };
+        const showImportPreview = (parsed) => {
+            const summary = make('p', `${parsed.rows.length} baris siap diperiksa server${parsed.skipped ? ` · ${parsed.skipped} baris dilewati` : ''}.`);
+            const nodes = [summary];
+            if (parsed.sheetSummaries.length) {
+                const title = make('h3', 'Sheet yang terbaca'), list = make('ul');
+                parsed.sheetSummaries.forEach((sheet) => list.append(make('li', `${sheet.sheetName}: ${sheet.ready} baris siap${sheet.skipped ? `, ${sheet.skipped} dilewati` : ''} (header baris ${sheet.headerRow})`)));
+                nodes.push(title, list);
+                if (parsed.ignoredSheets.length) {
+                    const ignoredTitle = make('h3', 'Sheet yang tidak diimpor — periksa sebelum melanjutkan'), ignoredList = make('ul');
+                    parsed.ignoredSheets.forEach((sheet) => ignoredList.append(make('li', `${sheet.sheetName}: ${sheet.reason}`)));
+                    nodes.push(ignoredTitle, ignoredList);
+                }
+            }
+            nodes.push(make('h3', 'Pratinjau kontak'));
+            parsed.rows.slice(0, 20).forEach((row) => nodes.push(make('p', `${row.sheetName ? `Sheet ${row.sheetName}, ` : ''}baris ${row.rowNumber}: ${row.fullName} | ${row.phone} | ${row.whatsappOptIn ? 'Setuju' : 'Belum setuju'}`)));
+            if (parsed.rows.length > 20) nodes.push(make('p', `+ ${parsed.rows.length - 20} baris lainnya. Lihat jumlah per sheet di atas.`));
+            importPreview.replaceChildren(...nodes);
+        };
         $('[data-toggle-import]').onclick = () => { const panel = $('[data-import-panel]'); panel.hidden = !panel.hidden; $('[data-toggle-import]').setAttribute('aria-expanded', String(!panel.hidden)); if (!panel.hidden) { panel.scrollIntoView({ block: 'start' }); importFile.focus({ preventScroll: true }); } };
         importFile.onchange = async () => {
-            rows = []; $('[data-import-submit]').disabled = true;
-            try { if (!importFile.files[0]) return; rows = await parseContactFile(importFile.files[0]); const list = make('div'); list.append(make('p', `${rows.length} kontak. Pratinjau maksimal 20 baris:`)); rows.slice(0,20).forEach((row) => list.append(make('p', `${row.rowNumber}. ${row.fullName} | ${row.phone} | ${row.whatsappOptIn ? 'Setuju' : 'Belum setuju'}`))); $('[data-import-preview]').replaceChildren(list); $('[data-import-submit]').disabled = false; }
-            catch (caught) { $('[data-import-preview]').textContent = caught.message; }
+            const file = importFile.files?.[0];
+            if (!file) return;
+            importFile.value = '';
+            const currentSelection = ++selectionId;
+            rows = []; skipped = 0; importSubmit.disabled = true; importSubmit.textContent = 'Impor kontak'; importPreview.replaceChildren();
+            setImportStatus(`Membaca ${file.name}...`);
+            try {
+                const parsed = await parseContactFile(file);
+                if (currentSelection !== selectionId) return;
+                rows = parsed.rows; skipped = parsed.skipped;
+                showImportPreview(parsed);
+                setImportStatus(`${file.name} terbaca. Periksa seluruh sheet sebelum mengimpor.`);
+                importSubmit.textContent = `Impor ${rows.length} kontak`;
+                importSubmit.disabled = false;
+            } catch (caught) { if (currentSelection === selectionId) setImportStatus(caught.message, true); }
         };
-        $('[data-import-submit]').onclick = async () => {
-            if (importing || !rows.length || !window.confirm(`Import ${rows.length} kontak? Duplikat akan dilewati.`)) return;
-            importing = true; $('[data-import-submit]').disabled = true; importFile.disabled = true;
-            try { const result = await request($('[data-import-submit]').dataset.url, {rows}); rows = []; const panel = $('[data-import-preview]'); panel.replaceChildren(make('p', `${result.imported} berhasil | ${result.duplicates} duplikat | ${result.invalid} perlu diperbaiki`)); result.issues.forEach((issue) => panel.append(make('p', `Baris ${issue.rowNumber}: ${issue.message}`))); panel.append(make('a', 'Segarkan daftar kontak')); panel.lastChild.href = window.location.href; }
-            catch (caught) { $('[data-import-preview]').textContent = caught.message; }
-            finally { importing = false; importFile.disabled = false; $('[data-import-submit]').disabled = !rows.length; }
+        importSubmit.onclick = async () => {
+            if (importing || !rows.length || !window.confirm(`Impor ${rows.length} kontak? Duplikat akan dilewati.`)) return;
+            importing = true; importSubmit.disabled = true; importFile.disabled = true; setImportStatus('Mengimpor kontak...');
+            try {
+                const result = await request(importSubmit.dataset.url, { rows });
+                rows = [];
+                importSubmit.textContent = 'Impor kontak';
+                importPreview.replaceChildren(make('p', `${result.imported} berhasil | ${result.duplicates} duplikat | ${result.invalid} invalid | ${skipped + result.skipped} dilewati`));
+                result.issues.forEach((issue) => importPreview.append(make('p', `${issue.sheetName ? `Sheet ${issue.sheetName}, ` : ''}baris ${issue.rowNumber}: ${issue.message}`)));
+                const refreshLink = make('a', 'Segarkan daftar kontak'); refreshLink.href = window.location.href; importPreview.append(refreshLink);
+                setImportStatus('Impor selesai.');
+            } catch (caught) { setImportStatus(caught.message, true); }
+            finally { importing = false; importFile.disabled = false; importSubmit.disabled = !rows.length; }
         };
     }
 }

@@ -81,7 +81,12 @@
 .messaging-preview h3 { margin: 1rem 0 .25rem; font-size: .9rem; }
 .messaging-module [hidden] { display: none !important; }
 .messaging-module .table-pagination { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
-.messaging-module [data-import-preview] { max-height: 300px; overflow: auto; margin: 1rem 0; }
+.messaging-module [data-import-status]:empty { display: none; }
+.messaging-module [data-import-preview] { max-height: 420px; overflow: auto; margin: 1rem 0; overflow-wrap: anywhere; }
+.messaging-module [data-import-preview] h3 { margin: .9rem 0 .35rem; font-size: .95rem; }
+.messaging-module [data-import-preview] p { margin: .35rem 0; }
+.messaging-module [data-import-preview] ul { list-style: disc; padding-left: 1.4rem; margin: .35rem 0 .75rem; }
+.messaging-module [data-import-preview] li { margin: .2rem 0; }
 .messaging-empty { padding: 1rem; color: var(--muted, #64748b); text-align: center; }
 .messaging-connection-hero { display: flex; align-items: center; gap: 1.5rem; padding: 1.75rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
 .messaging-connection-hero--ready { background: #f0fdf4; border-color: #bbf7d0; }

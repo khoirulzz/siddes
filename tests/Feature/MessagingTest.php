@@ -62,8 +62,18 @@ class MessagingTest extends TestCase
     public function test_contact_list_uses_operator_key_and_does_not_expose_secret(): void
     {
         Http::fake(['messaging.test/*' => Http::response(['items' => [], 'pagination' => ['page' => 1, 'perPage' => 20, 'total' => 0, 'lastPage' => 1]])]);
-        $this->actingAs($this->user('operator'))->get('/dashboard/messaging/contacts')->assertOk()->assertDontSee(str_repeat('o', 32))->assertDontSee(str_repeat('a', 32));
+        $this->actingAs($this->user('operator'))->get('/dashboard/messaging/contacts')->assertOk()->assertSee('Persetujuan kosong dianggap Ya')->assertDontSee(str_repeat('o', 32))->assertDontSee(str_repeat('a', 32));
         Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer '.str_repeat('o', 32)));
+    }
+
+    public function test_import_contacts_forwards_sheet_and_row_location(): void
+    {
+        Http::fake(['messaging.test/*' => Http::response(['received' => 1, 'imported' => 1, 'duplicates' => 0, 'invalid' => 0, 'skipped' => 0, 'issues' => []], 201)]);
+        $rows = [['sheetName' => 'Dusun 5', 'rowNumber' => 4, 'fullName' => 'Lima', 'phone' => '081234567805', 'whatsappOptIn' => true]];
+        $this->actingAs($this->user('operator'))->postJson('/dashboard/messaging/contacts/import', ['rows' => $rows])->assertCreated()->assertJsonPath('imported', 1);
+        Http::assertSent(fn ($request) => $request->method() === 'POST'
+            && $request->url() === 'https://messaging.test/integration/v1/contacts/import'
+            && $request->data()['rows'] === $rows);
     }
 
     public function test_backend_offline_is_not_an_empty_successful_list(): void

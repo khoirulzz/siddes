@@ -50,7 +50,7 @@ class MessagingController extends Controller
     public function importContacts(Request $request)
     {
         $this->enabled();
-        $data = $request->validate(['rows' => 'required|array|min:1|max:1000', 'rows.*.rowNumber' => 'required|integer|min:1', 'rows.*.fullName' => 'required|string|max:500', 'rows.*.phone' => 'required|string|max:100', 'rows.*.whatsappOptIn' => 'required|boolean']);
+        $data = $request->validate(['rows' => 'required|array|min:1|max:1000', 'rows.*.sheetName' => 'sometimes|string|min:1|max:100', 'rows.*.rowNumber' => 'required|integer|min:1', 'rows.*.fullName' => 'required|string|max:500', 'rows.*.phone' => 'required|string|max:100', 'rows.*.whatsappOptIn' => 'required|boolean']);
         try { return response()->json($this->messaging->request('POST', 'contacts/import', $data), 201); }
         catch (MessagingException $error) { return response()->json(['message' => $error->getMessage()], $error->httpStatus); }
     }

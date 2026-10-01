@@ -7,6 +7,10 @@
     @php
         $household = $prefillHousehold ?? $item->currentMembership?->household;
         $contextHouseholdId = $contextHouseholdContext ?? (($formMode ?? null) === 'member' ? $household?->id : null);
+        $selectedEducationUpdate = old('pendidikan_update', $item->pendidikan_update);
+        $selectedEducationUpdate = is_string($selectedEducationUpdate) && trim($selectedEducationUpdate) !== ''
+            ? \App\Support\PopulationStatHelper::normalizeEducationBucket($selectedEducationUpdate)
+            : '';
     @endphp
 
     <section class="panel">
@@ -170,7 +174,13 @@
 
                 <div class="field">
                     <label for="pendidikan_update">Pendidikan Update</label>
-                    <input id="pendidikan_update" type="text" name="pendidikan_update" value="{{ old('pendidikan_update', $item->pendidikan_update) }}" placeholder="Pendidikan saat ini (opsional)">
+                    <select id="pendidikan_update" name="pendidikan_update">
+                        <option value="" @selected($selectedEducationUpdate === '')>Belum diperbarui (gunakan pendidikan KK)</option>
+                        @foreach(\App\Support\PopulationStatHelper::EDUCATION_BUCKETS as $education)
+                            <option value="{{ $education }}" @selected($selectedEducationUpdate === $education)>{{ $education }}</option>
+                        @endforeach
+                    </select>
+                    <small class="muted">Opsional. Jika kosong, grafik memakai pendidikan dari KK.</small>
                 </div>
 
                 <div class="field">

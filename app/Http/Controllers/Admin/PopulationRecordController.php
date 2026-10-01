@@ -323,7 +323,7 @@ class PopulationRecordController extends Controller
             'tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
             'agama' => ['required', 'string', 'max:255'],
             'pendidikan' => ['nullable', 'string', 'max:255'],
-            'pendidikan_update' => ['nullable', 'string', 'max:255'],
+            'pendidikan_update' => ['nullable', Rule::in(PopulationStatHelper::EDUCATION_BUCKETS)],
             'status_keberadaan' => ['required', Rule::in(PopulationRecord::PRESENCE_OPTIONS)],
             'jenis_pekerjaan' => ['required', 'string', 'max:255'],
             'status_perkawinan' => ['required', Rule::in(PopulationRecord::STATUS_PERKAWINAN_OPTIONS)],
@@ -386,7 +386,9 @@ class PopulationRecordController extends Controller
             'agama' => $payload['agama'],
             'religion' => $payload['religion'],
             'pendidikan' => $payload['pendidikan'],
-            'pendidikan_update' => $payload['pendidikan_update'] ?: null,
+            ...(array_key_exists('pendidikan_update', $payload)
+                ? ['pendidikan_update' => $payload['pendidikan_update'] ?: null]
+                : []),
             'status_keberadaan' => $payload['status_keberadaan'],
             'jenis_pekerjaan' => $payload['jenis_pekerjaan'],
             'pekerjaan' => $payload['pekerjaan'],

@@ -22,10 +22,10 @@ class PopulationPresenceTest extends TestCase
         $resident = $this->resident();
 
         $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident),
-            $this->formData($resident, 'meninggal', 'Sarjana'))->assertRedirect();
+            $this->formData($resident, 'meninggal', 'Diploma IV/Sarjana'))->assertRedirect()->assertSessionHasNoErrors();
         $resident->refresh();
         $this->assertSame('meninggal', $resident->status_keberadaan);
-        $this->assertSame('Sarjana', $resident->pendidikan_update);
+        $this->assertSame('Diploma IV/Sarjana', $resident->pendidikan_update);
 
         $this->actingAs($operator)->get(route('dashboard.population-records.index', ['view' => 'individual']))
             ->assertOk()->assertSee($resident->nik)->assertSee('population-row--inactive');
@@ -38,13 +38,53 @@ class PopulationPresenceTest extends TestCase
         $this->get(route('information.population'))->assertOk()->assertViewHas('totalResidents', 0);
 
         $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident),
-            $this->formData($resident, 'ditemukan', 'Sarjana'))->assertRedirect();
+            $this->formData($resident, 'ditemukan', 'Diploma IV/Sarjana'))->assertRedirect()->assertSessionHasNoErrors();
         $this->actingAs($operator)->get(route('dashboard.population-records.index', ['view' => 'deceased']))
             ->assertOk()->assertDontSee($resident->nik);
         $this->actingAs($operator)->getJson(route('dashboard.population-records.statistics'))
             ->assertOk()->assertJsonPath('genders.data.0', 1)
             ->assertJsonPath('education.data.5', 1)
             ->assertJsonPath('education.data.0', 0);
+    }
+
+    public function test_education_update_uses_chart_categories_and_can_be_cleared_or_omitted(): void
+    {
+        $operator = User::factory()->create(['role' => 'operator']);
+        $resident = $this->resident();
+        $resident->update(['pendidikan_update' => 'SMA']);
+
+        $edit = $this->actingAs($operator)->get(route('dashboard.population-records.edit', $resident))
+            ->assertOk()
+            ->assertSee('name="pendidikan_update"', false)
+            ->assertSee('SMA/Sederajat')
+            ->assertSee('Belum diperbarui (gunakan pendidikan KK)');
+        $this->assertMatchesRegularExpression('/<option value="SMA\/Sederajat" selected>/', $edit->getContent());
+
+        $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident),
+            $this->formData($resident, 'ditemukan', 'SMA/Sederajat'))
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('SMA/Sederajat', $resident->fresh()->pendidikan_update);
+        $this->assertSame('SD', $resident->fresh()->pendidikan);
+        $this->actingAs($operator)->getJson(route('dashboard.population-records.statistics'))
+            ->assertOk()->assertJsonPath('education.data.2', 1);
+
+        $withoutOptionalField = $this->formData($resident, 'ditemukan', '');
+        unset($withoutOptionalField['pendidikan_update']);
+        $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident), $withoutOptionalField)
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('SMA/Sederajat', $resident->fresh()->pendidikan_update);
+
+        $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident),
+            $this->formData($resident, 'ditemukan', ''))
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull($resident->fresh()->pendidikan_update);
+        $this->actingAs($operator)->getJson(route('dashboard.population-records.statistics'))
+            ->assertOk()->assertJsonPath('education.data.0', 1);
+
+        $this->actingAs($operator)->put(route('dashboard.population-records.update', $resident),
+            $this->formData($resident, 'ditemukan', 'Tidak valid'))
+            ->assertSessionHasErrors('pendidikan_update');
+        $this->assertNull($resident->fresh()->pendidikan_update);
     }
 
     public function test_inactive_nik_cannot_be_verified_or_submit_letters_on_web_and_mobile(): void

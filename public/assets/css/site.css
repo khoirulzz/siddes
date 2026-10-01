@@ -3136,6 +3136,54 @@ textarea {
     background: linear-gradient(145deg, rgba(52, 168, 83, 0.42), rgba(66, 133, 244, 0.3));
 }
 
+.footer-visitor-stats {
+    margin-top: 0.85rem;
+    padding: 1rem;
+    border: 1px solid rgba(199, 219, 236, 0.25);
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f7ff;
+}
+
+.footer-visitor-heading h4 {
+    margin: 0 0 0.35rem;
+    color: #f1f7ff;
+}
+
+.footer-visitor-heading p,
+.footer-visitor-note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #d4e5f7;
+}
+
+.footer-visitor-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0.85rem 0;
+}
+
+.footer-visitor-grid > div {
+    min-width: 0;
+    padding: 0.75rem;
+    border-radius: 0.65rem;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.footer-visitor-grid dt {
+    font-size: 0.8rem;
+    color: #d4e5f7;
+}
+
+.footer-visitor-grid dd {
+    margin: 0.25rem 0 0;
+    font-size: clamp(1.1rem, 2vw, 1.6rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
 .footer-bottom {
     margin-top: 0.82rem;
     padding-top: 0.72rem;
@@ -3172,6 +3220,10 @@ textarea {
 }
 
 @media (max-width: 760px) {
+    .footer-visitor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .footer-shell {
         padding: 1.4rem 0 0.9rem;
     }

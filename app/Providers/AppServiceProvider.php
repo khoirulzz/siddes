@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\WebsiteSetting;
+use App\Services\VisitorStatisticsService;
 use App\Support\PublicMedia;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
 
@@ -52,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->applyVillageConfigOverrides();
+
+        View::composer('layouts.public', function ($view): void {
+            $view->with('visitorStatistics', app(VisitorStatisticsService::class)->summary());
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $email = strtolower(trim((string) $request->input('email', '')));

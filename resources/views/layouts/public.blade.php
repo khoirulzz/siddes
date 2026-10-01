@@ -325,6 +325,8 @@
                 </section>
             </div>
 
+            @include('partials.visitor-statistics')
+
             <div class="footer-bottom">
                 <p>&copy; {{ date('Y') }} {{ config('village.name') }}. Developed by {{ config('village.developed_by') }}.</p>
                 <p>Sistem informasi dan layanan digital desa.</p>

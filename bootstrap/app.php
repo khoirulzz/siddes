@@ -35,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->web(append: [\App\Http\Middleware\TrackWebsiteVisitor::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

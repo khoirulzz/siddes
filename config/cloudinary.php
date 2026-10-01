@@ -11,6 +11,7 @@ return [
     'folders' => [
         'dynamic' => env('CLOUDINARY_FOLDER_DYNAMIC', env('VITE_CLOUDINARY_FOLDER_DYNAMIC', 'sid/dynamic')),
         'archives' => env('CLOUDINARY_FOLDER_ARCHIVES', env('VITE_CLOUDINARY_FOLDER_ARCHIVES', 'sid/archives')),
+        'population_documents' => env('CLOUDINARY_FOLDER_POPULATION_DOCUMENTS', 'sid/population-documents'),
     ],
 ];
 

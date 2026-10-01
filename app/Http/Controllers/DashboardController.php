@@ -26,7 +26,7 @@ class DashboardController extends Controller
         [$monitorCards, $stats] = $this->buildMonitoringCards($periodStart, $periodEnd, $selectedPeriod);
 
         $populationSummary = Cache::remember('dashboard_population_summary', 300, function () {
-            return PopulationRecord::query()
+            return PopulationRecord::query()->active()
                 ->selectRaw('hamlet, COUNT(*) as total')
                 ->groupBy('hamlet')
                 ->orderBy('hamlet')
@@ -185,7 +185,7 @@ class DashboardController extends Controller
         $totalServiceIncoming = $pbbIncoming + $letterIncoming + $complaintIncoming;
         $totalServiceAll = $pbbTotalAll + $letterTotalAll + $complaintTotalAll;
 
-        $populationStats = PopulationRecord::query()
+        $populationStats = PopulationRecord::query()->active()
             ->selectRaw(
                 'COUNT(*) as total_all,
                  SUM(CASE WHEN created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as new_count',

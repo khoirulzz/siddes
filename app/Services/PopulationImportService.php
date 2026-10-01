@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -87,7 +88,7 @@ class PopulationImportService
             throw new PopulationImportException('Tidak ada baris valid yang dapat diimpor.');
         }
 
-        return DB::transaction(function () use ($preview, $sourceFile): array {
+        $result = DB::transaction(function () use ($preview, $sourceFile): array {
             $householdValues = $this->canonicalHouseholdValues($preview['rows']);
             $validRows = collect($preview['rows'])->reject(fn (array $row): bool => ($row['status'] ?? 'invalid') === 'invalid');
             $residents = $this->loadResidents($validRows->pluck('values.nik')->filter()->unique()->values());
@@ -143,6 +144,9 @@ class PopulationImportService
 
             return $result;
         }, 3);
+        Cache::forget('dashboard_population_summary');
+
+        return $result;
     }
 
     /** @return array<string, mixed> */
@@ -157,6 +161,8 @@ class PopulationImportService
                 'nik' => $row['values']['nik'],
                 'no_kk' => $row['values']['no_kk'],
                 'nama_lengkap' => $row['values']['nama_lengkap'],
+                'pendidikan_update' => $row['values']['pendidikan_update'],
+                'status_keberadaan' => $row['values']['status_keberadaan'],
                 'status' => $row['status'],
                 'action' => $row['action'],
                 'issues' => $row['issues'],
@@ -168,7 +174,7 @@ class PopulationImportService
     {
         $issues = [];
         $cells = $rawRow['_cells'];
-        $optionalFields = ['pendidikan', 'nama_ayah', 'nama_ibu', 'golongan_darah', 'kode_pos', 'no_paspor', 'no_kitas_kitap', 'alamat'];
+        $optionalFields = ['pendidikan', 'pendidikan_update', 'nama_ayah', 'nama_ibu', 'golongan_darah', 'kode_pos', 'no_paspor', 'no_kitas_kitap', 'alamat'];
         $text = function (string $field) use ($cells, $optionalFields, &$issues): ?string {
             $value = $this->textValue($cells[$field]['value'] ?? null);
             if ($value !== null && in_array($field, $optionalFields, true)
@@ -203,6 +209,14 @@ class PopulationImportService
         $bloodType = $this->enumValue('golongan_darah', $text('golongan_darah'), [
             'a' => 'A', 'b' => 'B', 'ab' => 'AB', 'o' => 'O',
         ], $issues);
+        $presenceProvided = array_key_exists('status_keberadaan', $cells);
+        $presenceInput = Str::lower(trim((string) $text('status_keberadaan')));
+        $presence = in_array($presenceInput, PopulationRecord::PRESENCE_OPTIONS, true)
+            ? $presenceInput : PopulationRecord::PRESENCE_FOUND;
+        if ($presenceProvided && $presenceInput !== '' && $presenceInput !== $presence) {
+            $issues[] = $this->issue('warning', 'status_keberadaan', 'invalid_defaulted',
+                'Status keberadaan tidak dikenal dan diubah menjadi ditemukan.');
+        }
 
         $hamlet = $hamletOverride ?: $this->enumValue(
             'dusun',
@@ -232,6 +246,8 @@ class PopulationImportService
             'tanggal_lahir' => $this->dateValue($cells['tanggal_lahir'] ?? null, $issues),
             'agama' => $text('agama'),
             'pendidikan' => $text('pendidikan'),
+            'pendidikan_update' => $text('pendidikan_update'),
+            'status_keberadaan' => $presenceProvided ? $presence : null,
             'jenis_pekerjaan' => $text('jenis_pekerjaan'),
             'status_perkawinan' => $maritalStatus,
             'kewarganegaraan' => $citizenship,
@@ -287,11 +303,11 @@ class PopulationImportService
         foreach ([
             'nama_lengkap' => 255, 'nama_kepala_keluarga' => 255, 'alamat' => 2000,
             'dusun' => 120, 'desa' => 120, 'kecamatan' => 120, 'kabupaten' => 120, 'provinsi' => 120,
-            'tempat_lahir' => 255, 'agama' => 255, 'pendidikan' => 255, 'jenis_pekerjaan' => 255,
+            'tempat_lahir' => 255, 'agama' => 255, 'pendidikan' => 255, 'pendidikan_update' => 255, 'jenis_pekerjaan' => 255,
             'no_paspor' => 80, 'no_kitas_kitap' => 80, 'nama_ayah' => 255, 'nama_ibu' => 255,
         ] as $field => $limit) {
             if ($values[$field] !== null && mb_strlen($values[$field]) > $limit) {
-                if (in_array($field, ['pendidikan', 'nama_ayah', 'nama_ibu', 'alamat'], true)) {
+                if (in_array($field, ['pendidikan', 'pendidikan_update', 'nama_ayah', 'nama_ibu', 'alamat'], true)) {
                     $this->addIssue($row, 'warning', $field, 'optional_ignored', "Isian melebihi {$limit} karakter dan tidak digunakan. Data lama tetap dipertahankan.");
                     $values[$field] = null;
                     $providedValues[$field] = null;
@@ -310,6 +326,7 @@ class PopulationImportService
                 'nama_lengkap' => $resident->resolvedName(), 'jenis_kelamin' => $resident->resolvedGender(),
                 'tempat_lahir' => $resident->resolvedBirthPlace(), 'tanggal_lahir' => $resident->resolvedBirthDate()?->toDateString(),
                 'agama' => $resident->resolvedReligion(), 'pendidikan' => $resident->pendidikan,
+                'pendidikan_update' => $resident->pendidikan_update,
                 'jenis_pekerjaan' => $resident->resolvedOccupation(), 'status_perkawinan' => $resident->status_perkawinan,
                 'kewarganegaraan' => $resident->kewarganegaraan, 'no_paspor' => $resident->no_paspor,
                 'no_kitas_kitap' => $resident->no_kitas_kitap, 'nama_ayah' => $resident->nama_ayah,
@@ -322,6 +339,11 @@ class PopulationImportService
                     $merged[$field] = $fallback;
                 }
             }
+            if ($merged['status_keberadaan'] === null) {
+                $merged['status_keberadaan'] = $resident->status_keberadaan ?: PopulationRecord::PRESENCE_FOUND;
+            }
+        } elseif ($merged['status_keberadaan'] === null) {
+            $merged['status_keberadaan'] = PopulationRecord::PRESENCE_FOUND;
         }
 
         $targetHousehold = $household ?: ($currentHousehold?->no_kk === $values['no_kk'] ? $currentHousehold : null);
@@ -361,7 +383,8 @@ class PopulationImportService
             'tempat_lahir' => $merged['tempat_lahir'], 'birth_place' => $merged['tempat_lahir'],
             'tanggal_lahir' => $merged['tanggal_lahir'], 'birth_date' => $merged['tanggal_lahir'],
             'agama' => $merged['agama'], 'religion' => $merged['agama'],
-            'pendidikan' => $merged['pendidikan'], 'jenis_pekerjaan' => $merged['jenis_pekerjaan'],
+            'pendidikan' => $merged['pendidikan'], 'pendidikan_update' => $merged['pendidikan_update'],
+            'status_keberadaan' => $merged['status_keberadaan'], 'jenis_pekerjaan' => $merged['jenis_pekerjaan'],
             'pekerjaan' => $merged['jenis_pekerjaan'], 'occupation' => $merged['jenis_pekerjaan'],
             'status_perkawinan' => $merged['status_perkawinan'], 'status_hubungan' => $merged['status_hubungan'],
             'kewarganegaraan' => $merged['kewarganegaraan'], 'no_paspor' => $merged['no_paspor'],

@@ -52,6 +52,11 @@ class PopulationRecord extends Model
         'O',
     ];
 
+    public const PRESENCE_FOUND = 'ditemukan';
+    public const PRESENCE_MOVED = 'pindah';
+    public const PRESENCE_DECEASED = 'meninggal';
+    public const PRESENCE_OPTIONS = [self::PRESENCE_FOUND, self::PRESENCE_MOVED, self::PRESENCE_DECEASED];
+
     protected $fillable = [
         'nama_lengkap',
         'full_name',
@@ -76,6 +81,8 @@ class PopulationRecord extends Model
         'provinsi',
         'kode_pos',
         'pendidikan',
+        'pendidikan_update',
+        'status_keberadaan',
         'status_perkawinan',
         'status_hubungan',
         'kewarganegaraan',
@@ -106,6 +113,21 @@ class PopulationRecord extends Model
                 $builder->where('dusun', $hamlet)->orWhere('hamlet', $hamlet);
             });
         }
+    }
+
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('status_keberadaan', self::PRESENCE_FOUND);
+    }
+
+    public function isActiveResident(): bool
+    {
+        return ($this->status_keberadaan ?: self::PRESENCE_FOUND) === self::PRESENCE_FOUND;
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PopulationDocument::class);
     }
 
     public function householdMemberships(): HasMany

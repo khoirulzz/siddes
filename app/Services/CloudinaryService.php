@@ -103,6 +103,109 @@ class CloudinaryService
         );
     }
 
+    /** Upload a resident PDF as an authenticated raw asset. */
+    public function uploadPrivatePdf(string $binary, string $filename, string $folder): ?array
+    {
+        if (! $this->enabled() || $binary === '') {
+            return null;
+        }
+
+        $params = [
+            'folder' => trim($folder, '/'),
+            'type' => 'authenticated',
+            'timestamp' => (string) time(),
+        ];
+
+        try {
+            $response = Http::timeout($this->timeoutSeconds())
+                ->attach('file', $binary, $filename)
+                ->post($this->uploadEndpoint('raw'), [
+                    ...$params,
+                    'api_key' => $this->apiKey(),
+                    'signature' => $this->signature($params),
+                ]);
+        } catch (\Throwable $e) {
+            Log::warning('cloudinary resident PDF upload failed', ['message' => $e->getMessage()]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::warning('cloudinary resident PDF upload failed', ['status' => $response->status()]);
+
+            return null;
+        }
+
+        $asset = $response->json();
+        if (! is_array($asset)
+            || ($asset['resource_type'] ?? null) !== 'raw'
+            || ($asset['type'] ?? null) !== 'authenticated'
+            || empty($asset['asset_id'])
+            || empty($asset['public_id'])) {
+            Log::warning('cloudinary resident PDF upload returned an invalid or public asset');
+            if (is_array($asset) && is_string($asset['asset_id'] ?? null)) {
+                $this->destroyAsset($asset['asset_id']);
+            }
+
+            return null;
+        }
+
+        return $asset;
+    }
+
+    /** Fetch privately through the signed Upload API; never expose a delivery URL. */
+    public function downloadAsset(string $assetId): ?string
+    {
+        if (! $this->enabled() || trim($assetId) === '') {
+            return null;
+        }
+
+        $params = ['asset_id' => trim($assetId), 'timestamp' => (string) time()];
+
+        try {
+            $response = Http::timeout($this->timeoutSeconds())->get(
+                sprintf('https://api.cloudinary.com/v1_1/%s/asset/download', $this->cloudName()),
+                [...$params, 'api_key' => $this->apiKey(), 'signature' => $this->signature($params)]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('cloudinary resident PDF download failed', ['message' => $e->getMessage()]);
+
+            return null;
+        }
+
+        $body = $response->body();
+        if (! $response->successful() || ! str_starts_with($body, '%PDF-')) {
+            Log::warning('cloudinary resident PDF download failed', ['status' => $response->status()]);
+
+            return null;
+        }
+
+        return $body;
+    }
+
+    /** Asset IDs are immutable, so deletion does not depend on a public URL or filename. */
+    public function destroyAsset(string $assetId): bool
+    {
+        if (! $this->enabled() || trim($assetId) === '') {
+            return false;
+        }
+
+        $params = ['asset_id' => trim($assetId), 'invalidate' => 'true', 'timestamp' => (string) time()];
+
+        try {
+            $response = Http::timeout($this->timeoutSeconds())->asForm()->post(
+                $this->destroyEndpoint('raw'),
+                [...$params, 'api_key' => $this->apiKey(), 'signature' => $this->signature($params)]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('cloudinary resident PDF delete failed', ['message' => $e->getMessage()]);
+
+            return false;
+        }
+
+        return $response->successful() && in_array($response->json('result'), ['ok', 'not found'], true);
+    }
+
     public function destroy(string $publicId, string $resourceType = 'image'): bool
     {
         if (! $this->enabled()) {

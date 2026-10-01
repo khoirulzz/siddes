@@ -50,7 +50,7 @@ class PublicServiceController extends Controller
         }
 
         $citizen = PopulationRecord::query()->where('nik', $nik)->first();
-        if (! $citizen) {
+        if (! $citizen || ! $citizen->isActiveResident()) {
             return response()->json([
                 'success' => false,
                 'message' => 'NIK tidak ditemukan. Silakan hubungi operator desa.',
@@ -87,7 +87,7 @@ class PublicServiceController extends Controller
     ): RedirectResponse {
         try {
             $data = $request->validated();
-            $citizen = PopulationRecord::query()->where('nik', $data['nik'])->firstOrFail();
+            $citizen = PopulationRecord::query()->active()->where('nik', $data['nik'])->firstOrFail();
 
             $documentService->ensureTemplateExists($data['letter_type']);
             $ticket = $documentService->generateTicketNumber();

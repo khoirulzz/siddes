@@ -19,11 +19,11 @@
 
         <div class="population-stats">
             <article class="population-stat population-stat--family">
-                <span>Kartu Keluarga</span>
+                <span>KK dengan Anggota Aktif</span>
                 <strong>{{ number_format($filteredHouseholdTotal, 0, ',', '.') }}</strong>
             </article>
             <article class="population-stat population-stat--people">
-                <span>Penduduk</span>
+                <span>Penduduk Aktif</span>
                 <strong>{{ number_format($filteredTotal, 0, ',', '.') }}</strong>
             </article>
             <article class="population-stat population-stat--male">
@@ -43,7 +43,13 @@
                 <span>Kartu Keluarga</span>
             </a>
             <a class="population-tab {{ $viewMode === 'individual' ? 'active' : '' }}" href="{{ route('dashboard.population-records.index', ['view' => 'individual', 'hamlet' => $selectedHamlet !== 'Semua' ? $selectedHamlet : null, 'q' => $filters['q']]) }}">
-                <span>Penduduk</span>
+                <span>Master Penduduk</span>
+            </a>
+            <a class="population-tab {{ $viewMode === 'moved' ? 'active' : '' }}" href="{{ route('dashboard.population-records.index', ['view' => 'moved', 'hamlet' => $selectedHamlet !== 'Semua' ? $selectedHamlet : null, 'q' => $filters['q']]) }}">
+                <span>Warga Pindah</span>
+            </a>
+            <a class="population-tab {{ $viewMode === 'deceased' ? 'active' : '' }}" href="{{ route('dashboard.population-records.index', ['view' => 'deceased', 'hamlet' => $selectedHamlet !== 'Semua' ? $selectedHamlet : null, 'q' => $filters['q']]) }}">
+                <span>Warga Meninggal</span>
             </a>
         </div>
 
@@ -81,7 +87,7 @@
             <div class="table-wrap population-table-wrap population-table-wrap--compact">
                 <table class="responsive-data-table">
                     <thead>
-                        <tr><th>No. KK</th><th>Kepala Keluarga</th><th>Wilayah</th><th>Alamat</th><th>Anggota</th><th>Diperbarui</th><th>Aksi</th></tr>
+                        <tr><th>No. KK</th><th>Kepala Keluarga</th><th>Wilayah</th><th>Alamat</th><th>Anggota Aktif</th><th>Diperbarui</th><th>Aksi</th></tr>
                     </thead>
                     <tbody>
                         @forelse($households as $household)
@@ -90,7 +96,7 @@
                                 <td data-label="Kepala Keluarga">{{ $household->nama_kepala_keluarga ?: 'Belum ditetapkan' }}</td>
                                 <td data-label="Wilayah"><strong>{{ $household->dusun ?: '-' }}</strong><small class="table-subtext">RT {{ $household->rt ?: '-' }} / RW {{ $household->rw ?: '-' }}</small></td>
                                 <td data-label="Alamat"><span class="line-clamp-2">{{ $household->alamat ?: '-' }}</span></td>
-                                <td data-label="Anggota"><span class="member-count">{{ $household->total_members }} orang</span></td>
+                                <td data-label="Anggota Aktif"><span class="member-count">{{ $household->total_members }} orang</span></td>
                                 <td data-label="Diperbarui">{{ $household->updated_at?->format('d-m-Y') ?: '-' }}</td>
                                 <td data-label="Aksi"><a class="btn btn-secondary" href="{{ route('dashboard.population-households.show', $household) }}">Lihat KK</a></td>
                             </tr>
@@ -105,21 +111,23 @@
     @else
         <section class="panel population-list-panel">
             <div class="toolbar">
-                <div><h2>Daftar Penduduk</h2><p class="muted">Pilih Edit untuk melihat dan memperbarui biodata.</p></div>
+                <div><h2>{{ match($viewMode) { 'moved' => 'Warga Pindah', 'deceased' => 'Warga Meninggal', default => 'Daftar Penduduk' } }}</h2><p class="muted">Pilih Edit untuk melihat dan memperbarui biodata.</p></div>
                 <span class="result-count">{{ number_format($items->total(), 0, ',', '.') }} penduduk</span>
             </div>
             <div class="table-wrap population-table-wrap population-table-wrap--compact">
                 <table class="responsive-data-table">
-                    <thead><tr><th>Nama / NIK</th><th>Jenis Kelamin</th><th>Tempat, Tanggal Lahir</th><th>KK / Kepala Keluarga</th><th>Hubungan</th><th>Wilayah</th><th>Aksi</th></tr></thead>
+                    <thead><tr><th>Nama / NIK</th><th>Jenis Kelamin</th><th>Tempat, Tanggal Lahir</th><th>KK / Kepala Keluarga</th><th>Hubungan</th><th>Wilayah</th><th>Pendidikan Update</th><th>Status Keberadaan</th><th>Aksi</th>@if($viewMode !== 'individual')<th>Dokumen</th>@endif</tr></thead>
                     <tbody>
                         @forelse($items as $item)
-                            <tr>
+                            <tr class="{{ $item->isActiveResident() ? '' : 'population-row--inactive' }}">
                                 <td data-label="Nama / NIK"><strong>{{ $item->resolvedName() }}</strong><small class="table-subtext identifier">{{ $item->nik }}</small></td>
                                 <td data-label="Jenis Kelamin">{{ $item->resolvedGender() }}</td>
                                 <td data-label="TTL">{{ $item->resolvedBirthPlace() }}<small class="table-subtext">{{ $item->resolvedBirthDate()?->format('d-m-Y') ?: '-' }} · {{ $item->age !== null ? $item->age.' tahun' : '-' }}</small></td>
                                 <td data-label="KK / Kepala"><span class="identifier">{{ $item->resolvedKkNumber() }}</span><small class="table-subtext">{{ $item->currentMembership?->household?->nama_kepala_keluarga ?: '-' }}</small></td>
                                 <td data-label="Hubungan">{{ $item->resolvedStatusHubungan() }}</td>
                                 <td data-label="Wilayah"><strong>{{ $item->resolvedHamlet() }}</strong><small class="table-subtext">RT {{ $item->resolvedRt() }} / RW {{ $item->resolvedRw() }}</small></td>
+                                <td data-label="Pendidikan Update">{{ $item->pendidikan_update ?: '-' }}</td>
+                                <td data-label="Status Keberadaan"><span class="status-pill {{ $item->isActiveResident() ? 'status-pill--success' : '' }}">{{ ucfirst($item->status_keberadaan ?: 'ditemukan') }}</span></td>
                                 <td data-label="Aksi">
                                     <div class="actions">
                                         <a class="btn btn-secondary" href="{{ route('dashboard.population-records.edit', $item) }}">Edit</a>
@@ -129,9 +137,35 @@
                                         </form>
                                     </div>
                                 </td>
+                                @if($viewMode !== 'individual')
+                                    <td data-label="Dokumen" class="population-document-cell">
+                                        @foreach($item->documents->where('status_keberadaan', $item->status_keberadaan) as $document)
+                                            <div class="population-document-item">
+                                                <a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a>
+                                                <form method="POST" action="{{ route('dashboard.population-documents.destroy', [$item, $document]) }}" onsubmit="return confirm('Hapus dokumen ini?')">@csrf @method('DELETE')<button type="submit" class="btn btn-secondary">Hapus</button></form>
+                                            </div>
+                                        @endforeach
+                                        <details>
+                                            <summary>Unggah PDF</summary>
+                                            <form method="POST" enctype="multipart/form-data" action="{{ route('dashboard.population-documents.store', $item) }}" class="population-document-form">
+                                                @csrf
+                                                <select name="jenis" aria-label="Jenis dokumen" required>
+                                                    @foreach(\App\Models\PopulationDocument::TYPES as $type => $label)
+                                                        @if(($viewMode === 'moved' && $type === 'surat_pindah') || ($viewMode === 'deceased' && $type !== 'surat_pindah'))
+                                                            <option value="{{ $type }}">{{ $label }}</option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                                <input type="file" name="document" accept="application/pdf,.pdf" aria-label="Berkas PDF" required>
+                                                <small class="muted">PDF, maksimal 5 MB.</small>
+                                                <button class="btn btn-secondary" type="submit">Simpan</button>
+                                            </form>
+                                        </details>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
-                            <tr><td colspan="7"><div class="empty-state"><strong>Belum ada penduduk yang sesuai</strong><span>Coba ubah pencarian atau tambahkan penduduk.</span></div></td></tr>
+                            <tr><td colspan="{{ $viewMode === 'individual' ? 9 : 10 }}"><div class="empty-state"><strong>Belum ada penduduk yang sesuai</strong><span>Coba ubah pencarian atau tambahkan penduduk.</span></div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -153,7 +187,7 @@
             <div class="import-guide">
                 <div>
                     <strong>1. Siapkan file</strong>
-                    <p>Isi satu penduduk per baris. Golongan darah, pendidikan, dan nama orang tua yang belum diketahui boleh dikosongkan atau diisi “Tidak Tahu”.</p>
+                    <p>Isi satu penduduk per baris. Pendidikan Update boleh kosong. Status Keberadaan yang kosong atau tidak dikenal pada kolom yang tersedia akan menjadi ditemukan.</p>
                 </div>
                 <div class="actions">
                     <a class="btn btn-secondary" href="{{ route('dashboard.population-records.template') }}">Template Excel</a>
@@ -209,6 +243,8 @@
                                 <th>Baris</th>
                                 <th>Nama / NIK</th>
                                 <th>No. KK</th>
+                                <th>Pendidikan Update</th>
+                                <th>Status Keberadaan</th>
                                 <th>Tindakan</th>
                                 <th>Hasil pemeriksaan</th>
                             </tr>
@@ -370,6 +406,8 @@
                         <td>${row.row}</td>
                         <td><strong>${escapeHtml(row.nama_lengkap)}</strong><small class="table-subtext identifier">${escapeHtml(row.nik)}</small></td>
                         <td class="identifier">${escapeHtml(row.no_kk)}</td>
+                        <td>${escapeHtml(row.pendidikan_update)}</td>
+                        <td>${escapeHtml(row.status_keberadaan)}</td>
                         <td><span class="status-pill status-pill--${row.status}">${actionLabels[row.status] || row.status}</span></td>
                         <td>${issues}</td>
                     </tr>`;

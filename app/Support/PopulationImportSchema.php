@@ -35,6 +35,8 @@ final class PopulationImportSchema
         'nama_ayah',
         'nama_ibu',
         'golongan_darah',
+        'pendidikan_update',
+        'status_keberadaan',
     ];
 
     public const MINIMUM_HEADERS = [
@@ -71,6 +73,8 @@ final class PopulationImportSchema
         'tanggal_lahir' => ['tanggal_lahir', 'tgl_lahir', 'birth_date'],
         'agama' => ['agama', 'religion'],
         'pendidikan' => ['pendidikan', 'pendidikan_terakhir', 'education'],
+        'pendidikan_update' => ['pendidikan_update', 'pendidikan_sekarang', 'pendidikan_saat_ini'],
+        'status_keberadaan' => ['status_keberadaan', 'keberadaan', 'status_warga'],
         'jenis_pekerjaan' => ['jenis_pekerjaan', 'pekerjaan', 'occupation'],
         'status_perkawinan' => ['status_perkawinan', 'status_kawin', 'perkawinan'],
         'kewarganegaraan' => ['kewarganegaraan', 'warga_negara', 'wni_wna'],

@@ -235,6 +235,7 @@ class PopulationImportController extends Controller
             'H' => 24, 'I' => 24, 'J' => 24, 'K' => 24, 'L' => 12, 'M' => 23, 'N' => 21,
             'O' => 28, 'P' => 17, 'Q' => 22, 'R' => 16, 'S' => 16, 'T' => 22, 'U' => 24,
             'V' => 24, 'W' => 18, 'X' => 18, 'Y' => 20, 'Z' => 24, 'AA' => 24, 'AB' => 15,
+            'AC' => 22, 'AD' => 22,
         ];
         foreach ($widths as $column => $width) {
             $dataSheet->getColumnDimension($column)->setWidth($width);
@@ -252,6 +253,7 @@ class PopulationImportController extends Controller
         $this->addListValidation($dataSheet, "V2:V{$lastDataRow}", PopulationRecord::STATUS_PERKAWINAN_OPTIONS);
         $this->addListValidation($dataSheet, "W2:W{$lastDataRow}", ['WNI', 'WNA']);
         $this->addListValidation($dataSheet, "AB2:AB{$lastDataRow}", [...PopulationRecord::GOLONGAN_DARAH_OPTIONS, 'Tidak Tahu']);
+        $this->addListValidation($dataSheet, "AD2:AD{$lastDataRow}", PopulationRecord::PRESENCE_OPTIONS);
 
         $instructions = $spreadsheet->createSheet();
         $instructions->setTitle('Petunjuk');
@@ -265,13 +267,14 @@ class PopulationImportController extends Controller
             ['6.', 'Sel kosong pada penduduk existing tidak menghapus data lama.'],
             ['7.', 'Import bersifat merge dan tidak menghapus penduduk yang tidak tercantum di file.'],
             ['8.', 'Gunakan pratinjau dan perbaiki baris merah sebelum menekan Import.'],
-            ['9.', 'Golongan darah, pendidikan, nama orang tua, alamat, kode pos, dan dokumen boleh diisi Tidak Tahu, N/A, atau tanda - bila belum diketahui; data lama tetap dipertahankan. WNA tetap wajib memiliki paspor atau KITAS/KITAP. Golongan darah di luar A/B/AB/O menjadi catatan.'],
+            ['9.', 'Golongan darah, pendidikan, pendidikan update, nama orang tua, alamat, dan kode pos boleh kosong; data lama tetap dipertahankan. WNA tetap wajib memiliki paspor atau KITAS/KITAP.'],
             ['10.', 'Template menyediakan hingga 6.000 baris data. Baris kosong dan format kosong tidak perlu dihapus sebelum pemeriksaan file.'],
+            ['11.', 'Status keberadaan: ditemukan, pindah, atau meninggal. Jika kolom ada tetapi kosong/salah, status menjadi ditemukan. File lama tanpa kolom ini mempertahankan status warga yang sudah ada.'],
         ], null, 'A1');
         $instructions->getStyle('A1:B1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('0F4C81');
         $instructions->getColumnDimension('A')->setWidth(8);
         $instructions->getColumnDimension('B')->setWidth(105);
-        $instructions->getStyle('A1:B11')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
+        $instructions->getStyle('A1:B12')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP);
         $spreadsheet->setActiveSheetIndex(0);
 
         return $spreadsheet;

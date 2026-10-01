@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PopulationRecord;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ class ComplaintReportRequestForm extends FormRequest
             'nik' => [
                 'required',
                 'digits:16',
-                Rule::exists('population_records', 'nik'),
+                Rule::exists('population_records', 'nik')->where('status_keberadaan', PopulationRecord::PRESENCE_FOUND),
             ],
             'reporter_name' => 'required|string|max:255',
             'phone' => 'required|string|min:10|max:15|regex:/^[0-9+\-\s()]+$/',

@@ -10,6 +10,7 @@ use App\Services\PopulationHouseholdSyncService;
 use App\Support\PopulationStatHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,14 +27,15 @@ class PopulationRecordController extends Controller
      */
     public function index(Request $request)
     {
-        $viewMode = $request->query('view') === 'individual' ? 'individual' : 'kk';
+        $viewMode = in_array($request->query('view'), ['individual', 'moved', 'deceased'], true)
+            ? $request->query('view') : 'kk';
         $selectedHamlet = $request->string('hamlet')->toString() ?: 'Semua';
         if ($selectedHamlet !== 'Semua' && ! in_array($selectedHamlet, PopulationRecord::HAMLETS, true)) {
             $selectedHamlet = 'Semua';
         }
         $search = trim((string) $request->query('q', ''));
 
-        $residentStatsQuery = PopulationRecord::query()->inHamlet($selectedHamlet);
+        $residentStatsQuery = PopulationRecord::query()->active()->inHamlet($selectedHamlet);
         $this->applySearchFilter($residentStatsQuery, $search);
 
         $filteredTotal = (clone $residentStatsQuery)->count();
@@ -45,7 +47,7 @@ class PopulationRecordController extends Controller
         $householdsQuery = Household::query()
             ->withCount([
                 'currentMembers as total_members' => function ($query): void {
-                    $query->where('is_current', true);
+                    $query->whereHas('resident', fn ($residentQuery) => $residentQuery->active());
                 },
             ]);
 
@@ -67,14 +69,25 @@ class PopulationRecordController extends Controller
             });
         }
 
-        $filteredHouseholdTotal = (clone $householdsQuery)->count();
+        $filteredHouseholdTotal = (clone $householdsQuery)
+            ->whereHas('currentMembers.resident', fn ($query) => $query->active())->count();
         $records = null;
         $households = null;
 
-        if ($viewMode === 'individual') {
+        if ($viewMode !== 'kk') {
             $records = PopulationRecord::query()
-                ->with(['currentMembership.household'])
+                ->with('currentMembership.household')
                 ->inHamlet($selectedHamlet);
+            if ($viewMode !== 'individual') {
+                $records->with(['documents' => fn ($query) => $query->select(
+                    'id', 'population_record_id', 'jenis', 'status_keberadaan', 'original_name', 'size', 'created_at'
+                )]);
+            }
+            if ($viewMode === 'moved') {
+                $records->where('status_keberadaan', PopulationRecord::PRESENCE_MOVED);
+            } elseif ($viewMode === 'deceased') {
+                $records->where('status_keberadaan', PopulationRecord::PRESENCE_DECEASED);
+            }
             $this->applySearchFilter($records, $search);
             $records = $records
                 ->orderByRaw('COALESCE(dusun, hamlet)')
@@ -119,7 +132,7 @@ class PopulationRecordController extends Controller
             $selectedHamlet = 'Semua';
         }
         $search = trim((string) $request->query('q', ''));
-        $query = PopulationRecord::query()->inHamlet($selectedHamlet);
+        $query = PopulationRecord::query()->active()->inHamlet($selectedHamlet);
         $this->applySearchFilter($query, $search);
 
         $hamlets = (clone $query)
@@ -135,7 +148,8 @@ class PopulationRecordController extends Controller
             (clone $query)->selectRaw(PopulationStatHelper::buildAgeSqlCases())->first(),
         );
         $educationSummary = PopulationStatHelper::buildEducationSummary(
-            (clone $query)->selectRaw('pendidikan, COUNT(*) as total')->groupBy('pendidikan')->get(),
+            (clone $query)->selectRaw("COALESCE(NULLIF(pendidikan_update, ''), pendidikan) as pendidikan, COUNT(*) as total")
+                ->groupByRaw("COALESCE(NULLIF(pendidikan_update, ''), pendidikan)")->get(),
         );
 
         return response()->json([
@@ -172,6 +186,7 @@ class PopulationRecordController extends Controller
             'statusPerkawinanOptions' => PopulationRecord::STATUS_PERKAWINAN_OPTIONS,
             'statusHubunganOptions' => PopulationRecord::STATUS_HUBUNGAN_OPTIONS,
             'golonganDarahOptions' => PopulationRecord::GOLONGAN_DARAH_OPTIONS,
+            'presenceOptions' => PopulationRecord::PRESENCE_OPTIONS,
         ]);
     }
 
@@ -184,6 +199,7 @@ class PopulationRecordController extends Controller
 
         $resident = PopulationRecord::create($this->extractResidentPayload($payload));
         $household = $this->householdSync->sync($resident, $payload);
+        Cache::forget('dashboard_population_summary');
 
         if ($request->filled('context_household_id')) {
             return redirect()
@@ -207,7 +223,12 @@ class PopulationRecordController extends Controller
      */
     public function edit(Request $request, PopulationRecord $populationRecord)
     {
-        $populationRecord->loadMissing(['currentMembership.household']);
+        $populationRecord->loadMissing([
+            'currentMembership.household',
+            'documents' => fn ($query) => $query->select(
+                'id', 'population_record_id', 'jenis', 'status_keberadaan', 'original_name', 'size', 'created_at'
+            ),
+        ]);
         $household = $populationRecord->currentMembership?->household;
 
         if ($household) {
@@ -228,6 +249,7 @@ class PopulationRecordController extends Controller
             'statusPerkawinanOptions' => PopulationRecord::STATUS_PERKAWINAN_OPTIONS,
             'statusHubunganOptions' => PopulationRecord::STATUS_HUBUNGAN_OPTIONS,
             'golonganDarahOptions' => PopulationRecord::GOLONGAN_DARAH_OPTIONS,
+            'presenceOptions' => PopulationRecord::PRESENCE_OPTIONS,
         ]);
     }
 
@@ -240,6 +262,7 @@ class PopulationRecordController extends Controller
 
         $populationRecord->update($this->extractResidentPayload($payload));
         $household = $this->householdSync->sync($populationRecord, $payload);
+        Cache::forget('dashboard_population_summary');
 
         if ($request->integer('context_household_id') === $household->id) {
             return redirect()
@@ -255,10 +278,14 @@ class PopulationRecordController extends Controller
      */
     public function destroy(Request $request, PopulationRecord $populationRecord)
     {
+        if ($populationRecord->documents()->exists()) {
+            return back()->with('error', 'Hapus dokumen warga terlebih dahulu sebelum menghapus data penduduk.');
+        }
         $householdIds = $populationRecord->householdMemberships()->pluck('household_id')->all();
         $returnHouseholdId = $request->integer('context_household_id');
         $populationRecord->delete();
         $this->householdSync->cleanupEmptyHouseholds($householdIds);
+        Cache::forget('dashboard_population_summary');
 
         if ($returnHouseholdId && Household::query()->whereKey($returnHouseholdId)->exists()) {
             return redirect()
@@ -296,6 +323,8 @@ class PopulationRecordController extends Controller
             'tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
             'agama' => ['required', 'string', 'max:255'],
             'pendidikan' => ['nullable', 'string', 'max:255'],
+            'pendidikan_update' => ['nullable', 'string', 'max:255'],
+            'status_keberadaan' => ['required', Rule::in(PopulationRecord::PRESENCE_OPTIONS)],
             'jenis_pekerjaan' => ['required', 'string', 'max:255'],
             'status_perkawinan' => ['required', Rule::in(PopulationRecord::STATUS_PERKAWINAN_OPTIONS)],
             'kewarganegaraan' => ['required', Rule::in(['WNI', 'WNA'])],
@@ -357,6 +386,8 @@ class PopulationRecordController extends Controller
             'agama' => $payload['agama'],
             'religion' => $payload['religion'],
             'pendidikan' => $payload['pendidikan'],
+            'pendidikan_update' => $payload['pendidikan_update'] ?: null,
+            'status_keberadaan' => $payload['status_keberadaan'],
             'jenis_pekerjaan' => $payload['jenis_pekerjaan'],
             'pekerjaan' => $payload['pekerjaan'],
             'occupation' => $payload['occupation'],

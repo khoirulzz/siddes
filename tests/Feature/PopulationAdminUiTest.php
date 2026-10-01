@@ -23,7 +23,7 @@ class PopulationAdminUiTest extends TestCase
             $this->assertSame('@', $sheet->getCell('A6000')->getStyle()->getNumberFormat()->getFormatCode());
             $this->assertSame('dd-mm-yyyy', $sheet->getCell('R6000')->getStyle()->getNumberFormat()->getFormatCode());
             $this->assertSame('A2', $sheet->getFreezePane());
-            $this->assertSame('A1:AB6001', $sheet->getAutoFilter()->getRange());
+            $this->assertSame('A1:AD6001', $sheet->getAutoFilter()->getRange());
             $this->assertSame('G2:G6001', $sheet->getCell('G2')->getDataValidation()->getSqref());
         } finally {
             $book->disconnectWorksheets();

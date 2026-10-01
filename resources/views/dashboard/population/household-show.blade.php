@@ -6,8 +6,9 @@
 @section('content')
     @php
         $members = $household->currentMembers->filter(fn ($member) => $member->resident);
-        $maleTotal = $members->filter(fn ($member) => $member->resident->resolvedGender() === 'Laki-laki')->count();
-        $femaleTotal = $members->filter(fn ($member) => $member->resident->resolvedGender() === 'Perempuan')->count();
+        $activeMembers = $members->filter(fn ($member) => $member->resident->isActiveResident());
+        $maleTotal = $activeMembers->filter(fn ($member) => $member->resident->resolvedGender() === 'Laki-laki')->count();
+        $femaleTotal = $activeMembers->filter(fn ($member) => $member->resident->resolvedGender() === 'Perempuan')->count();
     @endphp
 
     <section class="panel household-detail-hero">
@@ -35,7 +36,7 @@
     </section>
 
     <section class="household-member-stats">
-        <article><span>Total anggota</span><strong>{{ $members->count() }}</strong></article>
+        <article><span>Anggota aktif</span><strong>{{ $activeMembers->count() }}</strong></article>
         <article><span>Laki-laki</span><strong>{{ $maleTotal }}</strong></article>
         <article><span>Perempuan</span><strong>{{ $femaleTotal }}</strong></article>
     </section>
@@ -48,17 +49,18 @@
 
         <div class="table-wrap population-table-wrap population-table-wrap--compact">
             <table class="responsive-data-table">
-                <thead><tr><th>No.</th><th>Nama / NIK</th><th>Hubungan</th><th>Jenis Kelamin</th><th>Tempat, Tanggal Lahir</th><th>Pekerjaan</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>No.</th><th>Nama / NIK</th><th>Hubungan</th><th>Jenis Kelamin</th><th>Tempat, Tanggal Lahir</th><th>Pekerjaan</th><th>Status Keberadaan</th><th>Aksi</th></tr></thead>
                 <tbody>
                     @forelse($members as $member)
                         @php($resident = $member->resident)
-                        <tr>
+                        <tr class="{{ $resident->isActiveResident() ? '' : 'population-row--inactive' }}">
                             <td data-label="No."><strong>{{ $member->no_urut_kk ?: '-' }}</strong></td>
                             <td data-label="Nama / NIK"><strong>{{ $resident->resolvedName() }}</strong><small class="table-subtext identifier">{{ $resident->nik }}</small></td>
                             <td data-label="Hubungan"><span class="status-pill {{ $member->is_kepala_keluarga ? 'status-pill--success' : '' }}">{{ $member->status_hubungan ?: '-' }}</span></td>
                             <td data-label="Jenis Kelamin">{{ $resident->resolvedGender() }}</td>
                             <td data-label="TTL">{{ $resident->resolvedBirthPlace() }}<small class="table-subtext">{{ $resident->resolvedBirthDate()?->format('d-m-Y') ?: '-' }}</small></td>
                             <td data-label="Pekerjaan">{{ $resident->resolvedOccupation() }}</td>
+                            <td data-label="Status Keberadaan">{{ ucfirst($resident->status_keberadaan ?: 'ditemukan') }}</td>
                             <td data-label="Aksi">
                                 <div class="actions">
                                     <a class="btn btn-secondary" href="{{ route('dashboard.population-records.edit', ['population_record' => $resident, 'household' => $household->id]) }}">Edit</a>
@@ -71,7 +73,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7"><div class="empty-state"><strong>KK ini belum memiliki anggota aktif</strong><span>Tambahkan anggota pertama untuk melengkapi data keluarga.</span></div></td></tr>
+                        <tr><td colspan="8"><div class="empty-state"><strong>KK ini belum memiliki anggota</strong><span>Tambahkan anggota pertama untuk melengkapi data keluarga.</span></div></td></tr>
                     @endforelse
                 </tbody>
             </table>

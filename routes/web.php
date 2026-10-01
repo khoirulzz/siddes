@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\OperatorController;
 use App\Http\Controllers\Admin\PbbPaymentRequestController;
 use App\Http\Controllers\Admin\PbbTaxObjectController;
 use App\Http\Controllers\Admin\PopulationRecordController;
+use App\Http\Controllers\Admin\PopulationDocumentController;
 use App\Http\Controllers\Admin\PopulationImportController;
 use App\Http\Controllers\Admin\HouseholdController;
 use App\Http\Controllers\Admin\ServiceArchiveController;
@@ -159,6 +160,12 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
         ->name('population-records.template');
     Route::get('population-records/statistics', [PopulationRecordController::class, 'statistics'])
         ->name('population-records.statistics');
+    Route::post('population-records/{populationRecord}/documents', [PopulationDocumentController::class, 'store'])
+        ->name('population-documents.store');
+    Route::get('population-records/{populationRecord}/documents/{populationDocument}', [PopulationDocumentController::class, 'show'])
+        ->name('population-documents.show');
+    Route::delete('population-records/{populationRecord}/documents/{populationDocument}', [PopulationDocumentController::class, 'destroy'])
+        ->name('population-documents.destroy');
     Route::get('population-records/households/{household}', [HouseholdController::class, 'show'])
         ->name('population-households.show');
     Route::get('population-records/households/{household}/edit', [HouseholdController::class, 'edit'])

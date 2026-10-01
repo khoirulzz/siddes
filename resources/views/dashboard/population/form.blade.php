@@ -169,6 +169,11 @@
                 </div>
 
                 <div class="field">
+                    <label for="pendidikan_update">Pendidikan Update</label>
+                    <input id="pendidikan_update" type="text" name="pendidikan_update" value="{{ old('pendidikan_update', $item->pendidikan_update) }}" placeholder="Pendidikan saat ini (opsional)">
+                </div>
+
+                <div class="field">
                     <label for="jenis_pekerjaan">Jenis Pekerjaan</label>
                     <input id="jenis_pekerjaan" type="text" name="jenis_pekerjaan" value="{{ old('jenis_pekerjaan', $item->jenis_pekerjaan ?: $item->pekerjaan ?: $item->occupation) }}" required>
                 </div>
@@ -176,6 +181,14 @@
 
             <h2 style="margin:1.1rem 0 0.85rem;">Status & Dokumen Tambahan</h2>
             <div class="form-grid">
+                <div class="field">
+                    <label for="status_keberadaan">Status Keberadaan</label>
+                    <select id="status_keberadaan" name="status_keberadaan" required>
+                        @foreach($presenceOptions as $presence)
+                            <option value="{{ $presence }}" @selected(old('status_keberadaan', $item->status_keberadaan ?: 'ditemukan') === $presence)>{{ ucfirst($presence) }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="field">
                     <label for="status_perkawinan">Status Perkawinan</label>
                     <select id="status_perkawinan" name="status_perkawinan" required>
@@ -232,5 +245,20 @@
                 <a class="btn btn-secondary" href="{{ $contextHouseholdId ? route('dashboard.population-households.show', $contextHouseholdId) : route('dashboard.population-records.index') }}">Kembali</a>
             </div>
         </form>
+        @if($item->exists && $item->documents->isNotEmpty())
+            <div class="population-saved-documents">
+                <h3>Dokumen Tersimpan</h3>
+                <p class="muted">Dokumen tetap tersimpan saat status keberadaan berubah.</p>
+                @foreach($item->documents as $document)
+                    <div class="population-document-item">
+                        <span><a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a> <small class="muted">({{ ucfirst($document->status_keberadaan) }})</small></span>
+                        <form method="POST" action="{{ route('dashboard.population-documents.destroy', [$item, $document]) }}" onsubmit="return confirm('Hapus dokumen ini?')">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-secondary" type="submit">Hapus</button>
+                        </form>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </section>
 @endsection

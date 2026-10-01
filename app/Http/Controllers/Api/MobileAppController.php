@@ -131,7 +131,7 @@ class MobileAppController extends Controller
     ): JsonResponse {
         try {
             $data = $request->validated();
-            $citizen = PopulationRecord::query()->where('nik', $data['nik'])->firstOrFail();
+            $citizen = PopulationRecord::query()->active()->where('nik', $data['nik'])->firstOrFail();
 
             $documentService->ensureTemplateExists($data['letter_type']);
             $ticket = $documentService->generateTicketNumber();

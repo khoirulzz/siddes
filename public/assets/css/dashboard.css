@@ -1435,6 +1435,7 @@ details[open] > summary .details-action::after {
 
 .population-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.6rem;
     margin-bottom: 0.85rem;
 }
@@ -1489,6 +1490,33 @@ details[open] > summary .details-action::after {
 .population-table-wrap--compact table {
     min-width: 960px;
 }
+
+.population-row--inactive {
+    background: #f6f7f9;
+    color: #697581;
+}
+
+.responsive-data-table tr.population-row--inactive { background: #f6f7f9; }
+
+.population-row--inactive strong,
+.population-row--inactive .identifier {
+    color: #596673;
+}
+
+.population-row--inactive .actions,
+.population-row--inactive .population-document-cell {
+    color: var(--ink);
+}
+
+.population-document-cell { min-width: 210px; }
+.population-document-item { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.4rem; }
+.population-document-item .btn { padding: 0.25rem 0.45rem; }
+.population-document-form { display: grid; gap: 0.4rem; margin-top: 0.45rem; }
+.population-document-form input[type="file"] { max-width: 100%; font-size: 0.75rem; }
+.population-document-form select { width: 100%; }
+.population-saved-documents { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.population-saved-documents h3 { margin: 0 0 0.35rem; }
+.population-saved-documents .population-document-item { max-width: 550px; margin-top: 0.6rem; }
 
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f7fbff; }

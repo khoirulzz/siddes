@@ -12,13 +12,14 @@ use App\Models\VillageActivity;
 use App\Support\PopulationStatHelper;
 use App\Support\PublicMedia;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PublicController extends Controller
 {
     public function home()
     {
-        $populationSummary = PopulationRecord::query()
+        $populationSummary = PopulationRecord::query()->active()
             ->selectRaw('hamlet, COUNT(*) as total')
             ->groupBy('hamlet')
             ->orderBy('hamlet')
@@ -30,11 +31,12 @@ class PublicController extends Controller
             ->orderBy('category')
             ->pluck('total', 'category');
 
+        $activityYear = $this->activityYearExpression();
         $activityBudgetSummary = VillageActivity::query()
-            ->selectRaw('YEAR(activity_date) as year, COALESCE(SUM(budget), 0) as total_budget')
+            ->selectRaw("{$activityYear} as year, COALESCE(SUM(budget), 0) as total_budget")
             ->whereNotNull('activity_date')
-            ->groupByRaw('YEAR(activity_date)')
-            ->orderByRaw('YEAR(activity_date)')
+            ->groupByRaw($activityYear)
+            ->orderByRaw($activityYear)
             ->pluck('total_budget', 'year');
 
         return view('public.home', [
@@ -106,24 +108,24 @@ class PublicController extends Controller
 
     public function population()
     {
-        $summaryByHamlet = PopulationRecord::query()
+        $summaryByHamlet = PopulationRecord::query()->active()
             ->selectRaw("COALESCE(dusun, hamlet) as hamlet_name, COUNT(*) as total, SUM(CASE WHEN COALESCE(jenis_kelamin, gender) = 'Laki-laki' THEN 1 ELSE 0 END) as male_total, SUM(CASE WHEN COALESCE(jenis_kelamin, gender) = 'Perempuan' THEN 1 ELSE 0 END) as female_total")
             ->groupByRaw('COALESCE(dusun, hamlet)')
             ->orderByRaw('COALESCE(dusun, hamlet)')
             ->get();
 
-        $genderSummary = PopulationRecord::query()
+        $genderSummary = PopulationRecord::query()->active()
             ->selectRaw('COALESCE(jenis_kelamin, gender) as gender_name, COUNT(*) as total')
             ->groupByRaw('COALESCE(jenis_kelamin, gender)')
             ->pluck('total', 'gender_name');
 
-        $ageSummaryResult = PopulationRecord::query()
+        $ageSummaryResult = PopulationRecord::query()->active()
             ->selectRaw(PopulationStatHelper::buildAgeSqlCases())
             ->first();
 
-        $educationRawResult = PopulationRecord::query()
-            ->selectRaw('pendidikan, COUNT(*) as total')
-            ->groupBy('pendidikan')
+        $educationRawResult = PopulationRecord::query()->active()
+            ->selectRaw("COALESCE(NULLIF(pendidikan_update, ''), pendidikan) as pendidikan, COUNT(*) as total")
+            ->groupByRaw("COALESCE(NULLIF(pendidikan_update, ''), pendidikan)")
             ->get();
 
         return view('public.information.population', [
@@ -193,11 +195,12 @@ class PublicController extends Controller
             ->orderByDesc('total')
             ->get();
 
+        $activityYear = $this->activityYearExpression();
         $budgetYearSummary = VillageActivity::query()
-            ->selectRaw('YEAR(activity_date) as year, COALESCE(SUM(budget), 0) as total_budget')
+            ->selectRaw("{$activityYear} as year, COALESCE(SUM(budget), 0) as total_budget")
             ->whereNotNull('activity_date')
-            ->groupByRaw('YEAR(activity_date)')
-            ->orderByRaw('YEAR(activity_date)')
+            ->groupByRaw($activityYear)
+            ->orderByRaw($activityYear)
             ->get();
 
         return view('public.information.activities', [
@@ -283,6 +286,15 @@ class PublicController extends Controller
     public function downloadApp()
     {
         return view('public.download-app');
+    }
+
+    private function activityYearExpression(): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "CAST(strftime('%Y', activity_date) AS INTEGER)",
+            'pgsql' => 'EXTRACT(YEAR FROM activity_date)',
+            default => 'YEAR(activity_date)',
+        };
     }
 
 }

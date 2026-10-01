@@ -8,6 +8,29 @@ use Tests\TestCase;
 
 class CloudinaryServiceTest extends TestCase
 {
+    public function test_it_signs_a_short_lived_private_pdf_cdn_url(): void
+    {
+        config([
+            'cloudinary.enabled' => true,
+            'cloudinary.cloud_name' => 'dcf6mkq3q',
+            'cloudinary.api_key' => 'key',
+            'cloudinary.api_secret' => 'secret',
+            'cloudinary.delivery_base_url' => 'https://cdn.desalambanggelun.id',
+        ]);
+
+        $url = (new CloudinaryService())->privatePdfCdnUrl('resident-asset-1');
+        $this->assertNotNull($url);
+        $this->assertSame('cdn.desalambanggelun.id', parse_url($url, PHP_URL_HOST));
+        $this->assertSame('/private/pdf/resident-asset-1', parse_url($url, PHP_URL_PATH));
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        $this->assertGreaterThan(time(), (int) $query['exp']);
+        $this->assertLessThanOrEqual(time() + 300, (int) $query['exp']);
+        $this->assertSame(
+            hash_hmac('sha256', "siddes-private-pdf:v1\ndcf6mkq3q\nresident-asset-1\n" . $query['exp'], 'secret'),
+            $query['sig']
+        );
+    }
+
     public function test_it_builds_a_signed_delivery_url_for_cloudinary_assets(): void
     {
         config([

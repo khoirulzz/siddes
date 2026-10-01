@@ -72,6 +72,15 @@ class PopulationDocumentController extends Controller
     public function show(PopulationRecord $populationRecord, PopulationDocument $populationDocument)
     {
         abort_unless($populationDocument->population_record_id === $populationRecord->id, 404);
+
+        $cdnUrl = $this->cloudinaryService->privatePdfCdnUrl($populationDocument->cloudinary_asset_id);
+        if ($cdnUrl !== null) {
+            return redirect()->away($cdnUrl, 302, [
+                'Cache-Control' => 'private, no-store',
+                'Referrer-Policy' => 'no-referrer',
+            ]);
+        }
+
         $contents = $this->cloudinaryService->downloadAsset($populationDocument->cloudinary_asset_id);
         abort_if($contents === null, 503, 'Dokumen belum dapat diunduh. Silakan coba lagi.');
 

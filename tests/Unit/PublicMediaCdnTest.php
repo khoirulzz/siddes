@@ -32,6 +32,10 @@ class PublicMediaCdnTest extends TestCase
         $this->assertSame($other, PublicMedia::toUrl($other));
         $this->assertSame($otherCloud, PublicMedia::toUrl($otherCloud));
         $this->assertSame('/assets/images/logo_pekalongan.svg', PublicMedia::displayUrl('/assets/images/logo_pekalongan.svg'));
+        $this->assertSame(
+            'https://cdn.desalambanggelun.id/dcf6mkq3q/raw/upload/v1/public.pdf',
+            PublicMedia::toUrl('https://res.cloudinary.com/dcf6mkq3q/raw/upload/v1/public.pdf')
+        );
         $this->assertSame('https://cdn.desalambanggelun.id/dzrca841f/image/upload/v1/legacy.webp',
             PublicMedia::toUrl('dzrca841f/image/upload/v1/legacy.webp'));
 

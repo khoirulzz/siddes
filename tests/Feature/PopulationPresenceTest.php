@@ -98,6 +98,7 @@ class PopulationPresenceTest extends TestCase
             'cloudinary.cloud_name' => 'demo',
             'cloudinary.api_key' => 'key',
             'cloudinary.api_secret' => 'secret',
+            'cloudinary.delivery_base_url' => 'https://cdn.desalambanggelun.id',
         ]);
         $pdf = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n";
         Http::fake(function ($request) use (&$pdf) {
@@ -139,6 +140,9 @@ class PopulationPresenceTest extends TestCase
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/raw/upload')
             && str_contains($request->body(), 'authenticated')
             && str_contains($request->body(), 'sid/population-documents'));
+        $this->actingAs($operator)->get(route('dashboard.population-documents.show', [$resident, $document]))
+            ->assertRedirectContains('https://cdn.desalambanggelun.id/private/pdf/resident-asset-1?');
+        config(['cloudinary.delivery_base_url' => '']);
         $this->actingAs($operator)->get(route('dashboard.population-documents.show', [$resident, $document]))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')

@@ -106,9 +106,10 @@ class PublicMedia
         if (
             count($segments) < 4
             || ! in_array($segments[0], ['dcf6mkq3q', 'dzrca841f'], true)
-            || $segments[1] !== 'image'
+            || ! in_array($segments[1], ['image', 'raw'], true)
             || $segments[2] !== 'upload'
             || $segments[3] === ''
+            || ($segments[1] === 'raw' && ! str_ends_with(strtolower($path), '.pdf'))
             || str_contains($path, '..')
             || preg_match('/%2f|%5c|%2e/i', $path) === 1
         ) {

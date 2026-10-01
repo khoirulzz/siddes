@@ -185,6 +185,24 @@ class CloudinaryService
         return $body;
     }
 
+    /** Issue a short-lived CDN URL for an asset after the application authorizes the viewer. */
+    public function privatePdfCdnUrl(string $assetId): ?string
+    {
+        $assetId = trim($assetId);
+        $baseUrl = rtrim(trim((string) config('cloudinary.delivery_base_url', '')), '/');
+        if (! $this->enabled()
+            || ! preg_match('/^[A-Za-z0-9_-]{1,128}$/', $assetId)
+            || ! str_starts_with($baseUrl, 'https://')) {
+            return null;
+        }
+
+        $expires = (string) (time() + 300);
+        $message = implode("\n", ['siddes-private-pdf:v1', $this->cloudName(), $assetId, $expires]);
+        $signature = hash_hmac('sha256', $message, $this->apiSecret());
+
+        return $baseUrl . '/private/pdf/' . $assetId . '?exp=' . $expires . '&sig=' . $signature;
+    }
+
     /** Cloudinary requires the delivery type when deleting authenticated raw assets. */
     public function destroyRawAsset(string $publicId, string $deliveryType = 'authenticated'): bool
     {

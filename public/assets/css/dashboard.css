@@ -1517,6 +1517,12 @@ details[open] > summary .details-action::after {
 .population-saved-documents { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .population-saved-documents h3 { margin: 0 0 0.35rem; }
 .population-saved-documents .population-document-item { max-width: 550px; margin-top: 0.6rem; }
+.household-delete-panel { margin-top: 1rem; }
+.household-delete-panel summary { cursor: pointer; color: #b42318; font-weight: 700; }
+.household-delete-panel p { max-width: 680px; }
+.household-delete-panel form { display: grid; gap: 0.7rem; max-width: 420px; }
+.household-delete-panel input { width: 100%; }
+.household-delete-panel .btn { justify-self: start; }
 
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f7fbff; }

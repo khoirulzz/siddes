@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\PopulationRecord;
+use App\Models\Household;
 use App\Models\User;
 use App\Services\PopulationHouseholdSyncService;
 use App\Support\LetterSchema;
@@ -139,7 +140,10 @@ class PopulationPresenceTest extends TestCase
             && str_contains($request->body(), 'authenticated')
             && str_contains($request->body(), 'sid/population-documents'));
         $this->actingAs($operator)->get(route('dashboard.population-documents.show', [$resident, $document]))
-            ->assertOk()->assertDownload('akta.pdf');
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'inline; filename=akta.pdf')
+            ->assertSee('%PDF-1.4', false);
         auth()->logout();
         $this->get(route('dashboard.population-documents.show', [$resident, $document]))->assertRedirect();
 
@@ -158,7 +162,8 @@ class PopulationPresenceTest extends TestCase
         $this->actingAs($operator)->delete(route('dashboard.population-documents.destroy', [$resident, $document]))
             ->assertSessionHas('success');
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/raw/destroy')
-            && $request['asset_id'] === 'resident-asset-1');
+            && $request['public_id'] === 'sid/population-documents/akta.pdf'
+            && $request['type'] === 'authenticated');
         $this->actingAs($operator)->delete(route('dashboard.population-records.destroy', $resident))
             ->assertRedirect();
         $this->assertDatabaseCount('population_records', 0);
@@ -200,7 +205,84 @@ class PopulationPresenceTest extends TestCase
         ])->assertSessionHasErrors('document');
         $this->assertDatabaseCount('population_documents', 0);
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/raw/destroy')
-            && $request['asset_id'] === 'public-asset');
+            && $request['public_id'] === 'public.pdf'
+            && $request['type'] === 'upload');
+    }
+
+    public function test_deleting_a_household_removes_current_members_and_documents_but_keeps_former_members(): void
+    {
+        $operator = User::factory()->create(['role' => 'operator']);
+        $first = $this->resident();
+        $second = $this->resident('3326010101800002');
+        $former = $this->resident('3326010101800003');
+        $household = Household::query()->where('no_kk', $first->no_kk)->firstOrFail();
+
+        app(PopulationHouseholdSyncService::class)->sync($former, [
+            'no_kk' => '3326010101010002', 'status_hubungan' => 'Kepala Keluarga',
+            'dusun' => 'Bojongireng', 'nama_kepala_keluarga' => 'Warga Pindah KK',
+        ]);
+        $newHousehold = $former->fresh()->currentMembership->household;
+        $second->documents()->create([
+            'jenis' => 'surat_pindah', 'status_keberadaan' => 'pindah',
+            'original_name' => 'pindah.pdf', 'size' => 50,
+            'cloudinary_asset_id' => 'asset-2',
+            'cloudinary_public_id' => 'sid/population-documents/pindah.pdf',
+        ]);
+
+        $this->actingAs($operator)->get(route('dashboard.population-households.show', $household))
+            ->assertOk()->assertSee('Hapus KK dan seluruh anggota');
+        $this->actingAs($operator)->delete(route('dashboard.population-households.destroy', $household))
+            ->assertSessionHasErrors('confirm_no_kk');
+        $this->actingAs($operator)->delete(route('dashboard.population-households.destroy', $household), [
+            'confirm_no_kk' => '3326010101010099',
+        ])->assertSessionHasErrors('confirm_no_kk');
+        $this->assertDatabaseCount('population_records', 3);
+
+        config([
+            'cloudinary.enabled' => true, 'cloudinary.cloud_name' => 'demo',
+            'cloudinary.api_key' => 'key', 'cloudinary.api_secret' => 'secret',
+        ]);
+        Http::fake(['*/raw/destroy' => Http::response(['result' => 'ok'])]);
+
+        $this->actingAs($operator)->delete(route('dashboard.population-households.destroy', $household), [
+            'confirm_no_kk' => $household->no_kk,
+        ])->assertRedirect(route('dashboard.population-records.index', ['view' => 'kk']))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('households', ['id' => $household->id]);
+        $this->assertDatabaseMissing('population_records', ['id' => $first->id]);
+        $this->assertDatabaseMissing('population_records', ['id' => $second->id]);
+        $this->assertDatabaseHas('population_records', ['id' => $former->id]);
+        $this->assertDatabaseHas('households', ['id' => $newHousehold->id]);
+        $this->assertDatabaseCount('population_documents', 0);
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/raw/destroy')
+            && $request['public_id'] === 'sid/population-documents/pindah.pdf'
+            && $request['type'] === 'authenticated');
+    }
+
+    public function test_household_remains_when_cloudinary_rejects_document_deletion(): void
+    {
+        $operator = User::factory()->create(['role' => 'operator']);
+        $resident = $this->resident();
+        $household = Household::query()->where('no_kk', $resident->no_kk)->firstOrFail();
+        $resident->documents()->create([
+            'jenis' => 'surat_pindah', 'status_keberadaan' => 'pindah',
+            'original_name' => 'pindah.pdf', 'size' => 50,
+            'cloudinary_asset_id' => 'asset-3',
+            'cloudinary_public_id' => 'sid/population-documents/pindah.pdf',
+        ]);
+        config([
+            'cloudinary.enabled' => true, 'cloudinary.cloud_name' => 'demo',
+            'cloudinary.api_key' => 'key', 'cloudinary.api_secret' => 'secret',
+        ]);
+        Http::fake(['*/raw/destroy' => Http::response(['error' => ['message' => 'Rejected']], 401)]);
+
+        $this->actingAs($operator)->delete(route('dashboard.population-households.destroy', $household), [
+            'confirm_no_kk' => $household->no_kk,
+        ])->assertSessionHas('error');
+        $this->assertDatabaseHas('households', ['id' => $household->id]);
+        $this->assertDatabaseHas('population_records', ['id' => $resident->id]);
+        $this->assertDatabaseCount('population_documents', 1);
     }
 
     private function importCsv(User $operator, string $contents): void
@@ -215,11 +297,11 @@ class PopulationPresenceTest extends TestCase
         ])->assertOk();
     }
 
-    private function resident(): PopulationRecord
+    private function resident(string $nik = '3326010101800001'): PopulationRecord
     {
         $resident = PopulationRecord::query()->create([
             'full_name' => 'Warga Uji', 'nama_lengkap' => 'Warga Uji',
-            'nik' => '3326010101800001', 'nkk' => '3326010101010001', 'no_kk' => '3326010101010001',
+            'nik' => $nik, 'nkk' => '3326010101010001', 'no_kk' => '3326010101010001',
             'birth_place' => 'Pekalongan', 'tempat_lahir' => 'Pekalongan',
             'birth_date' => '1990-01-01', 'tanggal_lahir' => '1990-01-01',
             'gender' => 'Laki-laki', 'jenis_kelamin' => 'Laki-laki',

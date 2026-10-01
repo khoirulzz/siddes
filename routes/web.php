@@ -172,6 +172,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'role:admin,
         ->name('population-households.edit');
     Route::put('population-records/households/{household}', [HouseholdController::class, 'update'])
         ->name('population-households.update');
+    Route::delete('population-records/households/{household}', [HouseholdController::class, 'destroy'])
+        ->name('population-households.destroy');
         
     Route::delete('pbb-tax-objects/destroy-by-year', [PbbTaxObjectController::class, 'destroyByYear'])
         ->name('pbb-tax-objects.destroy-year');

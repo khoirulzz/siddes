@@ -143,8 +143,10 @@ class CloudinaryService
             || empty($asset['asset_id'])
             || empty($asset['public_id'])) {
             Log::warning('cloudinary resident PDF upload returned an invalid or public asset');
-            if (is_array($asset) && is_string($asset['asset_id'] ?? null)) {
-                $this->destroyAsset($asset['asset_id']);
+            if (is_array($asset)
+                && is_string($asset['public_id'] ?? null)
+                && in_array($asset['type'] ?? null, ['upload', 'private', 'authenticated'], true)) {
+                $this->destroyRawAsset($asset['public_id'], $asset['type']);
             }
 
             return null;
@@ -183,14 +185,20 @@ class CloudinaryService
         return $body;
     }
 
-    /** Asset IDs are immutable, so deletion does not depend on a public URL or filename. */
-    public function destroyAsset(string $assetId): bool
+    /** Cloudinary requires the delivery type when deleting authenticated raw assets. */
+    public function destroyRawAsset(string $publicId, string $deliveryType = 'authenticated'): bool
     {
-        if (! $this->enabled() || trim($assetId) === '') {
+        $publicId = trim($publicId, '/');
+        if (! $this->enabled() || $publicId === ''
+            || ! in_array($deliveryType, ['upload', 'private', 'authenticated'], true)) {
             return false;
         }
 
-        $params = ['asset_id' => trim($assetId), 'invalidate' => 'true', 'timestamp' => (string) time()];
+        $params = [
+            'public_id' => $publicId,
+            'type' => $deliveryType,
+            'timestamp' => (string) time(),
+        ];
 
         try {
             $response = Http::timeout($this->timeoutSeconds())->asForm()->post(
@@ -203,7 +211,18 @@ class CloudinaryService
             return false;
         }
 
-        return $response->successful() && in_array($response->json('result'), ['ok', 'not found'], true);
+        $result = $response->json('result');
+        if ($response->successful() && in_array($result, ['ok', 'not found'], true)) {
+            return true;
+        }
+
+        Log::warning('cloudinary resident PDF delete failed', [
+            'status' => $response->status(),
+            'result' => is_string($result) ? $result : null,
+            'error' => Str::limit((string) $response->json('error.message'), 200),
+        ]);
+
+        return false;
     }
 
     public function destroy(string $publicId, string $resourceType = 'image'): bool

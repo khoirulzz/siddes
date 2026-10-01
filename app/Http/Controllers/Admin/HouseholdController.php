@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Household;
+use App\Models\HouseholdMember;
+use App\Models\PopulationDocument;
 use App\Models\PopulationRecord;
+use App\Services\CloudinaryService;
+use App\Services\PopulationHouseholdSyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -79,5 +84,58 @@ class HouseholdController extends Controller
         return redirect()
             ->route('dashboard.population-households.show', $household)
             ->with('success', 'Data kartu keluarga berhasil diperbarui untuk seluruh anggota aktif.');
+    }
+
+    public function destroy(
+        Request $request,
+        Household $household,
+        CloudinaryService $cloudinaryService,
+        PopulationHouseholdSyncService $householdSync,
+    ) {
+        $request->validate([
+            'confirm_no_kk' => ['required', Rule::in([$household->no_kk])],
+        ], [
+            'confirm_no_kk.required' => 'Ketik nomor KK untuk mengonfirmasi penghapusan.',
+            'confirm_no_kk.in' => 'Nomor KK konfirmasi tidak sesuai.',
+        ]);
+
+        $residentIds = $household->currentMembers()->pluck('resident_id')->unique()->sort()->values()->all();
+        if (HouseholdMember::query()->whereIn('resident_id', $residentIds)
+            ->where('is_current', true)->where('household_id', '!=', $household->id)->exists()) {
+            return back()->with('error', 'Ada anggota yang tercatat aktif di KK lain. Periksa data keanggotaan dahulu.');
+        }
+
+        $linkedHouseholdIds = HouseholdMember::query()->whereIn('resident_id', $residentIds)
+            ->pluck('household_id')->all();
+
+        foreach (PopulationDocument::query()->whereIn('population_record_id', $residentIds)->orderBy('id')->get() as $document) {
+            if (! $cloudinaryService->destroyRawAsset($document->cloudinary_public_id)) {
+                return back()->with('error', 'Gagal menghapus salah satu dokumen di Cloudinary. KK dan anggotanya belum dihapus. Dokumen lain yang berhasil dihapus tidak dapat dipulihkan; coba lagi.');
+            }
+            $document->delete();
+        }
+
+        try {
+            DB::transaction(function () use ($household, $residentIds, $linkedHouseholdIds, $householdSync): void {
+                $lockedHousehold = Household::query()->whereKey($household->id)->lockForUpdate()->firstOrFail();
+                $currentIds = $lockedHousehold->currentMembers()->lockForUpdate()
+                    ->pluck('resident_id')->unique()->sort()->values()->all();
+                if ($currentIds !== $residentIds || PopulationDocument::query()
+                    ->whereIn('population_record_id', $residentIds)->exists()) {
+                    throw new \RuntimeException('Anggota atau dokumen KK berubah selama penghapusan. Silakan coba lagi.');
+                }
+
+                PopulationRecord::query()->whereIn('id', $residentIds)->delete();
+                $lockedHousehold->delete();
+                $householdSync->cleanupEmptyHouseholds($linkedHouseholdIds);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        Cache::forget('dashboard_population_summary');
+
+        return redirect()->route('dashboard.population-records.index', ['view' => 'kk'])
+            ->with('success', 'Kartu keluarga dan seluruh anggota yang masih tercatat di KK ini berhasil dihapus.');
     }
 }

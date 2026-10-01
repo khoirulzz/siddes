@@ -141,7 +141,7 @@
                                     <td data-label="Dokumen" class="population-document-cell">
                                         @foreach($item->documents->where('status_keberadaan', $item->status_keberadaan) as $document)
                                             <div class="population-document-item">
-                                                <a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a>
+                                                <a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}" target="_blank" rel="noopener">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a>
                                                 <form method="POST" action="{{ route('dashboard.population-documents.destroy', [$item, $document]) }}" onsubmit="return confirm('Hapus dokumen ini?')">@csrf @method('DELETE')<button type="submit" class="btn btn-secondary">Hapus</button></form>
                                             </div>
                                         @endforeach

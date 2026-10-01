@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class PopulationDocumentController extends Controller
 {
@@ -59,7 +60,7 @@ class PopulationDocumentController extends Controller
                 'cloudinary_public_id' => $asset['public_id'],
             ]);
         } catch (\Throwable $e) {
-            $this->cloudinaryService->destroyAsset($asset['asset_id']);
+            $this->cloudinaryService->destroyRawAsset($asset['public_id']);
             Log::error('population document metadata could not be saved', ['message' => $e->getMessage()]);
 
             return back()->withErrors(['document' => 'Gagal menyimpan data dokumen. Silakan coba lagi.']);
@@ -74,19 +75,26 @@ class PopulationDocumentController extends Controller
         $contents = $this->cloudinaryService->downloadAsset($populationDocument->cloudinary_asset_id);
         abort_if($contents === null, 503, 'Dokumen belum dapat diunduh. Silakan coba lagi.');
 
-        return response()->streamDownload(static function () use ($contents): void {
-            echo $contents;
-        }, $populationDocument->original_name, [
+        $response = response($contents, 200, [
             'Content-Type' => 'application/pdf',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ]);
+        $filename = preg_replace('/[\x00-\x1F\x7F]/', '', basename(str_replace('\\', '/', $populationDocument->original_name))) ?: 'dokumen.pdf';
+        $fallback = preg_match('/^[\x20-\x7E]+$/', $filename) === 1 && ! str_contains($filename, '%')
+            ? $filename : 'dokumen.pdf';
+        $response->headers->set(
+            'Content-Disposition',
+            HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_INLINE, $filename, $fallback)
+        );
+
+        return $response;
     }
 
     public function destroy(PopulationRecord $populationRecord, PopulationDocument $populationDocument): RedirectResponse
     {
         abort_unless($populationDocument->population_record_id === $populationRecord->id, 404);
-        if (! $this->cloudinaryService->destroyAsset($populationDocument->cloudinary_asset_id)) {
+        if (! $this->cloudinaryService->destroyRawAsset($populationDocument->cloudinary_public_id)) {
             return back()->with('error', 'Gagal menghapus dokumen di Cloudinary. Silakan coba lagi.');
         }
         $populationDocument->delete();

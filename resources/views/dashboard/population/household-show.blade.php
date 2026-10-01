@@ -22,6 +22,7 @@
             <div class="actions">
                 <a class="btn btn-primary" href="{{ route('dashboard.population-records.create', ['household' => $household->id]) }}">Tambah Anggota</a>
                 <a class="btn btn-secondary" href="{{ route('dashboard.population-households.edit', $household) }}">Edit Data KK</a>
+                <a class="btn btn-danger" href="#hapus-kk">Hapus KK</a>
             </div>
         </div>
 
@@ -78,5 +79,19 @@
                 </tbody>
             </table>
         </div>
+    </section>
+
+    <section id="hapus-kk" class="panel household-delete-panel">
+        <details>
+            <summary>Hapus KK dan seluruh anggota</summary>
+            <p>Penghapusan ini menghapus {{ $members->count() }} penduduk yang saat ini tercatat di KK {{ $household->no_kk }}, termasuk dokumen pendukungnya. Penduduk yang sudah pindah ke KK lain tidak ikut terhapus.</p>
+            <form method="POST" action="{{ route('dashboard.population-households.destroy', $household) }}">
+                @csrf
+                @method('DELETE')
+                <label for="confirm_no_kk">Ketik nomor KK untuk konfirmasi</label>
+                <input id="confirm_no_kk" name="confirm_no_kk" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]{16}" required placeholder="{{ $household->no_kk }}">
+                <button class="btn btn-danger" type="submit">Hapus KK dan {{ $members->count() }} anggota</button>
+            </form>
+        </details>
     </section>
 @endsection

@@ -251,7 +251,7 @@
                 <p class="muted">Dokumen tetap tersimpan saat status keberadaan berubah.</p>
                 @foreach($item->documents as $document)
                     <div class="population-document-item">
-                        <span><a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a> <small class="muted">({{ ucfirst($document->status_keberadaan) }})</small></span>
+                        <span><a href="{{ route('dashboard.population-documents.show', [$item, $document]) }}" target="_blank" rel="noopener">{{ \App\Models\PopulationDocument::TYPES[$document->jenis] ?? 'PDF' }}</a> <small class="muted">({{ ucfirst($document->status_keberadaan) }})</small></span>
                         <form method="POST" action="{{ route('dashboard.population-documents.destroy', [$item, $document]) }}" onsubmit="return confirm('Hapus dokumen ini?')">
                             @csrf @method('DELETE')
                             <button class="btn btn-secondary" type="submit">Hapus</button>

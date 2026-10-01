@@ -3,7 +3,7 @@
 @section('title', 'Profil Desa - ' . config('village.name'))
 
 @section('content')
-    <section class="profile-hero-modern" style="--profile-hero-image: url('{{ config('village.profile_hero_image_url') }}');">
+    <section class="profile-hero-modern" style="--profile-hero-image: url('{{ \App\Support\PublicMedia::displayUrl(config('village.profile_hero_image_url')) }}');">
         <div class="profile-hero-layer">
             <p class="profile-kicker">Profil Resmi Desa</p>
             <h1>{{ config('village.name') }}</h1>
@@ -68,7 +68,7 @@
             <figure class="org-chart-image-wrap">
                 <img
                     class="org-chart-image"
-                    src="{{ config('village.organization_chart_url') }}"
+                    src="{{ \App\Support\PublicMedia::displayUrl(config('village.organization_chart_url')) }}"
                     alt="Bagan struktur organisasi Pemerintah Desa {{ config('village.name') }}"
                     loading="lazy"
                 >
@@ -102,7 +102,7 @@
         <div class="profile-boundary">
             @if(config('village.batas_desa'))
                 <figure class="boundary-image-wrap">
-                    <img src="{{ config('village.batas_desa') }}" alt="Batas wilayah {{ config('village.name') }}" loading="lazy">
+                    <img src="{{ \App\Support\PublicMedia::displayUrl(config('village.batas_desa')) }}" alt="Batas wilayah {{ config('village.name') }}" loading="lazy">
                 </figure>
             @else
                 <p class="muted">Gambar batas desa belum tersedia.</p>

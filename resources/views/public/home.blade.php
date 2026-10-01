@@ -3,7 +3,7 @@
 @section('title', 'Beranda - ' . config('village.name'))
 
 @section('content')
-    <section class="hero hero-with-image hero-centered hero-premium" style="--hero-image: url('{{ config('village.hero_image_url') }}');">
+    <section class="hero hero-with-image hero-centered hero-premium" style="--hero-image: url('{{ \App\Support\PublicMedia::displayUrl(config('village.hero_image_url')) }}');">
         <div class="hero-branding">
             <p class="hero-kicker">Sistem Informasi Desa</p>
             <h1>

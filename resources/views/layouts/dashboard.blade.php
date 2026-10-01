@@ -18,7 +18,7 @@
     <div class="dashboard-shell" data-dashboard-shell>
         <aside class="sidebar" id="dashboardSidebar">
             <a href="{{ route('dashboard.index') }}" class="brand">
-                <img src="{{ config('village.logo_url') }}" alt="Logo {{ config('village.district') }}">
+                <img src="{{ \App\Support\PublicMedia::displayUrl(config('village.logo_url')) }}" alt="Logo {{ config('village.district') }}">
                 <span class="brand-text">
                     <strong>{{ config('village.name') }}</strong>
                     <small>Panel {{ auth()->user()->role }}</small>

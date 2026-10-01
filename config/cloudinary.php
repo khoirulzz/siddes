@@ -6,6 +6,7 @@ return [
     'api_key' => env('CLOUDINARY_API_KEY'),
     'api_secret' => env('CLOUDINARY_API_SECRET'),
     'secure' => (bool) env('CLOUDINARY_SECURE', true),
+    'delivery_base_url' => env('CLOUDINARY_DELIVERY_BASE_URL', 'https://cdn.desalambanggelun.id'),
     'timeout_seconds' => (int) env('CLOUDINARY_TIMEOUT_SECONDS', 20),
 
     'folders' => [

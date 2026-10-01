@@ -117,7 +117,7 @@
     <header class="site-header">
         <div class="container site-header-inner">
             <a href="{{ route('home') }}" class="brand" data-admin-entry="{{ route('login') }}">
-                <img src="{{ config('village.logo_url') }}" alt="Logo {{ config('village.district') }}">
+                <img src="{{ \App\Support\PublicMedia::displayUrl(config('village.logo_url')) }}" alt="Logo {{ config('village.district') }}">
                 <span>
                     {{ config('village.name') }}
                     <small>{{ config('village.district') }}</small>
@@ -232,7 +232,7 @@
             <div class="footer-grid">
                 <section class="footer-brand-block">
                     <div class="footer-brand-header">
-                        <img src="{{ config('village.logo_url') }}" alt="Logo {{ config('village.name') }}">
+                        <img src="{{ \App\Support\PublicMedia::displayUrl(config('village.logo_url')) }}" alt="Logo {{ config('village.name') }}">
                         <div>
                             <h3>{{ config('village.name') }}</h3>
                             <p>Portal Informasi Resmi Pemerintah Desa {{ config('village.district') }}</p>
@@ -352,7 +352,7 @@
                 <div class="welcome-banner-card">
                     <img
                         class="welcome-banner-image"
-                        src="{{ config('village.welcome_banner_url') }}"
+                        src="{{ \App\Support\PublicMedia::displayUrl(config('village.welcome_banner_url')) }}"
                         alt="{{ $welcomeBannerAlt }}"
                         loading="eager"
                         fetchpriority="high"

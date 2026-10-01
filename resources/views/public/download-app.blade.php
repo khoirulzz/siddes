@@ -21,7 +21,7 @@
 
         <aside class="sid-download-card" aria-labelledby="app-title">
             <div class="sid-download-app-brand">
-                <span class="sid-download-app-logo"><img src="{{ config('village.logo_url') }}" alt="" width="48" height="56"></span>
+                <span class="sid-download-app-logo"><img src="{{ \App\Support\PublicMedia::displayUrl(config('village.logo_url')) }}" alt="" width="48" height="56"></span>
                 <div>
                     <h2 id="app-title">SID Mobile</h2>
                     <p>{{ config('village.name') }}</p>

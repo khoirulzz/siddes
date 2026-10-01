@@ -14,6 +14,7 @@ use App\Models\PopulationRecord;
 use App\Services\ImageUploadService;
 use App\Services\LetterDocumentService;
 use App\Support\LetterSchema;
+use App\Support\PublicMedia;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -80,7 +81,7 @@ class MobileAppController extends Controller
             'data' => [
                 'name' => config('village.name'),
                 'district' => config('village.district'),
-                'logo_url' => url(config('village.logo_url')),
+                'logo_url' => url(PublicMedia::displayUrl(config('village.logo_url'))),
                 'phone' => config('village.phone'),
                 'email' => config('village.email'),
                 'address' => config('village.address'),

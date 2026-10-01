@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicMedia;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -41,10 +42,10 @@ class Announcement extends Model
 
     public function getThumbnailUrlAttribute(): string
     {
-        return (string) (
+        return (string) PublicMedia::displayUrl((string) (
             config('village.announcement_thumbnail_icon')
             ?: config('village.announcement_icon_url')
             ?: config('village.logo_url')
-        );
+        ));
     }
 }

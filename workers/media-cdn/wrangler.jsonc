@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "subwebdes-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "cdn.desalambanggelun.id/*",
+      "zone_name": "desalambanggelun.id"
+    }
+  ]
+}

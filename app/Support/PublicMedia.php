@@ -6,6 +6,24 @@ use Illuminate\Support\Str;
 
 class PublicMedia
 {
+    public static function displayUrl(?string $value): ?string
+    {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $raw) !== 1) {
+            return $raw;
+        }
+
+        $host = (string) parse_url($raw, PHP_URL_HOST);
+
+        return strcasecmp($host, 'res.cloudinary.com') === 0
+            ? (self::brandedCloudinaryUrl($raw) ?? $raw)
+            : $raw;
+    }
+
     public static function toUrl(?string $value): ?string
     {
         $raw = trim((string) $value);
@@ -19,6 +37,10 @@ class PublicMedia
 
         if (preg_match('/^https?:\/\//i', $raw) === 1) {
             $incomingHost = (string) parse_url($raw, PHP_URL_HOST);
+            if (strcasecmp($incomingHost, 'res.cloudinary.com') === 0) {
+                return self::displayUrl($raw);
+            }
+
             $appHost = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
             $incomingPath = (string) parse_url($raw, PHP_URL_PATH);
             $normalizedIncomingPath = self::normalizePath($incomingPath);
@@ -67,7 +89,36 @@ class PublicMedia
     private static function resolveCloudinaryUrl(string $path): string
     {
         $scheme = config('cloudinary.secure', true) ? 'https' : 'http';
-        return $scheme . '://res.cloudinary.com/' . ltrim($path, '/');
+        $url = $scheme . '://res.cloudinary.com/' . ltrim($path, '/');
+
+        return self::brandedCloudinaryUrl($url) ?? $url;
+    }
+
+    private static function brandedCloudinaryUrl(string $url): ?string
+    {
+        $baseUrl = rtrim(trim((string) config('cloudinary.delivery_base_url', '')), '/');
+        if ($baseUrl === '' || ! str_starts_with($baseUrl, 'https://')) {
+            return null;
+        }
+
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $segments = explode('/', ltrim($path, '/'));
+        if (
+            count($segments) < 4
+            || ! in_array($segments[0], ['dcf6mkq3q', 'dzrca841f'], true)
+            || $segments[1] !== 'image'
+            || $segments[2] !== 'upload'
+            || $segments[3] === ''
+            || str_contains($path, '..')
+            || preg_match('/%2f|%5c|%2e/i', $path) === 1
+        ) {
+            return null;
+        }
+
+        $query = (string) parse_url($url, PHP_URL_QUERY);
+        $fragment = (string) parse_url($url, PHP_URL_FRAGMENT);
+
+        return $baseUrl . $path . ($query !== '' ? '?' . $query : '') . ($fragment !== '' ? '#' . $fragment : '');
     }
 
     public static function normalizePath(?string $value): ?string

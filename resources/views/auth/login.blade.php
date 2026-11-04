@@ -23,9 +23,6 @@
             </label>
 
             <button class="btn btn-primary" type="submit">Masuk</button>
-            <p class="help" style="margin-top:0.8rem;">
-                Akun awal: admin@lambanggelun.id / password123
-            </p>
         </form>
     </div>
 @endsection

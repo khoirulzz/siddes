@@ -2,6 +2,7 @@
 
 return [
     'admin_login_path' => env('ADMIN_LOGIN_PATH', 'masuk-admin'),
+    'diag_secret' => env('DIAG_SECRET', ''),
 
     'media' => [
         'allowed_prefixes' => [

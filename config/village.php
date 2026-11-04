@@ -28,7 +28,7 @@ return [
     'instagram_url' => 'https://instagram.com/pemdes_lambanggelun',
     'facebook_url' => 'https://facebook.com/desa.lambanggelun.1',
     'map_link_url' => 'https://maps.google.com/?q=Desa+Lambanggelun,+Kabupaten+Pekalongan',
-    'developed_by' => 'Khoirul Ulum',
+    'developed_by' => 'Nalaro Digital',
     'map_embed_url' => 'https://www.google.com/maps?q=Desa+Lambanggelun,+Kabupaten+Pekalongan&output=embed',
     'batas_desa' =>  'https://res.cloudinary.com/dcf6mkq3q/image/upload/v1774983115/171715_1_dfqfby.webp',
     'api_key_openrouter' => env('OPENROUTER_API_KEY'),

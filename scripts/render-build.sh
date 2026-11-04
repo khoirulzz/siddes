@@ -7,6 +7,9 @@ set -eu
 echo "==> [render-build] PHP version"
 php --version
 
+echo "==> [render-build] Checking PHP2Shell security status"
+php scripts/audit-php2shell.php
+
 echo "==> [render-build] Installing Composer dependencies (no dev)"
 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 

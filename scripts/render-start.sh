@@ -40,6 +40,9 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
   done
 fi
 
+echo "==> [render-start] Running PHP2Shell runtime audit..."
+php scripts/audit-php2shell.php
+
 echo "==> [render-start] Launching Web Server..."
 if command -v frankenphp >/dev/null 2>&1; then
     echo "==> [render-start] Detected FrankenPHP. Launching..."

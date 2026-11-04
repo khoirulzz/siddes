@@ -25,6 +25,23 @@ class SecurityHeadersMiddleware
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
 
+        // Content-Security-Policy: mitigasi XSS inline script
+        if (str_contains($contentType, 'text/html')) {
+            $response->headers->set(
+                'Content-Security-Policy',
+                "default-src 'self'; " .
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
+                "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net data:; " .
+                "img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://images.unsplash.com; " .
+                "connect-src 'self' https://api.groq.com; " .
+                "frame-src 'self' https://www.google.com https://maps.google.com; " .
+                "frame-ancestors 'self'; " .
+                "object-src 'none'; " .
+                "base-uri 'self';"
+            );
+        }
+
         if ($request->isSecure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
         }

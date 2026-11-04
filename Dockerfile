@@ -1,4 +1,6 @@
-FROM dunglas/frankenphp:1.2-php8.3-alpine
+# PHP2Shell patch: gunakan tag major-minor (1-php8.3) agar selalu ambil PHP 8.3.36+
+# CVE-2026-109618 & CVE-2026-109619 — patched sejak PHP 8.3.36 (rilis 21 Okt 2026)
+FROM dunglas/frankenphp:1-php8.3-alpine
 
 COPY docker/php-upload.ini /usr/local/etc/php/conf.d/99-siddes-upload.ini
 

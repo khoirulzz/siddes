@@ -32,5 +32,11 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Mock external service credentials agar unit test tidak bergantung .env -->
+        <env name="CLOUDINARY_URL" value="cloudinary://key:secret@cloud"/>
+        <env name="CLOUDINARY_CDN_DOMAIN" value=""/>
+        <env name="GEMINI_API_KEY" value="test-gemini-key"/>
+        <env name="GROQ_API_KEY" value="test-groq-key"/>
+        <env name="MESSAGING_MODULE_ENABLED" value="false"/>
     </php>
 </phpunit>

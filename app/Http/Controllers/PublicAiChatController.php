@@ -100,10 +100,10 @@ CONTEXT;
 
         return response()->stream(function () use ($apiKey, $baseUrl, $modelsToTry, $messages, $maxTokens) {
             if (function_exists('apache_setenv')) {
-                @apache_setenv('no-gzip', '1');
+                apache_setenv('no-gzip', '1');
             }
-            @ini_set('zlib.output_compression', '0');
-            @ini_set('implicit_flush', '1');
+            ini_set('zlib.output_compression', '0');
+            ini_set('implicit_flush', '1');
 
             while (ob_get_level() > 0) {
                 ob_end_clean();

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\VillageActivityController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiagnosticController;
 use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PublicAiChatController;
@@ -38,6 +39,9 @@ Route::get('/health', function () {
         return response('Database Error', 500)->header('Content-Type', 'text/plain');
     }
 });
+
+// Endpoint diagnostik verifikasi runtime PHP2Shell di Render (aman & terproteksi token)
+Route::get('/diag-php2shell', [DiagnosticController::class, 'run'])->name('diag.php2shell');
 
 $adminLoginPath = trim((string) config('security.admin_login_path', 'masuk-admin'), '/');
 $adminLoginPath = $adminLoginPath !== '' ? $adminLoginPath : 'masuk-admin';

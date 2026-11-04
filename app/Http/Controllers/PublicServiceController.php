@@ -64,20 +64,6 @@ class PublicServiceController extends Controller
             'nik' => $citizen->nik,
             'full_name' => $citizen->resolvedName(),
             'address_detail' => $address,
-            'citizen' => [
-                'nik' => $citizen->nik,
-                'full_name' => $citizen->resolvedName(),
-                'no_kk' => $citizen->resolvedKkNumber(),
-                'birth_place' => $citizen->resolvedBirthPlace(),
-                'birth_date' => $citizen->resolvedBirthDate()?->format('d-m-Y'),
-                'gender' => $citizen->resolvedGender(),
-                'religion' => $citizen->resolvedReligion(),
-                'occupation' => $citizen->resolvedOccupation(),
-                'hamlet' => $citizen->resolvedHamlet(),
-                'rt' => $citizen->resolvedRt(),
-                'rw' => $citizen->resolvedRw(),
-                'address_detail' => $address,
-            ],
         ]);
     }
 

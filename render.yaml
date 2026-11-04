@@ -102,3 +102,7 @@ services:
       # Admin path (ubah sesuai kebutuhan keamanan)
       - key: ADMIN_LOGIN_PATH
         value: masuk-admin
+
+      # Token keamanan untuk endpoint uji runtime /diag-php2shell
+      - key: DIAG_SECRET
+        generateValue: true

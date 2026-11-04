@@ -1,6 +1,7 @@
 
 <!-- Marked.js for better markdown rendering -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 
 <div id="ai-chatbot-widget">
     <!-- Toggle Button -->
@@ -53,7 +54,7 @@
         <div id="aichat-messages">
             <div class="aichat-bubble aichat-bubble--ai aichat-welcome" id="aichat-welcome">
                 <div class="aichat-bubble-inner">
-                    <p>Halo! Saya asisten AI Desa Lambanggelun. Silakan tanya tentang layanan desa, surat, PBB, dll.</p>
+                    <p>Halo! Saya asisten AI {{ config('village.name') }}. Silakan tanya tentang layanan desa, surat, PBB, dll.</p>
                 </div>
                 <div class="aichat-quick-replies">
                     <button class="aichat-quick-btn" data-q="Bagaimana cara buat surat domisili?">Cara surat domisili?</button>
@@ -297,12 +298,21 @@ document.addEventListener('DOMContentLoaded', function () {
     let collapseTimer = null;
     const AUTO_COLLAPSE_MS = 30000; // 30 seconds
 
-    // Initialize Marked.js if available
+    // Initialize Marked.js and DOMPurify for secure markdown rendering
     const renderContent = (text) => {
+        if (!text) return '';
         if (typeof marked !== 'undefined') {
-            return marked.parse(text);
+            const parsed = marked.parse(text);
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(parsed);
+            }
+            return parsed;
         }
-        return text.replace(/\n/g, '<br>');
+        const escaped = String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return escaped.replace(/\n/g, '<br>');
     };
 
     // Load from SessionStorage so it persists across page reloads in same tab

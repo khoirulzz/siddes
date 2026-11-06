@@ -28,6 +28,7 @@ class SecurityHeadersTest extends TestCase
         foreach ([
             "img-src 'self' data: blob:",
             'https://res.cloudinary.com',
+            'https://cdn.desalambanggelun.id',
             'https://upload.wikimedia.org',
             'https://picsum.photos',
             'https://fastly.picsum.photos',

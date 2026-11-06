@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\\Http\\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\\Http\\Request;
+use Symfony\\Component\\HttpFoundation\\Response;
 
 class SecurityHeadersMiddleware
 {
@@ -34,7 +34,7 @@ class SecurityHeadersMiddleware
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; " .
                 "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net data:; " .
                 "img-src 'self' data: blob: " .
-                "https://res.cloudinary.com " .
+                "https://res.cloudinary.com https://cdn.desalambanggelun.id " .
                 "https://upload.wikimedia.org " .
                 "https://picsum.photos https://fastly.picsum.photos " .
                 "https://desalambanggelun.web.id https://desalambanggelun.id " .
